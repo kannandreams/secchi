@@ -1,0 +1,200 @@
+/* pkgwatch — btop-style (Tokyo Night) */
+
+Screen {
+    background: $background;
+}
+
+Header {
+    dock: top;
+    background: $primary-darken-2;
+    color: $text;
+    text-style: bold;
+}
+
+Footer {
+    dock: bottom;
+    background: $primary-darken-2;
+    color: $text-muted;
+}
+
+/* ── Sidebar ── */
+
+Sidebar {
+    width: 24;
+    height: 100%;
+    background: $panel-darken-1;
+    border-right: tall $primary-darken-2;
+    padding: 0 1;
+    overflow-y: auto;
+}
+
+Sidebar .sidebar-title {
+    text-style: bold;
+    color: $text;
+    padding: 1 0 0 0;
+    width: 100%;
+}
+
+Sidebar .sidebar-subtitle {
+    color: $text-muted;
+    text-style: italic;
+    padding-bottom: 1;
+    width: 100%;
+}
+
+Sidebar .sidebar-group-header {
+    color: $text-muted;
+    text-style: bold;
+    padding: 1 0 0 0;
+    width: 100%;
+}
+
+Sidebar .sidebar-divider {
+    height: 1;
+    background: $boost;
+    margin: 0 0;
+}
+
+SidebarItem {
+    padding: 0 0 0 2;
+    width: 100%;
+    height: 1;
+}
+
+SidebarItem:hover {
+    background: $boost;
+}
+
+SidebarItem:focus {
+    background: $primary-darken-2;
+    text-style: bold;
+}
+
+.sidebar-item--selected {
+    background: $primary-darken-2;
+    text-style: bold;
+}
+
+/* ── Main Content Area ── */
+
+#main-content {
+    width: 1fr;
+    height: 100%;
+    background: $background;
+}
+
+/* ── Dashboard ── */
+
+StatCard {
+    width: 1fr;
+    height: 4;
+    padding: 0 2;
+    margin: 0 1 0 0;
+    border: solid $primary-darken-2;
+    background: $surface;
+    content-align: center middle;
+}
+
+#package-table {
+    width: 1fr;
+    height: 1fr;
+    border: solid $primary-darken-2;
+}
+
+DataTable {
+    background: $surface;
+}
+
+DataTable > .datatable--header {
+    background: $primary-darken-2;
+    color: $text;
+    text-style: bold;
+}
+
+DataTable > .datatable--cursor {
+    background: $primary-darken-1;
+    color: $text;
+}
+
+/* ── Status Bar ── */
+
+#status-bar {
+    dock: bottom;
+    height: 1;
+    background: $panel;
+    color: $text-muted;
+    padding: 0 2;
+}
+
+.status-left {
+    width: 1fr;
+}
+
+.status-right {
+    width: auto;
+}
+
+/* ── Detail ── */
+
+#detail-content {
+    width: 1fr;
+    height: 1fr;
+}
+
+#detail-header {
+    height: auto;
+    padding: 1 0;
+}
+
+#detail-meta {
+    height: auto;
+    padding: 0 0 1 0;
+    color: $text-muted;
+}
+
+#error-view {
+    color: $error;
+    padding: 2 2;
+    border: solid $error;
+}
+
+#notes-content {
+    height: 1fr;
+    padding: 1;
+    border: solid $primary-darken-2;
+}
+
+/* ── Tabs ── */
+
+TabbedContent {
+    height: 1fr;
+    border: solid $primary-darken-2;
+}
+
+TabPane {
+    padding: 1 0;
+}
+
+Tabs {
+    background: $primary-darken-2;
+}
+
+Tabs > .underline--active-tab {
+    background: $primary;
+}
+
+/* ── Chart ── */
+
+PlotextPlot {
+    height: 1fr;
+    width: 1fr;
+    padding: 1;
+}
+
+/* ── Scrollbars ── */
+
+Scrollbar {
+    scrollbar-color: $primary-darken-2;
+    scrollbar-color-hover: $primary;
+    scrollbar-size-vertical: 1;
+}

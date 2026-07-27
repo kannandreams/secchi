@@ -1,0 +1,29 @@
+[projects.opencode]
+description = "OpenCode CLI — AI coding agent"
+packages = [
+    { name = "opencode", registry = "crates.io" },
+]
+
+[projects.textual]
+description = "Textual — Python TUI framework"
+packages = [
+    { name = "textual", registry = "pypi" },
+]
+
+[projects.react]
+description = "React — UI library"
+packages = [
+    { name = "react", registry = "npm" },
+]
+
+[projects.serde]
+description = "Serde — Rust serialization framework"
+packages = [
+    { name = "serde", registry = "crates.io" },
+]
+
+[projects.httpx]
+description = "HTTPX — Python HTTP client"
+packages = [
+    { name = "httpx", registry = "pypi" },
+]
