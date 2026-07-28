@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import VerticalScroll
+from textual.containers import Vertical, VerticalScroll
 from textual.message import Message
 from textual.widgets import Static
 
-from pkgwatch.models import PackageRef, Project
-from pkgwatch.ui import palette
+from secchi.models import PackageRef, Project
+from secchi.spotlight import FALLBACK_SPOTLIGHT, Spotlight, spotlight_disabled
+from secchi.ui import palette
 
 
 class SidebarItem(Static):
@@ -34,7 +36,7 @@ class SidebarItem(Static):
         self.post_message(Sidebar.PackageSelected(self.ref))
 
 
-class Sidebar(VerticalScroll):
+class Sidebar(Vertical):
     """Left sidebar: PACKAGES (favorites + all)."""
 
     can_focus = True
@@ -58,6 +60,14 @@ class Sidebar(VerticalScroll):
         self._order: list[str] = []
         self._cursor: int = -1
         self._favorites_only: bool = False
+        self._spotlight: Spotlight | None = (
+            None if spotlight_disabled() else FALLBACK_SPOTLIGHT
+        )
+
+    def compose(self) -> ComposeResult:
+        yield VerticalScroll(id="sidebar-list")
+        if self._spotlight is not None:
+            yield Static(self._spotlight_markup(), classes="sidebar-promo")
 
     def on_mount(self) -> None:
         self._build()
@@ -65,7 +75,8 @@ class Sidebar(VerticalScroll):
     # ── construction ──
 
     def _build(self) -> None:
-        self.remove_children()
+        listing = self.query_one("#sidebar-list", VerticalScroll)
+        listing.remove_children()
         self._items.clear()
         self._order.clear()
 
@@ -75,13 +86,13 @@ class Sidebar(VerticalScroll):
         project: Project = app.project
         packages = getattr(app, "visible_packages", project.packages)
 
-        self.mount(Static("PACKAGES", classes="sidebar-title"))
+        listing.mount(Static("PACKAGES", classes="sidebar-title"))
 
         favorites = [r for r in packages if r.favorite]
         all_pkgs = packages
 
         if favorites:
-            self.mount(
+            listing.mount(
                 Static(
                     f"[{palette.YELLOW}]★ Favorites[/] [dim]({len(favorites)})[/]",
                     classes="sidebar-section",
@@ -90,7 +101,7 @@ class Sidebar(VerticalScroll):
             for ref in favorites:
                 self._add_item(ref, key_suffix="fav")
 
-        self.mount(
+        listing.mount(
             Static(
                 f"All Packages [dim]({len(all_pkgs)})[/]",
                 classes="sidebar-section sidebar-section--all",
@@ -108,7 +119,7 @@ class Sidebar(VerticalScroll):
         order_key = f"{key_suffix}:{ref.registry.value}:{ref.name}"
         self._items[order_key] = item
         self._order.append(order_key)
-        self.mount(item)
+        self.query_one("#sidebar-list", VerticalScroll).mount(item)
 
     # ── version population ──
 
@@ -122,6 +133,19 @@ class Sidebar(VerticalScroll):
 
     def refresh_versions(self) -> None:
         self._refresh_versions()
+
+    def set_spotlight(self, spotlight: Spotlight | None) -> None:
+        self._spotlight = None if spotlight_disabled() else spotlight
+        try:
+            promo = self.query_one(".sidebar-promo", Static)
+        except Exception:
+            if self._spotlight is not None and self.is_mounted:
+                self.mount(Static(self._spotlight_markup(), classes="sidebar-promo"))
+            return
+        if self._spotlight is None:
+            promo.remove()
+        else:
+            promo.update(self._spotlight_markup())
 
     # ── selection / highlight ──
 
@@ -169,8 +193,20 @@ class Sidebar(VerticalScroll):
     def _scroll_to_cursor(self) -> None:
         if 0 <= self._cursor < len(self._order):
             item = self._items[self._order[self._cursor]]
-            self.scroll_to_widget(item, animate=False)
+            self.query_one("#sidebar-list", VerticalScroll).scroll_to_widget(
+                item, animate=False
+            )
 
     def toggle_favorites_filter(self) -> None:
         self._favorites_only = not self._favorites_only
         self._build()
+
+    def _spotlight_markup(self) -> str:
+        if self._spotlight is None:
+            return ""
+        return (
+            f"[b {palette.YELLOW}]Spotlight[/]\n"
+            f"[b white]{self._spotlight.title}[/]\n"
+            f"[white]{self._spotlight.description}[/]\n"
+            f"[{palette.YELLOW}]{self._spotlight.url}[/]"
+        )

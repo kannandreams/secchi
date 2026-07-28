@@ -9,8 +9,8 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.widgets import Static
 
-from pkgwatch import __version__
-from pkgwatch.ui import palette
+from secchi import __version__
+from secchi.ui import palette
 
 
 def format_path(path: Path | None) -> str:
@@ -36,7 +36,7 @@ def _age_text(refreshed_at: datetime | None) -> str:
     return f"{mins // 60}h ago"
 
 
-class PkgWatchFooter(Horizontal):
+class SecchiFooter(Horizontal):
     """Docked bottom bar: version + data-freshness left, config path right."""
 
     def __init__(self, config_path: Path | None) -> None:

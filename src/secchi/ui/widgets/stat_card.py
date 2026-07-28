@@ -6,7 +6,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Static
 
-from pkgwatch.ui import palette
+from secchi.ui import palette
 
 
 class StatCard(Vertical):
@@ -35,7 +35,7 @@ class StatCard(Vertical):
         self.add_class("stat-card")
 
     def compose(self) -> ComposeResult:
-        yield Static(self._label.upper(), classes="stat-card-label")
+        yield Static(self._label, classes="stat-card-label")
         yield Static(self._value_markup(), classes="stat-card-value")
         yield Static(self._delta_markup(), classes="stat-card-delta")
 
@@ -57,9 +57,9 @@ class StatCard(Vertical):
 
     def _value_markup(self) -> str:
         if self._value_color:
-            return f"[bold {self._value_color}]{self._value}[/]"
+            return f"[b {self._value_color}]{self._value}[/]"
         else:
-            return f"[bold {palette.GREEN}]{self._value}[/]"
+            return f"[b {palette.GREEN}]{self._value}[/]"
 
     def _delta_markup(self) -> str:
         if self._delta:

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from pkgwatch.models import (
+from secchi.models import (
     ActivityEvent,
     ActivityEventKind,
     DerivedPackageData,

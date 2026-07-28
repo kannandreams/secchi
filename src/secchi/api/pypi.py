@@ -7,8 +7,8 @@ from typing import Any
 
 import httpx
 
-from pkgwatch.api.base import RegistryAdapter
-from pkgwatch.models import (
+from secchi.api.base import RegistryAdapter
+from secchi.models import (
     Dependency,
     DownloadCounts,
     DownloadTrendPoint,

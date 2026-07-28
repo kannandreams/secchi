@@ -1,4 +1,4 @@
-"""Configuration loader — reads pkgwatch.toml and env vars."""
+"""Configuration loader — reads secchi config files and env vars."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-from pkgwatch.models import PackageRef, Project, Registry
+from secchi.models import PackageRef, Project, Registry
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -17,18 +17,20 @@ else:
 def _config_locations() -> list[Path]:
     """Return candidate config file paths in priority order."""
     candidates: list[Path] = []
+    candidates.append(Path.cwd() / "secchi.toml")
     candidates.append(Path.cwd() / "pkgwatch.toml")
     if platform := os.environ.get("XDG_CONFIG_HOME", ""):
-        candidates.append(Path(platform) / "pkgwatch" / "config.toml")
+        candidates.append(Path(platform) / "secchi" / "config.toml")
     else:
-        candidates.append(Path.home() / ".config" / "pkgwatch" / "config.toml")
+        candidates.append(Path.home() / ".config" / "secchi" / "config.toml")
     return candidates
 
 
 def find_config(explicit: str | None = None) -> Path | None:
     """Locate the config file.
 
-    Priority: explicit path > ./pkgwatch.toml > ~/.config/pkgwatch/config.toml
+    Priority: explicit path > ./secchi.toml > ./pkgwatch.toml >
+    ~/.config/secchi/config.toml
     """
     if explicit:
         path = Path(explicit).expanduser()
@@ -91,6 +93,12 @@ def get_env_token(var_name: str) -> str | None:
     """Read an auth token from environment variable.
 
     Supported vars:
-    - PKGWATCH_GITHUB_TOKEN — GitHub API token for release notes
+    - SECCHI_GITHUB_TOKEN — GitHub API token for release notes
+    - PKGWATCH_GITHUB_TOKEN — legacy fallback for SECCHI_GITHUB_TOKEN
     """
-    return os.environ.get(var_name)
+    token = os.environ.get(var_name)
+    if token:
+        return token
+    if var_name == "SECCHI_GITHUB_TOKEN":
+        return os.environ.get("PKGWATCH_GITHUB_TOKEN")
+    return None

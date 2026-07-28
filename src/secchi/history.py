@@ -12,16 +12,16 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from pkgwatch.models import HistorySnapshot
+from secchi.models import HistorySnapshot
 
 
 def history_file_path() -> Path:
-    """XDG_CACHE_HOME/pkgwatch/history.json, else ~/.cache/pkgwatch/history.json."""
+    """XDG_CACHE_HOME/secchi/history.json, else ~/.cache/secchi/history.json."""
     if base := os.environ.get("XDG_CACHE_HOME", ""):
         root = Path(base)
     else:
         root = Path.home() / ".cache"
-    return root / "pkgwatch" / "history.json"
+    return root / "secchi" / "history.json"
 
 
 def _load_all() -> dict[str, list[dict]]:

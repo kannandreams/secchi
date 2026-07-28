@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from pkgwatch.models import (
+from secchi.models import (
     Dependency,
     DownloadCounts,
     DownloadTrendPoint,
@@ -56,9 +56,9 @@ class RegistryAdapter(Protocol):
 
 def create_adapter(registry: Registry) -> RegistryAdapter:
     """Factory: return the correct adapter for a given registry."""
-    from pkgwatch.api.crates import CratesAdapter
-    from pkgwatch.api.npm import NpmAdapter
-    from pkgwatch.api.pypi import PyPIAdapter
+    from secchi.api.crates import CratesAdapter
+    from secchi.api.npm import NpmAdapter
+    from secchi.api.pypi import PyPIAdapter
 
     adapters = {
         Registry.PYPI: PyPIAdapter,

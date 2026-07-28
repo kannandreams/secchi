@@ -1,12 +1,12 @@
 [project]
-name = "pkgwatch"
+name = "secchi"
 version = "0.1.0"
 description = "Beautiful TUI dashboard to monitor packages across PyPI, crates.io, and npm"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 authors = [
-    { name = "PkgWatch Contributors" },
+    { name = "Secchi Contributors" },
 ]
 dependencies = [
     "textual>=8.0",
@@ -17,11 +17,11 @@ dependencies = [
 ]
 
 [project.scripts]
-pkgwatch = "pkgwatch.cli:main"
+secchi = "secchi.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pkgwatch"]
+packages = ["src/secchi"]

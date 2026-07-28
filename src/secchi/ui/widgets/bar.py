@@ -6,10 +6,17 @@ _FULL = "█"
 _EMPTY = "░"
 
 
-from pkgwatch.ui import palette
+from secchi.ui import palette
 
 
-def render_bar(fraction: float, width: int = 16, color: str = palette.PROGRESS_FG) -> str:
+def render_bar(
+    fraction: float,
+    width: int = 16,
+    color: str = palette.PROGRESS_FG,
+    *,
+    filled_char: str = _FULL,
+    empty_char: str = _EMPTY,
+) -> str:
     """Return a Rich-markup horizontal bar for `fraction` (0.0–1.0).
 
     `color` must be a literal Rich color name (not a Textual CSS variable),
@@ -17,10 +24,10 @@ def render_bar(fraction: float, width: int = 16, color: str = palette.PROGRESS_F
     """
     fraction = max(0.0, min(1.0, fraction))
     filled = round(fraction * width)
-    bar = _FULL * filled + _EMPTY * (width - filled)
+    bar = filled_char * filled + empty_char * (width - filled)
     if filled < width:
         return (
-            f"[{color}]{_FULL * filled}[/]"
-            f"[{palette.PROGRESS_BG}]{_EMPTY * (width - filled)}[/]"
+            f"[{color}]{filled_char * filled}[/]"
+            f"[{palette.PROGRESS_BG}]{empty_char * (width - filled)}[/]"
         )
     return f"[{color}]{bar}[/]"

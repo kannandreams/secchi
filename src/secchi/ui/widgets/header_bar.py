@@ -6,15 +6,15 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.widgets import Static
 
-from pkgwatch import __version__
-from pkgwatch.ui import palette
+from secchi import __version__
+from secchi.ui import palette
 
 
-class PkgWatchHeader(Horizontal):
+class SecchiHeader(Horizontal):
     """Docked top bar: SECCHI wordmark, product line, and shortcut hints."""
 
     def compose(self) -> ComposeResult:
-        brand = f"[{palette.SECCHI}]SECCHI[/]"
+        brand = "SECCHI"
         product = (
             "Open Source Package Intelligence   "
             f"[{palette.TEXT_MUTED}]v.{__version__}[/]"

@@ -7,8 +7,8 @@ from datetime import datetime
 
 import httpx
 
-from pkgwatch.api.base import RegistryAdapter
-from pkgwatch.models import (
+from secchi.api.base import RegistryAdapter
+from secchi.models import (
     Dependency,
     DownloadCounts,
     DownloadTrendPoint,
@@ -22,7 +22,7 @@ from pkgwatch.models import (
 CRATES_API = "https://crates.io/api/v1"
 
 _HEADERS = {
-    "User-Agent": "pkgwatch (https://github.com/pkgwatch)",
+    "User-Agent": "secchi (https://github.com/secchi)",
     "Accept": "application/json",
 }
 

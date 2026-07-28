@@ -8,12 +8,12 @@ from textual.widget import Widget
 from textual.widgets import Static
 from textual_plotext import PlotextPlot
 
-from pkgwatch.derived import compute_downloads_30d
-from pkgwatch.models import DerivedPackageData, PackageInfo, Registry
-from pkgwatch.ui import palette
-from pkgwatch.ui.widgets.bar import render_bar
-from pkgwatch.ui.widgets.panel import Panel
-from pkgwatch.utils import (
+from secchi.derived import compute_downloads_30d
+from secchi.models import DerivedPackageData, PackageInfo, Registry
+from secchi.ui import palette
+from secchi.ui.widgets.bar import render_bar
+from secchi.ui.widgets.panel import Panel
+from secchi.utils import (
     derive_github_repo,
     format_age,
     format_age_short,
@@ -35,6 +35,32 @@ def _source_registries(info: PackageInfo) -> list[Registry]:
     return info.source_registries or [info.registry]
 
 
+def _download_date_ticks(trend: list) -> tuple[list[int], list[str]]:
+    if not trend:
+        return [], []
+    positions = sorted({0, len(trend) // 2, len(trend) - 1})
+    return positions, [_short_date_label(trend[pos].date) for pos in positions]
+
+
+def _download_count_ticks(counts: list[int]) -> tuple[list[int], list[str]]:
+    if not counts:
+        return [], []
+    lo = min(counts)
+    hi = max(counts)
+    if lo == hi:
+        return [lo], [shorten_number(lo)]
+    mid = (lo + hi) // 2
+    ticks = [lo, mid, hi]
+    return ticks, [shorten_number(tick) for tick in ticks]
+
+
+def _short_date_label(raw: str) -> str:
+    parts = raw.split("-")
+    if len(parts) == 3:
+        return f"{parts[1]}/{parts[2]}"
+    return raw[-5:] if len(raw) > 5 else raw
+
+
 class OverviewTab(Vertical):
     """Composes all overview panels into three horizontal rows."""
 
@@ -47,15 +73,17 @@ class OverviewTab(Vertical):
         info, derived = self._info, self._derived
         with Horizontal(classes="overview-row"):
             yield DownloadsPanel(info, derived)
-            yield ReleasesPanel(info, derived)
             yield HealthScorePanel(info, derived)
+            yield MaintenancePanel(info, derived)
         with Horizontal(classes="overview-row"):
             yield InstallMethodsPanel(info, derived)
-            yield MetadataPanel(info, derived)
-            yield DependenciesPanel(info, derived)
+            yield ReleasesPanel(info, derived)
+            with Horizontal(classes="overview-split"):
+                yield EcosystemReachPanel(info, derived)
+                yield RiskSignalsPanel(info, derived)
         with Horizontal(classes="overview-row overview-row--bottom"):
             yield ActivityPanel(info, derived, classes="panel--wide")
-            yield LinksPanel(info, derived)
+            yield DetailsPanel(info, derived)
 
 
 class DownloadsPanel(Panel):
@@ -90,10 +118,21 @@ class DownloadsPanel(Panel):
             chart = self.query_one("#ov-trend-chart", PlotextPlot)
             plt = chart.plt
             plt.clear_data()
-            plt.plot([p.count for p in trend], marker="braille")
             plt.theme("clear")
-            # Keep the grid subordinate to the green download trend.
+            plt.frame(False)
+            plt.axes_color(palette.SEPARATOR)
+            plt.ticks_color(palette.BORDER_SECONDARY)
             plt.grid(False)
+            xs = list(range(len(trend)))
+            ys = [p.count for p in trend]
+            plt.plot(
+                xs,
+                ys,
+                marker="braille",
+                color=palette.GREEN,
+            )
+            plt.xticks(*_download_date_ticks(trend))
+            plt.yticks(*_download_count_ticks(ys))
             chart.refresh()
         except Exception:
             pass
@@ -111,7 +150,12 @@ class ReleasesPanel(Panel):
         adoption = self._derived.release_adoption
         for ver in self._info.versions[:5]:
             pct = adoption.get(ver.version, 0.0)
-            bar = render_bar(pct / 100, width=8)
+            bar = render_bar(
+                pct / 100,
+                width=8,
+                filled_char="─",
+                empty_char="─",
+            )
             age = format_age_short(ver.release_date)
             version = ver.version if len(ver.version) <= 8 else ver.version[:7] + "…"
             line = (
@@ -121,36 +165,6 @@ class ReleasesPanel(Panel):
             rows.append(Static(line))
         if not rows:
             rows.append(Static("[dim]No release data.[/]"))
-        return rows
-
-
-class DependenciesPanel(Panel):
-    def __init__(self, info: PackageInfo, derived: DerivedPackageData) -> None:
-        self._info = info
-        caption = (
-            "Source: crates.io reverse deps"
-            if info.registry is Registry.CRATES
-            else ""
-        )
-        super().__init__("TOP DEPENDENCIES", caption=caption)
-
-    def compose_body(self) -> list[Widget]:
-        if self._info.registry is not Registry.CRATES:
-            return [
-                Static(
-                    f"[dim]Reverse-dependency data is not available for "
-                    f"{self._info.registry.display_name}.\n"
-                    f"No public reverse-dependency API exists for this registry.[/]"
-                )
-            ]
-        rev = self._info.reverse_dependencies
-        if not rev:
-            return [Static("[dim]No reverse dependencies found.[/]")]
-        rows: list[Widget] = []
-        for dep in rev:
-            rows.append(
-                Static(f"{dep.name:<20} [dim]{shorten_number(dep.downloads):>8}[/]")
-            )
         return rows
 
 
@@ -169,23 +183,28 @@ class InstallMethodsPanel(Panel):
         rows: list[Widget] = []
         max_count_width = max(len(shorten_number(m.count)) for m in methods)
         for m in methods:
-            bar = render_bar(m.percent / 100, width=14)
+            bar = render_bar(
+                m.percent / 100,
+                width=20,
+                filled_char="─",
+                empty_char="─",
+            )
             label = m.label if len(m.label) <= 15 else m.label[:14] + "…"
             count = shorten_number(m.count)
             rows.append(
                 Static(
-                    f"{label:<15}  {bar:<14}  "
+                    f"{label:<15}  {bar:<20}  "
                     f"[b]{count:>{max_count_width}}[/] [dim]({m.percent:>4.1f}%)[/]"
                 )
             )
         return rows
 
 
-class MetadataPanel(Panel):
+class DetailsPanel(Panel):
     def __init__(self, info: PackageInfo, derived: DerivedPackageData) -> None:
         self._info = info
         super().__init__(
-            "METADATA",
+            "DETAILS",
             caption=f"Source: GitHub, {', '.join(r.display_name for r in _source_registries(info))}",
         )
 
@@ -204,14 +223,78 @@ class MetadataPanel(Panel):
         gh = info.github_stats
         rows = [
             ("Repository", repo_str),
-            ("License", info.license or "—"),
             ("Created", format_age(gh.created_at)),
             ("Size", shorten_bytes(size)),
             ("Docs", info.documentation_url or "—"),
-            ("Last Commit", format_age(gh.pushed_at)),
         ]
+        for registry in _source_registries(info):
+            rows.append((registry.display_name, _short_url(_registry_url(info, registry))))
+        if info.homepage and info.homepage not in (info.repository_url, info.documentation_url):
+            rows.append(("Homepage", _short_url(info.homepage)))
         lines = "\n".join(f"[dim]{k:<12}[/] {v}" for k, v in rows)
         return [Static(lines)]
+
+
+class MaintenancePanel(Panel):
+    def __init__(self, info: PackageInfo, derived: DerivedPackageData) -> None:
+        self._info = info
+        super().__init__("MAINTENANCE", caption="Source: registry + GitHub")
+
+    def compose_body(self) -> list[Widget]:
+        info = self._info
+        gh = info.github_stats
+        rows = [
+            ("Last Release", format_age(info.latest_release_date)),
+            ("Last Commit", format_age(gh.pushed_at)),
+            ("CI", "yes" if gh.has_ci else "—"),
+            ("README", "yes" if gh.has_readme else "—"),
+        ]
+        return [Static("\n".join(f"[dim]{k:<12}[/] {v}" for k, v in rows))]
+
+
+class EcosystemReachPanel(Panel):
+    def __init__(self, info: PackageInfo, derived: DerivedPackageData) -> None:
+        self._info = info
+        self._breakdown = derived.install_breakdown
+        super().__init__("REACH", caption="Availability + 30-day downloads")
+
+    def compose_body(self) -> list[Widget]:
+        registries = _source_registries(self._info)
+        icons = " ".join(registry.icon for registry in registries)
+        rows = [Static(f"[dim]Available[/] {icons}")]
+        for method in self._breakdown.methods[:4]:
+            label = method.label.replace(" install", "")
+            rows.append(
+                Static(
+                    f"{label:<8} [{palette.GREEN}]{shorten_number(method.count):>6}[/] "
+                    f"[dim]{method.percent:>4.1f}%[/]"
+                )
+            )
+        return rows
+
+
+class RiskSignalsPanel(Panel):
+    def __init__(self, info: PackageInfo, derived: DerivedPackageData) -> None:
+        self._info = info
+        self._health = derived.health_score
+        super().__init__("RISKS", caption="Derived from package signals")
+
+    def compose_body(self) -> list[Widget]:
+        info = self._info
+        gh = info.github_stats
+        risks: list[tuple[str, bool]] = [
+            ("Stale release", _age_bucket_days(info.latest_release_date) > 365),
+            ("No repository", not gh.resolved),
+            ("No docs", not (info.documentation_url or info.homepage or gh.has_readme)),
+            ("No CI signal", not gh.has_ci),
+            ("Low health", self._health.total < 50),
+        ]
+        rows = []
+        for label, active in risks:
+            marker = f"[{palette.RED}]●[/]" if active else f"[{palette.GREEN}]●[/]"
+            state = "watch" if active else "ok"
+            rows.append(Static(f"{marker} {label:<13} [dim]{state}[/]"))
+        return rows
 
 
 class HealthScorePanel(Panel):
@@ -226,7 +309,7 @@ class HealthScorePanel(Panel):
         rows: list[Widget] = []
         for sub in self._health.sub_scores:
             frac = sub.score / sub.max_score if sub.max_score else 0
-            bar = _muted_block_chain(frac, segments=8)
+            bar = _muted_block_chain(frac, segments=20)
             rows.append(
                 Static(
                     f"[dim]{sub.label:<13}[/] "
@@ -262,49 +345,34 @@ class ActivityPanel(Panel):
         return rows
 
 
-class LinksPanel(Panel):
-    def __init__(self, info: PackageInfo, derived: DerivedPackageData) -> None:
-        self._info = info
-        super().__init__("LINKS")
+def _registry_url(info: PackageInfo, registry: Registry) -> str:
+    name = info.name
+    return {
+        Registry.PYPI: f"https://pypi.org/project/{name}/",
+        Registry.CRATES: f"https://crates.io/crates/{name}",
+        Registry.NPM: f"https://www.npmjs.com/package/{name}",
+    }[registry]
 
-    def compose_body(self) -> list[Widget]:
-        info = self._info
-        rows: list[tuple[str, str]] = []
-        if info.repository_url:
-            rows.append(("Repository", info.repository_url))
-        for registry in _source_registries(info):
-            rows.append((registry.display_name, self._registry_url(registry)))
-        if info.documentation_url:
-            rows.append(("Docs", info.documentation_url))
-        if info.homepage and info.homepage not in (info.repository_url, info.documentation_url):
-            rows.append(("Homepage", info.homepage))
-        if not rows:
-            return [Static("[dim]No links available.[/]")]
-        widgets: list[Widget] = []
-        for label, url in rows:
-            widgets.append(
-                Static(f"[dim]{label:<12}[/] [{palette.BLUE}]{_short_url(url)}[/]")
-            )
-        return widgets
 
-    def _registry_url(self, registry: Registry) -> str:
-        name = self._info.name
-        return {
-            Registry.PYPI: f"https://pypi.org/project/{name}/",
-            Registry.CRATES: f"https://crates.io/crates/{name}",
-            Registry.NPM: f"https://www.npmjs.com/package/{name}",
-        }[registry]
+def _age_bucket_days(dt) -> int:
+    if dt is None:
+        return 10_000
+    from datetime import datetime, timezone
+
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return max((datetime.now(timezone.utc) - dt).days, 0)
 
 
 def _short_url(url: str) -> str:
     return url.replace("https://", "").replace("http://", "").rstrip("/")
 
 
-def _muted_block_chain(fraction: float, segments: int = 8) -> str:
+def _muted_block_chain(fraction: float, segments: int = 20) -> str:
     fraction = max(0.0, min(1.0, fraction))
     filled = round(fraction * segments)
     blocks = []
     for i in range(segments):
         style = palette.GREEN if i < filled else palette.BORDER_SECONDARY
-        blocks.append(f"[{style}]■[/]")
-    return " ".join(blocks)
+        blocks.append(f"[{style}]▮[/]")
+    return "".join(blocks)

@@ -10,7 +10,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Input, OptionList, Static
 from textual.widgets.option_list import Option
 
-from pkgwatch.models import PackageRef, Project
+from secchi.models import PackageRef, Project
 
 
 _SHORTCUTS = [
@@ -20,7 +20,7 @@ _SHORTCUTS = [
     ("r", "Refresh all package data"),
     ("f", "Toggle favorites-only filter"),
     ("?", "Show this help"),
-    ("q / Ctrl+C", "Quit pkgwatch"),
+    ("q / Ctrl+C", "Quit secchi"),
     ("Esc", "Close overlay / dismiss"),
 ]
 

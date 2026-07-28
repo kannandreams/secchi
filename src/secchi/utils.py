@@ -8,8 +8,8 @@ from urllib.parse import urlparse
 
 import httpx
 
-from pkgwatch.config import get_env_token
-from pkgwatch.models import GitHubIssueEvent, GitHubStats
+from secchi.config import get_env_token
+from secchi.models import GitHubIssueEvent, GitHubStats
 
 
 def shorten_number(n: int) -> str:
@@ -109,7 +109,7 @@ def derive_github_repo(urls: list[str]) -> tuple[str, str] | None:
 
 
 def _gh_headers() -> dict[str, str]:
-    token = get_env_token("PKGWATCH_GITHUB_TOKEN")
+    token = get_env_token("SECCHI_GITHUB_TOKEN")
     headers: dict[str, str] = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -128,7 +128,7 @@ def _parse_gh_time(raw: str | None) -> datetime | None:
 async def fetch_github_release_notes(owner: str, repo: str, tag: str | None = None) -> str:
     """Fetch the latest release notes from GitHub.
 
-    Uses PKGWATCH_GITHUB_TOKEN env var for higher rate limits.
+    Uses SECCHI_GITHUB_TOKEN env var for higher rate limits.
     """
     url = f"https://api.github.com/repos/{owner}/{repo}/releases"
     params: dict[str, str] = {"per_page": "5"}

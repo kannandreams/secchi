@@ -3,27 +3,21 @@
 from __future__ import annotations
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib  # type: ignore
-
 from tomli_w import dumps as toml_dumps
 
-from pkgwatch import __version__
-from pkgwatch.config import find_config, load_project
+from secchi import __version__
+from secchi.config import find_config, list_projects, load_project
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="pkgwatch",
+        prog="secchi",
         description="TUI dashboard to monitor your packages across registries.",
     )
-    parser.add_argument("--version", action="version", version=f"pkgwatch {__version__}")
+    parser.add_argument("--version", action="version", version=f"secchi {__version__}")
     parser.add_argument(
         "--project",
         "-p",
@@ -36,7 +30,10 @@ def build_parser() -> argparse.ArgumentParser:
         "-c",
         type=str,
         default=None,
-        help="Path to config file (default: ./pkgwatch.toml or ~/.config/pkgwatch/config.toml)",
+        help=(
+            "Path to config file (default: ./secchi.toml, ./pkgwatch.toml, "
+            "or ~/.config/secchi/config.toml)"
+        ),
     )
     parser.add_argument(
         "--refresh",
@@ -52,7 +49,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     sub = parser.add_subparsers(dest="command")
-    sub.add_parser("init", help="Interactively create a pkgwatch.toml config file")
+    sub.add_parser("init", help="Interactively create a secchi.toml config file")
     monitor_parser = sub.add_parser("monitor", help="Monitor a project (alias for --project)")
     monitor_parser.add_argument("project_name", type=str, help="Project name to monitor")
 
@@ -60,10 +57,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def cmd_init() -> None:
-    """Interactively scaffold a pkgwatch.toml file."""
-    output_path = Path.cwd() / "pkgwatch.toml"
+    """Interactively scaffold a secchi.toml file."""
+    output_path = Path.cwd() / "secchi.toml"
 
-    print("🚀  pkgwatch init — create a new config file")
+    print("🚀  secchi init — create a new config file")
     print()
 
     if output_path.exists():
@@ -121,7 +118,7 @@ def cmd_init() -> None:
     output_path.write_text(toml_dumps(config))
     print(f"\n✅  Config written to {output_path}")
     first = next(iter(projects))
-    print(f"   Run: pkgwatch monitor {first}")
+    print(f"   Run: secchi monitor {first}")
 
 
 def main() -> None:
@@ -139,11 +136,11 @@ def main() -> None:
 
     if args.list:
         if not config_path:
-            print("No config file found. Run 'pkgwatch init' to create one.")
-            print("Searched: ./pkgwatch.toml, ~/.config/pkgwatch/config.toml")
+            print("No config file found. Run 'secchi init' to create one.")
+            print("Searched: ./secchi.toml, ./pkgwatch.toml, ~/.config/secchi/config.toml")
             sys.exit(1)
 
-        projects = _list_projects_from_config(config_path)
+        projects = list_projects(config_path)
         if not projects:
             print(f"No projects found in {config_path}")
             sys.exit(0)
@@ -154,14 +151,24 @@ def main() -> None:
         return
 
     # Launch TUI
-    if not args.project:
-        parser.error("--project/-p is required to launch the dashboard")
-
     if not config_path:
         print("No config file found.")
-        print("Run 'pkgwatch init' to create one, or use --config to specify a path.")
-        print("Searched: ./pkgwatch.toml, ~/.config/pkgwatch/config.toml")
+        print("Run 'secchi init' to create one, or use --config to specify a path.")
+        print("Searched: ./secchi.toml, ./pkgwatch.toml, ~/.config/secchi/config.toml")
         sys.exit(1)
+
+    if not args.project:
+        projects = list_projects(config_path)
+        if len(projects) == 1:
+            args.project = projects[0]
+        elif projects:
+            print(f"Projects in {config_path}:")
+            for project_name in projects:
+                print(f"  - {project_name}")
+            parser.error("--project/-p is required when config has multiple projects")
+        else:
+            print(f"No projects found in {config_path}")
+            sys.exit(1)
 
     try:
         project = load_project(config_path, args.project)
@@ -169,16 +176,10 @@ def main() -> None:
         print(f"Error: {e}")
         sys.exit(1)
 
-    from pkgwatch.ui.app import PkgWatch
+    from secchi.ui.app import Secchi
 
-    app = PkgWatch(project=project, config_path=config_path, force_refresh=args.refresh)
+    app = Secchi(project=project, config_path=config_path, force_refresh=args.refresh)
     app.run()
-
-
-def _list_projects_from_config(config_path: Path) -> list[str]:
-    data = tomllib.loads(config_path.read_text())
-    return list(data.get("projects", {}).keys())
-
 
 if __name__ == "__main__":
     main()

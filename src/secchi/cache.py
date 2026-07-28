@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from pkgwatch.models import (
+from secchi.models import (
     Dependency,
     DownloadCounts,
     DownloadTrendPoint,
@@ -24,10 +24,10 @@ from pkgwatch.models import (
 
 
 def cache_root() -> Path:
-    """XDG_CACHE_HOME/pkgwatch, else ~/.cache/pkgwatch."""
+    """XDG_CACHE_HOME/secchi, else ~/.cache/secchi."""
     if base := os.environ.get("XDG_CACHE_HOME", ""):
-        return Path(base) / "pkgwatch"
-    return Path.home() / ".cache" / "pkgwatch"
+        return Path(base) / "secchi"
+    return Path.home() / ".cache" / "secchi"
 
 
 def package_cache_path(key: str) -> Path:

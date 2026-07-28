@@ -1,4 +1,4 @@
-/* pkgwatch — package-intelligence dashboard */
+/* secchi — package-intelligence dashboard */
 
 Screen {
     background: #000000;
@@ -7,7 +7,7 @@ Screen {
 
 /* ── Custom header bar ── */
 
-PkgWatchHeader {
+SecchiHeader {
     dock: top;
     height: 3;
     background: #020202;
@@ -15,71 +15,79 @@ PkgWatchHeader {
     border-bottom: solid #3A3A3A;
 }
 
-PkgWatchHeader #header-brand {
+SecchiHeader #header-brand {
     width: 12;
-    height: 3;
+    height: 1;
     content-align: left middle;
     padding: 0 1;
-    margin: 0 1 0 0;
-    background: #020202;
+    margin: 1 1 0 0;
+    background: #7CFFB2;
+    color: #00160D;
     text-style: bold;
 }
 
-PkgWatchHeader #header-product {
+SecchiHeader #header-product {
     width: 1fr;
-    height: 3;
+    height: 1;
     content-align: left middle;
     padding: 0 1;
+    margin: 1 0 0 0;
     color: #E5E7EB;
     text-style: bold;
 }
 
-PkgWatchHeader #header-right {
+SecchiHeader #header-right {
     width: auto;
-    height: 3;
+    height: 1;
     content-align: right middle;
     padding: 0 1;
-    background: #020202;
-    color: #9CA3AF;
+    margin: 1 0 0 0;
+    background: #243D34;
+    color: #E5E7EB;
 }
 
 /* ── Custom footer/status bar ── */
 
-PkgWatchFooter {
+SecchiFooter {
     dock: bottom;
-    height: 3;
+    height: 2;
     background: #0F0F0F;
     color: #9CA3AF;
     border-top: solid #3A3A3A;
 }
 
-PkgWatchFooter #footer-left {
+SecchiFooter #footer-left {
     width: 1fr;
     height: 1;
     content-align: left middle;
-    padding: 0 1;
+    padding: 0;
 }
 
-PkgWatchFooter #footer-right {
+SecchiFooter #footer-right {
     width: auto;
     height: 1;
     content-align: right middle;
-    padding: 0 1;
+    padding: 0;
 }
 
 /* ── Sidebar ── */
 
 Sidebar {
-    width: 28;
+    width: 36;
     height: 100%;
     background: #020202;
     border-right: solid #3A3A3A;
     padding: 0 1;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 Sidebar:focus {
     border-right: solid #3A3A3A;
+}
+
+#sidebar-list {
+    width: 100%;
+    height: 1fr;
 }
 
 Sidebar .sidebar-title {
@@ -113,6 +121,16 @@ SidebarItem:hover {
     text-style: bold;
 }
 
+.sidebar-promo {
+    width: 100%;
+    height: 8;
+    padding: 1;
+    margin: 1 0 0 0;
+    border: solid #3A3A3A;
+    background: #111111;
+    color: #FFFFFF;
+}
+
 /* ── Main content ── */
 
 #main-content {
@@ -129,41 +147,60 @@ SidebarItem:hover {
 #detail-content {
     width: 1fr;
     height: 1fr;
-    padding: 1 2;
+    padding: 1 1 2 1;
 }
 
 #summary-row {
-    height: 6;
+    height: 10;
     padding: 0 1 1 0;
 }
 
 #project-card {
     width: 4fr;
-    height: 5;
+    height: 9;
     padding: 1;
     margin: 0 2 0 0;
     border: solid #3A3A3A;
     background: #050505;
 }
 
-#detail-header {
-    height: 2;
-    padding: 0;
-    text-style: bold;
-}
-
-/* ── Badges ── */
-
-#badge-row {
+#project-title {
     height: 1;
     padding: 0;
+    text-style: bold;
+    color: #39D353;
+}
+
+/* ── Project metadata ── */
+
+#project-meta-row {
+    height: 1;
+    padding: 0;
+    margin: 1 0 0 0;
+}
+
+.project-meta-label {
+    width: auto;
+    height: 1;
+    margin: 0 1 0 0;
+    color: #6B7280;
 }
 
 .source-icons {
     width: auto;
     height: 1;
-    margin: 0 1 0 0;
+    margin: 0 2 0 0;
     color: #E5E7EB;
+}
+
+.license-ribbon {
+    width: auto;
+    height: 1;
+    padding: 0 1;
+    background: #19091D;
+    color: #E5E7EB;
+    border-left: solid #C026D3;
+    border-right: solid #C026D3;
 }
 
 #website-link {
@@ -189,15 +226,15 @@ SidebarItem:hover {
 
 #stat-cards {
     width: 3fr;
-    height: 5;
+    height: 7;
     padding: 0;
 }
 
 .stat-card {
     width: 1fr;
-    height: 5;
+    height: 6;
     padding: 1;
-    margin: 0 1 0 0;
+    margin: 0;
     border: solid #3A3A3A;
     background: #050505;
 }
@@ -205,14 +242,13 @@ SidebarItem:hover {
 .stat-card-label {
     height: 1;
     color: #9CA3AF;
-    text-style: bold;
 }
 
 .stat-card-value {
     height: 2;
     color: #39D353;
-    text-style: bold;
     content-align: left middle;
+    text-style: bold;
 }
 
 .stat-card-delta {
@@ -262,12 +298,13 @@ TabPane {
 }
 
 .overview-row {
-    height: 14;
-    padding: 0 1 1 0;
+    height: 11;
+    padding: 0 0 1 0;
 }
 
 .overview-row--bottom {
-    height: 12;
+    height: 7;
+    padding: 0;
 }
 
 Panel {
@@ -275,8 +312,9 @@ Panel {
     height: 1fr;
     border: solid #3A3A3A;
     background: #050505;
-    padding: 1;
+    padding: 1 1 0 1;
     margin: 0 1 0 0;
+    overflow: hidden;
     border-title-color: #3B82F6;
     border-title-style: bold;
 }
@@ -285,19 +323,32 @@ Panel.panel--wide {
     width: 2fr;
 }
 
+.overview-split {
+    width: 1fr;
+    height: 1fr;
+    padding: 0;
+    margin: 0 1 0 0;
+}
+
+.overview-split Panel {
+    margin: 0 1 0 0;
+}
+
 .panel-body {
     height: 1fr;
 }
 
 .panel-caption {
     height: 1;
-    color: #9CA3AF;
-    text-style: italic;
+    color: #6B7280;
+    text-style: italic dim;
+    padding: 0;
     dock: bottom;
 }
 
 .ov-summary {
     height: 1;
+    margin-top: 1;
 }
 
 #ov-trend-chart {

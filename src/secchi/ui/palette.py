@@ -3,7 +3,7 @@ GREEN_DARK = "#2EA043"
 GREEN_DIM = "#238636"
 
 # Brand accent: intentionally reserved for the SECCHI wordmark.
-SECCHI = "#7FE7D8"
+SECCHI = "#7CFFB2"
 
 BLUE = "#3B82F6"
 BLUE_DARK = "#2563EB"

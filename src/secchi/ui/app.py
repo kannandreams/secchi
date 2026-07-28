@@ -12,17 +12,17 @@ from textual.binding import Binding
 from textual.containers import Container, Horizontal
 from textual import on
 
-from pkgwatch import derived as derive
-from pkgwatch.api.base import create_adapter
-from pkgwatch.cache import load_package_cache, save_package_cache
-from pkgwatch.history import (
+from secchi import derived as derive
+from secchi.api.base import create_adapter
+from secchi.cache import load_package_cache, save_package_cache
+from secchi.history import (
     HistorySnapshot,
     append_snapshot,
     compute_delta,
     find_baseline,
     load_snapshots,
 )
-from pkgwatch.models import (
+from secchi.models import (
     DerivedPackageData,
     FetchError,
     InstallBreakdown,
@@ -32,22 +32,23 @@ from pkgwatch.models import (
     Project,
     Registry,
 )
-from pkgwatch.ui.widgets.detail import DetailView
-from pkgwatch.ui.widgets.header_bar import PkgWatchHeader
-from pkgwatch.ui.widgets.modals import HelpScreen, SearchScreen
-from pkgwatch.ui.widgets.sidebar import Sidebar
-from pkgwatch.ui.widgets.status_bar import PkgWatchFooter
-from pkgwatch.utils import (
+from secchi.spotlight import fetch_spotlight, spotlight_disabled
+from secchi.ui.widgets.detail import DetailView
+from secchi.ui.widgets.header_bar import SecchiHeader
+from secchi.ui.widgets.modals import HelpScreen, SearchScreen
+from secchi.ui.widgets.sidebar import Sidebar
+from secchi.ui.widgets.status_bar import SecchiFooter
+from secchi.utils import (
     fetch_github_extended_stats_for_package,
     fetch_release_notes_for_package,
 )
 
 
-class PkgWatch(App[None]):
+class Secchi(App[None]):
     """Single-screen dashboard — sidebar + rich per-package detail view."""
 
     CSS_PATH = "styles/dashboard.tcss"
-    TITLE = "pkgwatch"
+    TITLE = "secchi"
 
     BINDINGS = [
         Binding("r", "refresh", "Refresh", priority=True),
@@ -140,16 +141,17 @@ class PkgWatch(App[None]):
         return [r for r in self._project.packages if r.name.lower() == target] or [ref]
 
     def compose(self) -> ComposeResult:
-        yield PkgWatchHeader()
+        yield SecchiHeader()
         yield Horizontal(
             Sidebar(),
             Container(id="main-content"),
         )
-        yield PkgWatchFooter(self._config_path)
+        yield SecchiFooter(self._config_path)
 
     def on_mount(self) -> None:
         self.theme = "textual-dark"
         self._select_default_package(render=False)
+        self._start_spotlight_fetch()
         self._start_data_fetch(force=self._force_refresh)
 
     # ── actions ──
@@ -169,6 +171,22 @@ class PkgWatch(App[None]):
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
+
+    def _start_spotlight_fetch(self) -> None:
+        if spotlight_disabled():
+            try:
+                self.query_one(Sidebar).set_spotlight(None)
+            except Exception:
+                pass
+            return
+        self.run_worker(self._fetch_spotlight(), exclusive=False, group="spotlight")
+
+    async def _fetch_spotlight(self) -> None:
+        spotlight = await fetch_spotlight()
+        try:
+            self.query_one(Sidebar).set_spotlight(spotlight)
+        except Exception:
+            pass
 
     # ── navigation ──
 
@@ -430,7 +448,7 @@ def _unique_registries(registries) -> list[Registry]:
 
 
 def _combine_download_trends(infos: list[PackageInfo]):
-    from pkgwatch.models import DownloadTrendPoint
+    from secchi.models import DownloadTrendPoint
 
     counts: dict[str, int] = {}
     for info in infos:

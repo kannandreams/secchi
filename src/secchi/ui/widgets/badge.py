@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from textual.widgets import Static
 
-from pkgwatch.ui import palette
+from secchi.ui import palette
 
 
 class Badge(Static):

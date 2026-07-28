@@ -9,18 +9,32 @@ from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import DataTable, Markdown, Static, TabbedContent, TabPane
 
-from pkgwatch.models import DerivedPackageData, FetchError, PackageInfo, PackageRef
-from pkgwatch.ui import palette
-from pkgwatch.ui.widgets.badge import Badge
-from pkgwatch.ui.widgets.bar import render_bar
-from pkgwatch.ui.widgets.overview import OverviewTab
-from pkgwatch.ui.widgets.stat_card import StatCard
-from pkgwatch.utils import (
+from secchi.models import DerivedPackageData, FetchError, PackageInfo, PackageRef
+from secchi.ui import palette
+from secchi.ui.widgets.bar import render_bar
+from secchi.ui.widgets.overview import OverviewTab
+from secchi.ui.widgets.stat_card import StatCard
+from secchi.utils import (
     format_age,
     format_pct_delta,
     shorten_bytes,
     shorten_number,
 )
+
+
+# Kept in one place so additional package sources can be surfaced without
+# changing the project-card layout. Only ecosystems present in source_registries
+# are rendered today.
+ECOSYSTEM_ICONS: dict[str, str] = {
+    "crates.io": "🦀",
+    "pypi": "🐍",
+    "npm": "⬢",
+    "homebrew": "🍺",
+    "docker": "🐳",
+    "nix": "❄️",
+    "winget": "🪟",
+    "scoop": "📦",
+}
 
 
 class DetailView(Container):
@@ -58,30 +72,33 @@ class DetailView(Container):
 
     def _compose_summary_row(self) -> ComposeResult:
         with Horizontal(id="summary-row"):
-            with Container(id="project-card"):
-                yield Static(self._build_header(), id="detail-header")
-                yield from self._compose_badges()
+            yield Static(self._build_project_card(), id="project-card")
             if self._info and self._info.latest_version:
                 yield from self._compose_stat_cards()
 
-    def _compose_badges(self) -> ComposeResult:
+    def _build_project_card(self) -> str:
+        title = self._build_title()
         if not self._info:
-            return
+            return title
+
         info = self._info
         registries = info.source_registries or [info.registry]
-        with Horizontal(id="badge-row"):
-            icons = " ".join(_registry_icon_label(registry) for registry in registries)
-            if icons:
-                yield Static(icons, classes="source-icons")
-            if info.license:
-                yield Badge(info.license, color=palette.PURPLE)
-            if info.package_kind:
-                yield Badge(info.package_kind, color=palette.CYAN)
+        icons = " ".join(_registry_icon_label(registry) for registry in registries)
+
+        lines = [title]
+        if info.description:
+            lines.append(f"[#E5E7EB]{info.description[:120]}[/]")
         if info.homepage:
-            yield Static(
-                f"[{palette.CYAN}]{_short_url(info.homepage)}[/]",
-                id="website-link",
-            )
+            lines.append("")
+            lines.append(f"[{palette.CYAN}]{_short_url(info.homepage)}[/]")
+        meta: list[str] = []
+        if icons:
+            meta.append(f"[dim]Ecosystem[/] {icons}")
+        if info.license:
+            meta.append(f"[dim]License[/] [{palette.PURPLE}]{info.license}[/]")
+        if meta:
+            lines.append("   ".join(meta))
+        return "\n".join(lines)
 
     def _compose_stat_cards(self) -> ComposeResult:
         info = self._info
@@ -100,7 +117,7 @@ class DetailView(Container):
         pct = derived.downloads_30d_pct_change if derived else None
         pct_text, pct_color = format_pct_delta(pct)
         dl_card = StatCard(
-            "Downloads",
+            "DLs",
             shorten_number(total),
             delta=pct_text,
             delta_color=pct_color,
@@ -159,13 +176,10 @@ class DetailView(Container):
 
     # ── content builders ──
 
-    def _build_header(self) -> str:
+    def _build_title(self) -> str:
         star = f" [{palette.YELLOW}]★[/]" if self._ref.favorite else ""
         name = self._ref.name
-        header = f"[b {palette.GREEN}]{name}[/]{star}"
-        if self._info and self._info.description:
-            header += f"\n[dim]{self._info.description[:120]}[/]"
-        return header
+        return f"[b {palette.GREEN}]{name}[/]{star}"
 
     def _releases_pane(self) -> VerticalScroll:
         info = self._info
@@ -271,9 +285,4 @@ def _short_url(url: str) -> str:
 
 
 def _registry_icon_label(registry) -> str:
-    return {
-        "crates.io": "🦀",
-        "pypi": "🐍",
-        "npm": "⬢",
-        "docker": "🐳",
-    }.get(registry.value, registry.icon)
+    return ECOSYSTEM_ICONS.get(registry.value, registry.icon)

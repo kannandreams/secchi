@@ -6,9 +6,9 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 
-from pkgwatch.api.base import RegistryAdapter
-from pkgwatch.config import get_env_token
-from pkgwatch.models import (
+from secchi.api.base import RegistryAdapter
+from secchi.config import get_env_token
+from secchi.models import (
     Dependency,
     DownloadCounts,
     DownloadTrendPoint,

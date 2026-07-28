@@ -1,5 +1,5 @@
 [projects.demo]
-description = "PkgWatch demo — a mixed portfolio across registries"
+description = "Secchi demo — a mixed portfolio across registries"
 packages = [
     { name = "serde", registry = "crates.io", favorite = true },
     { name = "ripgrep", registry = "crates.io", favorite = true },
