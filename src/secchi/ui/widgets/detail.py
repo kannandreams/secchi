@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, VerticalScroll
+from textual.containers import Container, Grid, Horizontal, VerticalScroll
 from textual.widgets import DataTable, Markdown, Static, TabbedContent, TabPane
 
 from secchi.models import DerivedPackageData, FetchError, PackageInfo, PackageRef
@@ -151,7 +151,7 @@ class DetailView(Container):
             delta_color=grade_color,
         )
 
-        with Horizontal(id="stat-cards"):
+        with Grid(id="stat-cards"):
             yield ver_card
             yield dl_card
             yield stars_card

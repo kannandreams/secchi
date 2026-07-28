@@ -151,13 +151,13 @@ SidebarItem:hover {
 }
 
 #summary-row {
-    height: 10;
+    height: 12;
     padding: 0 1 1 0;
 }
 
 #project-card {
-    width: 4fr;
-    height: 9;
+    width: 3fr;
+    height: 11;
     padding: 1;
     margin: 0 2 0 0;
     border: solid #3A3A3A;
@@ -225,35 +225,43 @@ SidebarItem:hover {
 /* ── Stat cards ── */
 
 #stat-cards {
-    width: 3fr;
-    height: 7;
+    width: 4fr;
+    height: 11;
+    layout: grid;
+    grid-size: 3 2;
+    grid-gutter: 1 1;
+    grid-columns: 1fr 1fr 1fr;
+    grid-rows: 1fr 1fr;
     padding: 0;
 }
 
 .stat-card {
     width: 1fr;
-    height: 6;
-    padding: 1;
+    height: 1fr;
+    padding: 0 1;
     margin: 0;
     border: solid #3A3A3A;
-    background: #050505;
+    background: #111111;
+    color: #E5E7EB;
 }
 
 .stat-card-label {
     height: 1;
     color: #9CA3AF;
+    content-align: center middle;
 }
 
 .stat-card-value {
     height: 2;
     color: #39D353;
-    content-align: left middle;
+    content-align: center middle;
     text-style: bold;
 }
 
 .stat-card-delta {
     height: 1;
     color: #9CA3AF;
+    content-align: center middle;
 }
 
 /* ── Tabs ── */
@@ -298,7 +306,7 @@ TabPane {
 }
 
 .overview-row {
-    height: 11;
+    height: 10;
     padding: 0 0 1 0;
 }
 
