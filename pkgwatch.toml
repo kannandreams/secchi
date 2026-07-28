@@ -19,6 +19,13 @@ packages = [
     { name = "opencode", registry = "crates.io" },
 ]
 
+[projects.tuffcli]
+description = "tuffcli — capability lifecycle manager for coding agents"
+packages = [
+    { name = "tuffcli", registry = "crates.io", favorite = true },
+    { name = "tuffcli", registry = "pypi", favorite = true },
+]
+
 [projects.textual]
 description = "Textual — Python TUI framework"
 packages = [

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
+from textual import on
 
 from pkgwatch import derived as derive
 from pkgwatch.api.base import create_adapter
@@ -22,9 +24,12 @@ from pkgwatch.history import (
 from pkgwatch.models import (
     DerivedPackageData,
     FetchError,
+    InstallBreakdown,
+    InstallMethod,
     PackageInfo,
     PackageRef,
     Project,
+    Registry,
 )
 from pkgwatch.ui.widgets.detail import DetailView
 from pkgwatch.ui.widgets.header_bar import PkgWatchHeader
@@ -73,6 +78,10 @@ class PkgWatch(App[None]):
         return self._project
 
     @property
+    def visible_packages(self) -> list[PackageRef]:
+        return _logical_package_refs(self._project.packages)
+
+    @property
     def refreshed_at(self) -> datetime | None:
         return self._refreshed_at
 
@@ -81,13 +90,51 @@ class PkgWatch(App[None]):
         return self._package_data
 
     def get_package_info(self, ref: PackageRef) -> PackageInfo | None:
-        return self._package_data.get(_package_key(ref))
+        refs = self._matching_refs(ref)
+        infos = [
+            self._package_data[_package_key(r)]
+            for r in refs
+            if _package_key(r) in self._package_data
+        ]
+        if len(infos) <= 1:
+            return infos[0] if infos else None
+        return _combine_package_infos(ref, infos)
 
     def get_package_error(self, ref: PackageRef) -> FetchError | None:
-        return self._package_errors.get(_package_key(ref))
+        for r in self._matching_refs(ref):
+            error = self._package_errors.get(_package_key(r))
+            if error:
+                return error
+        return None
 
     def get_derived(self, ref: PackageRef) -> DerivedPackageData | None:
-        return self._derived_data.get(_package_key(ref))
+        refs = self._matching_refs(ref)
+        derived_items = [
+            self._derived_data[_package_key(r)]
+            for r in refs
+            if _package_key(r) in self._derived_data
+        ]
+        if not derived_items:
+            return None
+        if len(derived_items) == 1:
+            return derived_items[0]
+
+        info = self.get_package_info(ref)
+        if info is None:
+            return None
+        combined = derive.compute_all(info)
+        combined.install_breakdown = _combine_install_breakdown(
+            [
+                self._package_data[_package_key(r)]
+                for r in refs
+                if _package_key(r) in self._package_data
+            ]
+        )
+        return combined
+
+    def _matching_refs(self, ref: PackageRef) -> list[PackageRef]:
+        target = ref.name.lower()
+        return [r for r in self._project.packages if r.name.lower() == target] or [ref]
 
     def compose(self) -> ComposeResult:
         yield PkgWatchHeader()
@@ -98,7 +145,7 @@ class PkgWatch(App[None]):
         yield PkgWatchFooter(self._config_path)
 
     def on_mount(self) -> None:
-        self.theme = "tokyo-night"
+        self.theme = "textual-dark"
         self._select_default_package()
         self._start_data_fetch()
 
@@ -123,10 +170,11 @@ class PkgWatch(App[None]):
     # ── navigation ──
 
     def _select_default_package(self) -> None:
-        if not self._project.packages:
+        packages = self.visible_packages
+        if not packages:
             return
-        favorite = next((r for r in self._project.packages if r.favorite), None)
-        self.navigate_to_package(favorite or self._project.packages[0])
+        favorite = next((r for r in packages if r.favorite), None)
+        self.navigate_to_package(favorite or packages[0])
 
     def navigate_to_package(self, ref: PackageRef) -> None:
         self._selected_ref = ref
@@ -135,6 +183,10 @@ class PkgWatch(App[None]):
             self.query_one(Sidebar).select_package(ref)
         except Exception:
             pass
+
+    @on(Sidebar.PackageSelected)
+    def _on_package_selected(self, event: Sidebar.PackageSelected) -> None:
+        self.navigate_to_package(event.ref)
 
     def _render_selected(self) -> None:
         if self._selected_ref is None:
@@ -264,10 +316,100 @@ class PkgWatch(App[None]):
 
         # Re-render the detail view when its package's data lands.
         if self._selected_ref is not None and (
-            changed_ref is None or _package_key(changed_ref) == _package_key(self._selected_ref)
+            changed_ref is None
+            or changed_ref.name.lower() == self._selected_ref.name.lower()
         ):
             self._render_selected()
 
 
 def _package_key(ref: PackageRef) -> str:
     return f"{ref.registry.value}:{ref.name}"
+
+
+def _logical_package_refs(refs: list[PackageRef]) -> list[PackageRef]:
+    grouped: dict[str, PackageRef] = {}
+    for ref in refs:
+        key = ref.name.lower()
+        current = grouped.get(key)
+        if current is None:
+            grouped[key] = replace(ref)
+        elif ref.favorite and not current.favorite:
+            current.favorite = True
+    return list(grouped.values())
+
+
+def _combine_package_infos(ref: PackageRef, infos: list[PackageInfo]) -> PackageInfo:
+    primary = _pick_primary_info(infos)
+    combined = replace(primary)
+    combined.name = ref.name
+    combined.source_registries = _unique_registries(info.registry for info in infos)
+    combined.total_downloads = sum(info.total_downloads for info in infos)
+    combined.download_counts = replace(primary.download_counts)
+    combined.download_counts.today = sum(info.download_counts.today for info in infos)
+    combined.download_counts.week = sum(info.download_counts.week for info in infos)
+    combined.download_counts.month = sum(info.download_counts.month for info in infos)
+    combined.download_trend = _combine_download_trends(infos)
+
+    best_github = next((info.github_stats for info in infos if info.github_stats.resolved), None)
+    if best_github is not None:
+        combined.github_stats = best_github
+
+    crates_info = next((info for info in infos if info.registry is Registry.CRATES), None)
+    if crates_info is not None:
+        combined.reverse_dependencies = crates_info.reverse_dependencies
+
+    return combined
+
+
+def _pick_primary_info(infos: list[PackageInfo]) -> PackageInfo:
+    for registry in (Registry.CRATES, Registry.PYPI, Registry.NPM):
+        for info in infos:
+            if info.registry is registry and info.latest_version:
+                return info
+    return infos[0]
+
+
+def _unique_registries(registries) -> list[Registry]:
+    seen: set[Registry] = set()
+    out: list[Registry] = []
+    for registry in registries:
+        if registry not in seen:
+            seen.add(registry)
+            out.append(registry)
+    return out
+
+
+def _combine_download_trends(infos: list[PackageInfo]):
+    from pkgwatch.models import DownloadTrendPoint
+
+    counts: dict[str, int] = {}
+    for info in infos:
+        for point in info.download_trend:
+            counts[point.date] = counts.get(point.date, 0) + point.count
+    return [DownloadTrendPoint(date=date, count=counts[date]) for date in sorted(counts)]
+
+
+def _combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
+    totals: dict[str, int] = {}
+    for info in infos:
+        label = info.registry.install_command
+        count = info.download_counts.month or sum(p.count for p in info.download_trend[-30:])
+        if count == 0:
+            count = info.total_downloads
+        totals[label] = totals.get(label, 0) + count
+
+    total = sum(totals.values())
+    if total <= 0:
+        return InstallBreakdown(
+            methods=[],
+            caption="No 30-day install/download data available across registries.",
+        )
+
+    methods = [
+        InstallMethod(label=label, count=count, percent=count / total * 100)
+        for label, count in sorted(totals.items(), key=lambda item: item[1], reverse=True)
+    ]
+    return InstallBreakdown(
+        methods=methods,
+        caption="Combined from registry 30-day download totals.",
+    )

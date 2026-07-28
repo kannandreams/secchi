@@ -30,6 +30,10 @@ def _downloads_source(registry: Registry) -> str:
     }[registry]
 
 
+def _source_registries(info: PackageInfo) -> list[Registry]:
+    return info.source_registries or [info.registry]
+
+
 class OverviewTab(Vertical):
     """Composes all overview panels into three horizontal rows."""
 
@@ -57,9 +61,15 @@ class DownloadsPanel(Panel):
     def __init__(self, info: PackageInfo, derived: DerivedPackageData) -> None:
         self._info = info
         self._derived = derived
+        registries = _source_registries(info)
+        caption = (
+            "Source: combined registry downloads"
+            if len(registries) > 1
+            else _downloads_source(info.registry)
+        )
         super().__init__(
             "DOWNLOADS (last 30 days)",
-            caption=_downloads_source(info.registry),
+            caption=caption,
         )
 
     def compose_body(self) -> list[Widget]:
@@ -171,7 +181,7 @@ class MetadataPanel(Panel):
         self._info = info
         super().__init__(
             "METADATA",
-            caption=f"Source: GitHub, {info.registry.display_name}",
+            caption=f"Source: GitHub, {', '.join(r.display_name for r in _source_registries(info))}",
         )
 
     def compose_body(self) -> list[Widget]:
@@ -233,7 +243,7 @@ class ActivityPanel(Panel):
         for ev in self._events[:8]:
             icon = ev.kind.icon
             label = ev.kind.label
-            ref = f"[$accent]{ev.ref}[/]: " if ev.ref else ""
+            ref = f"[blue]{ev.ref}[/]: " if ev.ref else ""
             title = ev.title if len(ev.title) <= 46 else ev.title[:45] + "…"
             age = format_age(ev.timestamp)
             rows.append(
@@ -255,9 +265,8 @@ class LinksPanel(Panel):
         rows: list[tuple[str, str]] = []
         if info.repository_url:
             rows.append(("Repository", info.repository_url))
-        registry_url = self._registry_url()
-        if registry_url:
-            rows.append((info.registry.display_name, registry_url))
+        for registry in _source_registries(info):
+            rows.append((registry.display_name, self._registry_url(registry)))
         if info.documentation_url:
             rows.append(("Docs", info.documentation_url))
         if info.homepage and info.homepage not in (info.repository_url, info.documentation_url):
@@ -267,17 +276,17 @@ class LinksPanel(Panel):
         widgets: list[Widget] = []
         for label, url in rows:
             widgets.append(
-                Static(f"[dim]{label:<12}[/] [$accent]{_short_url(url)}[/]")
+                Static(f"[dim]{label:<12}[/] [blue]{_short_url(url)}[/]")
             )
         return widgets
 
-    def _registry_url(self) -> str:
+    def _registry_url(self, registry: Registry) -> str:
         name = self._info.name
         return {
             Registry.PYPI: f"https://pypi.org/project/{name}/",
             Registry.CRATES: f"https://crates.io/crates/{name}",
             Registry.NPM: f"https://www.npmjs.com/package/{name}",
-        }[self._info.registry]
+        }[registry]
 
 
 def _short_url(url: str) -> str:

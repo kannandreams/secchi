@@ -220,6 +220,7 @@ class PackageInfo:
     """Full package information fetched from the registry."""
     name: str
     registry: Registry
+    source_registries: list[Registry] = field(default_factory=list)
     description: str = ""
     author: str = ""
     license: str = ""

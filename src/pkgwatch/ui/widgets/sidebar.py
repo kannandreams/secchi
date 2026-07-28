@@ -83,11 +83,12 @@ class Sidebar(VerticalScroll):
         if not hasattr(app, "project"):
             return
         project: Project = app.project
+        packages = getattr(app, "visible_packages", project.packages)
 
         self.mount(Static("PACKAGES", classes="sidebar-title"))
 
-        favorites = [r for r in project.packages if r.favorite]
-        all_pkgs = project.packages
+        favorites = [r for r in packages if r.favorite]
+        all_pkgs = packages
 
         if favorites:
             self.mount(

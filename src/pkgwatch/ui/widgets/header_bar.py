@@ -14,7 +14,7 @@ class PkgWatchHeader(Horizontal):
 
     def compose(self) -> ComposeResult:
         left = (
-            f"[b $accent]pkgwatch[/]  [dim]│[/]  Package Intelligence"
+            f"[b green]pkgwatch[/]  [dim]│[/]  Package Intelligence"
             f"   [dim]v{__version__}[/]"
         )
         right = (

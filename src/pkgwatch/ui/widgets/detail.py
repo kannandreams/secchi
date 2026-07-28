@@ -61,8 +61,10 @@ class DetailView(Container):
         if not self._info:
             return
         info = self._info
+        registries = info.source_registries or [info.registry]
         with Horizontal(id="badge-row"):
-            yield Badge(info.registry.language, color="yellow")
+            for registry in registries:
+                yield Badge(registry.language, color="yellow")
             if info.license:
                 yield Badge(info.license, color="magenta")
             if info.package_kind:
@@ -210,7 +212,7 @@ class DetailView(Container):
         events = derived.activity if derived else []
         lines: list[str] = []
         for ev in events:
-            ref = f"[$accent]{ev.ref}[/]: " if ev.ref else ""
+            ref = f"[blue]{ev.ref}[/]: " if ev.ref else ""
             title = ev.title if len(ev.title) <= 70 else ev.title[:69] + "…"
             lines.append(
                 f"[green]{ev.kind.icon}[/] [b]{ev.kind.label:<12}[/] {ref}{title}"

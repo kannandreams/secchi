@@ -17,7 +17,7 @@ class Badge(Static):
         color: str = "",
     ) -> None:
         if variant == "link" and url:
-            content = f"[$accent]{text}[/]"
+            content = f"[cyan]{text}[/]"
         elif color:
             content = f"[{color}]{text}[/{color}]"
         else:

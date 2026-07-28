@@ -1,7 +1,7 @@
-/* pkgwatch — package-intelligence dashboard (Tokyo Night) */
+/* pkgwatch — package-intelligence dashboard */
 
 Screen {
-    background: $background;
+    background: #000000;
     layers: base overlay;
 }
 
@@ -10,8 +10,9 @@ Screen {
 PkgWatchHeader {
     dock: top;
     height: 1;
-    background: $primary-darken-3;
-    color: $text;
+    background: #050505;
+    color: #e6e6e6;
+    border-bottom: solid #444444;
 }
 
 PkgWatchHeader #header-left {
@@ -26,7 +27,7 @@ PkgWatchHeader #header-right {
     height: 1;
     content-align: right middle;
     padding: 0 1;
-    color: $text-muted;
+    color: #b8b8b8;
 }
 
 /* ── Custom footer/status bar ── */
@@ -34,8 +35,9 @@ PkgWatchHeader #header-right {
 PkgWatchFooter {
     dock: bottom;
     height: 1;
-    background: $primary-darken-3;
-    color: $text-muted;
+    background: #050505;
+    color: #b8b8b8;
+    border-top: solid #444444;
 }
 
 PkgWatchFooter #footer-left {
@@ -57,25 +59,25 @@ PkgWatchFooter #footer-right {
 Sidebar {
     width: 28;
     height: 100%;
-    background: $panel-darken-1;
-    border-right: tall $primary-darken-2;
+    background: #050505;
+    border-right: solid #444444;
     padding: 0 1;
     overflow-y: auto;
 }
 
 Sidebar:focus {
-    border-right: tall $primary;
+    border-right: solid #1e90ff;
 }
 
 Sidebar .sidebar-title {
     text-style: bold;
-    color: $accent;
+    color: #1e90ff;
     padding: 1 0 0 0;
     width: 100%;
 }
 
 Sidebar .sidebar-section {
-    color: $text-muted;
+    color: #b8b8b8;
     text-style: bold;
     padding: 1 0 0 0;
     width: 100%;
@@ -85,33 +87,33 @@ SidebarItem {
     padding: 0 1;
     width: 100%;
     height: 1;
-    color: $text;
+    color: #e6e6e6;
 }
 
 SidebarItem:hover {
-    background: $boost;
+    background: #121212;
 }
 
 .sidebar-item--selected {
-    background: $primary-darken-1;
+    background: #0057b8;
     text-style: bold;
 }
 
 #shortcuts-box {
     height: auto;
-    border-top: tall $primary-darken-2;
+    border-top: solid #444444;
     margin: 1 0 0 0;
     padding: 1 0 0 0;
 }
 
 .shortcuts-title {
-    color: $text-muted;
+    color: #b8b8b8;
     text-style: bold;
     width: 100%;
 }
 
 .shortcuts-body {
-    color: $text-muted;
+    color: #b8b8b8;
     width: 100%;
 }
 
@@ -120,7 +122,7 @@ SidebarItem:hover {
 #main-content {
     width: 1fr;
     height: 100%;
-    background: $background;
+    background: #000000;
 }
 
 #detail-view {
@@ -152,13 +154,13 @@ SidebarItem:hover {
     width: auto;
     padding: 0 1;
     margin: 0 1 0 0;
-    border: round $primary-darken-2;
-    color: $text;
+    border: solid #444444;
+    color: #e6e6e6;
     content-align: center middle;
 }
 
 .badge--link {
-    color: $accent;
+    color: #00d7ff;
 }
 
 /* ── Stat cards ── */
@@ -173,8 +175,8 @@ SidebarItem:hover {
     height: 5;
     padding: 0 1;
     margin: 0 1 0 0;
-    border: round $primary-darken-2;
-    background: $surface;
+    border: solid #444444;
+    background: #050505;
 }
 
 /* ── Tabs ── */
@@ -208,7 +210,7 @@ TabPane {
 
 .pane-heading {
     height: auto;
-    color: $accent;
+    color: #1e90ff;
     text-style: bold;
 }
 
@@ -230,11 +232,11 @@ TabPane {
 Panel {
     width: 1fr;
     height: 1fr;
-    border: round $primary-darken-2;
-    background: $surface;
+    border: solid #444444;
+    background: #050505;
     padding: 0 1;
     margin: 0 1 0 0;
-    border-title-color: $accent;
+    border-title-color: #1e90ff;
     border-title-style: bold;
 }
 
@@ -248,7 +250,7 @@ Panel.panel--wide {
 
 .panel-caption {
     height: 1;
-    color: $text-muted;
+    color: #b8b8b8;
     text-style: italic;
     dock: bottom;
 }
@@ -265,42 +267,42 @@ Panel.panel--wide {
 /* ── Tables ── */
 
 DataTable {
-    background: $surface;
+    background: #050505;
     height: auto;
 }
 
 DataTable > .datatable--header {
-    background: $primary-darken-2;
-    color: $text;
+    background: #111111;
+    color: #e6e6e6;
     text-style: bold;
 }
 
 /* ── Error / loading ── */
 
 #error-view {
-    color: $error;
+    color: #ff5f5f;
     padding: 2 2;
-    border: round $error;
+    border: solid #ff5f5f;
 }
 
 #loading-view {
     padding: 2 2;
-    color: $text-muted;
+    color: #b8b8b8;
 }
 
 /* ── Modals ── */
 
 SearchScreen {
     align: center middle;
-    background: $background 60%;
+    background: #000000 60%;
 }
 
 #search-box {
     width: 70;
     height: auto;
     max-height: 80%;
-    background: $surface;
-    border: round $primary;
+    background: #050505;
+    border: solid #1e90ff;
     padding: 1 2;
 }
 
@@ -308,19 +310,19 @@ SearchScreen {
     height: auto;
     max-height: 18;
     margin: 1 0 0 0;
-    background: $surface;
+    background: #050505;
 }
 
 HelpScreen {
     align: center middle;
-    background: $background 60%;
+    background: #000000 60%;
 }
 
 #help-box {
     width: 60;
     height: auto;
-    background: $surface;
-    border: round $primary;
+    background: #050505;
+    border: solid #1e90ff;
     padding: 1 2;
 }
 
@@ -331,19 +333,19 @@ HelpScreen {
 
 .modal-title {
     text-style: bold;
-    color: $accent;
+    color: #1e90ff;
     width: 100%;
 }
 
 .modal-hint {
     width: 100%;
-    color: $text-muted;
+    color: #b8b8b8;
 }
 
 /* ── Scrollbars ── */
 
 Scrollbar {
-    scrollbar-color: $primary-darken-2;
-    scrollbar-color-hover: $primary;
+    scrollbar-color: #444444;
+    scrollbar-color-hover: #1e90ff;
     scrollbar-size-vertical: 1;
 }

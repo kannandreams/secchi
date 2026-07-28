@@ -48,7 +48,7 @@ class SearchScreen(ModalScreen[PackageRef | None]):
         results = self.query_one("#search-results", OptionList)
         results.clear_options()
         q = query.lower().strip()
-        for ref in self._project.packages:
+        for ref in self._visible_packages():
             if q and q not in ref.name.lower():
                 continue
             star = "★ " if ref.favorite else "  "
@@ -78,11 +78,22 @@ class SearchScreen(ModalScreen[PackageRef | None]):
         if not key:
             self.dismiss(None)
             return
-        for ref in self._project.packages:
+        for ref in self._visible_packages():
             if self._key(ref) == key:
                 self.dismiss(ref)
                 return
         self.dismiss(None)
+
+    def _visible_packages(self) -> list[PackageRef]:
+        seen: dict[str, PackageRef] = {}
+        for ref in self._project.packages:
+            key = ref.name.lower()
+            current = seen.get(key)
+            if current is None:
+                seen[key] = PackageRef(ref.name, ref.registry, ref.favorite)
+            elif ref.favorite and not current.favorite:
+                current.favorite = True
+        return list(seen.values())
 
     def action_dismiss_screen(self) -> None:
         self.dismiss(None)
@@ -94,7 +105,7 @@ class HelpScreen(ModalScreen[None]):
     BINDINGS = [Binding("escape,q,question_mark", "dismiss_screen", "Close", show=False)]
 
     def compose(self) -> ComposeResult:
-        rows = "\n".join(f"[b $accent]{k:<12}[/] {v}" for k, v in _SHORTCUTS)
+        rows = "\n".join(f"[b blue]{k:<12}[/] {v}" for k, v in _SHORTCUTS)
         with Vertical(id="help-box"):
             yield Static("Keyboard Shortcuts", classes="modal-title")
             yield Static(rows, id="help-body")
