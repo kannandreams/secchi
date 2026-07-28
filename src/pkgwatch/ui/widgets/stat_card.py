@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+from textual.app import ComposeResult
+from textual.containers import Vertical
 from textual.widgets import Static
 
+from pkgwatch.ui import palette
 
-class StatCard(Static):
+
+class StatCard(Vertical):
     """A compact stat card: label on top, value below, optional delta subline.
 
     Delta color convention is metric-specific and set by the caller via
@@ -27,8 +31,13 @@ class StatCard(Static):
         self._delta = delta
         self._value_color = value_color
         self._delta_color = delta_color
-        super().__init__(self._content())
+        super().__init__()
         self.add_class("stat-card")
+
+    def compose(self) -> ComposeResult:
+        yield Static(self._label.upper(), classes="stat-card-label")
+        yield Static(self._value_markup(), classes="stat-card-value")
+        yield Static(self._delta_markup(), classes="stat-card-delta")
 
     def set(
         self,
@@ -43,16 +52,17 @@ class StatCard(Static):
         self._value_color = value_color
         self._delta_color = delta_color
         if self.is_mounted:
-            self.update(self._content())
+            self.query_one(".stat-card-value", Static).update(self._value_markup())
+            self.query_one(".stat-card-delta", Static).update(self._delta_markup())
 
-    def _content(self) -> str:
-        label = f"[dim]{self._label}[/dim]"
+    def _value_markup(self) -> str:
         if self._value_color:
-            value = f"[b {self._value_color}]{self._value}[/]"
+            return f"[bold {self._value_color}]{self._value}[/]"
         else:
-            value = f"[b]{self._value}[/b]"
-        delta = ""
+            return f"[bold {palette.GREEN}]{self._value}[/]"
+
+    def _delta_markup(self) -> str:
         if self._delta:
             color = self._delta_color or "dim"
-            delta = f"\n[{color}]{self._delta}[/]"
-        return f"{label}\n{value}{delta}"
+            return f"[{color}]{self._delta}[/]"
+        return ""

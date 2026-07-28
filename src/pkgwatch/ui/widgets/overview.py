@@ -10,6 +10,7 @@ from textual_plotext import PlotextPlot
 
 from pkgwatch.derived import compute_downloads_30d
 from pkgwatch.models import DerivedPackageData, PackageInfo, Registry
+from pkgwatch.ui import palette
 from pkgwatch.ui.widgets.bar import render_bar
 from pkgwatch.ui.widgets.panel import Panel
 from pkgwatch.utils import (
@@ -47,11 +48,11 @@ class OverviewTab(Vertical):
         with Horizontal(classes="overview-row"):
             yield DownloadsPanel(info, derived)
             yield ReleasesPanel(info, derived)
-            yield DependenciesPanel(info, derived)
+            yield HealthScorePanel(info, derived)
         with Horizontal(classes="overview-row"):
             yield InstallMethodsPanel(info, derived)
             yield MetadataPanel(info, derived)
-            yield HealthScorePanel(info, derived)
+            yield DependenciesPanel(info, derived)
         with Horizontal(classes="overview-row overview-row--bottom"):
             yield ActivityPanel(info, derived, classes="panel--wide")
             yield LinksPanel(info, derived)
@@ -91,6 +92,8 @@ class DownloadsPanel(Panel):
             plt.clear_data()
             plt.plot([p.count for p in trend], marker="braille")
             plt.theme("clear")
+            # Keep the grid subordinate to the green download trend.
+            plt.grid(False)
             chart.refresh()
         except Exception:
             pass
@@ -112,7 +115,7 @@ class ReleasesPanel(Panel):
             age = format_age_short(ver.release_date)
             version = ver.version if len(ver.version) <= 8 else ver.version[:7] + "…"
             line = (
-                f"[green]{version:<8}[/] [dim]{age:>4}[/] "
+                f"[{palette.GREEN}]{version:<8}[/] [dim]{age:>4}[/] "
                 f"{bar} [b]{pct:4.1f}%[/]"
             )
             rows.append(Static(line))
@@ -164,13 +167,15 @@ class InstallMethodsPanel(Panel):
         if not methods:
             return [Static("[dim]No install data available.[/]")]
         rows: list[Widget] = []
+        max_count_width = max(len(shorten_number(m.count)) for m in methods)
         for m in methods:
-            bar = render_bar(m.percent / 100, width=8)
-            label = m.label if len(m.label) <= 18 else m.label[:17] + "…"
+            bar = render_bar(m.percent / 100, width=14)
+            label = m.label if len(m.label) <= 15 else m.label[:14] + "…"
+            count = shorten_number(m.count)
             rows.append(
                 Static(
-                    f"{label:<18}\n  {bar} "
-                    f"[b]{shorten_number(m.count)}[/] [dim]({m.percent:.0f}%)[/]"
+                    f"{label:<15}  {bar:<14}  "
+                    f"[b]{count:>{max_count_width}}[/] [dim]({m.percent:>4.1f}%)[/]"
                 )
             )
         return rows
@@ -213,7 +218,7 @@ class HealthScorePanel(Panel):
     def __init__(self, info: PackageInfo, derived: DerivedPackageData) -> None:
         self._health = derived.health_score
         super().__init__(
-            f"HEALTH SCORE ({self._health.total}/100)",
+            f"HEALTH SCORE ({self._health.total} / 100)",
             caption="Derived from multiple signals",
         )
 
@@ -221,10 +226,12 @@ class HealthScorePanel(Panel):
         rows: list[Widget] = []
         for sub in self._health.sub_scores:
             frac = sub.score / sub.max_score if sub.max_score else 0
-            color = "green" if frac >= 0.75 else "yellow" if frac >= 0.5 else "red"
-            bar = render_bar(frac, width=10, color=color)
+            bar = _muted_block_chain(frac, segments=8)
             rows.append(
-                Static(f"[dim]{sub.label:<13}[/] [b]{sub.score:>2}/{sub.max_score}[/] {bar}")
+                Static(
+                    f"[dim]{sub.label:<13}[/] "
+                    f"[dim]{sub.score:>2}/{sub.max_score}[/] {bar}"
+                )
             )
         return rows
 
@@ -243,12 +250,12 @@ class ActivityPanel(Panel):
         for ev in self._events[:8]:
             icon = ev.kind.icon
             label = ev.kind.label
-            ref = f"[blue]{ev.ref}[/]: " if ev.ref else ""
+            ref = f"[{palette.BLUE}]{ev.ref}[/]: " if ev.ref else ""
             title = ev.title if len(ev.title) <= 46 else ev.title[:45] + "…"
             age = format_age(ev.timestamp)
             rows.append(
                 Static(
-                    f"[green]{icon}[/] [b]{label:<12}[/] {ref}{title}"
+                    f"[{palette.GREEN}]{icon}[/] [b]{label:<12}[/] {ref}{title}"
                     f"  [dim]{age}[/]"
                 )
             )
@@ -276,7 +283,7 @@ class LinksPanel(Panel):
         widgets: list[Widget] = []
         for label, url in rows:
             widgets.append(
-                Static(f"[dim]{label:<12}[/] [blue]{_short_url(url)}[/]")
+                Static(f"[dim]{label:<12}[/] [{palette.BLUE}]{_short_url(url)}[/]")
             )
         return widgets
 
@@ -291,3 +298,13 @@ class LinksPanel(Panel):
 
 def _short_url(url: str) -> str:
     return url.replace("https://", "").replace("http://", "").rstrip("/")
+
+
+def _muted_block_chain(fraction: float, segments: int = 8) -> str:
+    fraction = max(0.0, min(1.0, fraction))
+    filled = round(fraction * segments)
+    blocks = []
+    for i in range(segments):
+        style = palette.GREEN if i < filled else palette.BORDER_SECONDARY
+        blocks.append(f"[{style}]■[/]")
+    return " ".join(blocks)

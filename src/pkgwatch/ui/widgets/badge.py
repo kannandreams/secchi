@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from textual.widgets import Static
 
+from pkgwatch.ui import palette
+
 
 class Badge(Static):
     """A compact bordered chip. `variant='link'` renders a clickable URL."""
@@ -17,7 +19,7 @@ class Badge(Static):
         color: str = "",
     ) -> None:
         if variant == "link" and url:
-            content = f"[cyan]{text}[/]"
+            content = f"[{palette.CYAN}]{text}[/]"
         elif color:
             content = f"[{color}]{text}[/{color}]"
         else:

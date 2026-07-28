@@ -10,6 +10,7 @@ from textual.containers import Horizontal
 from textual.widgets import Static
 
 from pkgwatch import __version__
+from pkgwatch.ui import palette
 
 
 def format_path(path: Path | None) -> str:
@@ -57,7 +58,7 @@ class PkgWatchFooter(Horizontal):
         age = _age_text(refreshed_at)
         try:
             self.query_one("#footer-left", Static).update(
-                f"pkgwatch {__version__}   [dim]│[/]   Data updated: {age}"
+                f"[{palette.GREEN}]secchi[/] {__version__}   [dim]│[/]   Data updated: {age}"
             )
         except Exception:
             pass

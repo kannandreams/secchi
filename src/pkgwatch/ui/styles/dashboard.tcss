@@ -9,35 +9,48 @@ Screen {
 
 PkgWatchHeader {
     dock: top;
-    height: 1;
-    background: #050505;
-    color: #e6e6e6;
-    border-bottom: solid #444444;
+    height: 3;
+    background: #020202;
+    color: #E5E7EB;
+    border-bottom: solid #3A3A3A;
 }
 
-PkgWatchHeader #header-left {
-    width: 1fr;
-    height: 1;
+PkgWatchHeader #header-brand {
+    width: 12;
+    height: 3;
     content-align: left middle;
     padding: 0 1;
+    margin: 0 1 0 0;
+    background: #020202;
+    text-style: bold;
+}
+
+PkgWatchHeader #header-product {
+    width: 1fr;
+    height: 3;
+    content-align: left middle;
+    padding: 0 1;
+    color: #E5E7EB;
+    text-style: bold;
 }
 
 PkgWatchHeader #header-right {
     width: auto;
-    height: 1;
+    height: 3;
     content-align: right middle;
     padding: 0 1;
-    color: #b8b8b8;
+    background: #020202;
+    color: #9CA3AF;
 }
 
 /* ── Custom footer/status bar ── */
 
 PkgWatchFooter {
     dock: bottom;
-    height: 1;
-    background: #050505;
-    color: #b8b8b8;
-    border-top: solid #444444;
+    height: 3;
+    background: #0F0F0F;
+    color: #9CA3AF;
+    border-top: solid #3A3A3A;
 }
 
 PkgWatchFooter #footer-left {
@@ -59,25 +72,25 @@ PkgWatchFooter #footer-right {
 Sidebar {
     width: 28;
     height: 100%;
-    background: #050505;
-    border-right: solid #444444;
+    background: #020202;
+    border-right: solid #3A3A3A;
     padding: 0 1;
     overflow-y: auto;
 }
 
 Sidebar:focus {
-    border-right: solid #1e90ff;
+    border-right: solid #3A3A3A;
 }
 
 Sidebar .sidebar-title {
     text-style: bold;
-    color: #1e90ff;
+    color: #3B82F6;
     padding: 1 0 0 0;
     width: 100%;
 }
 
 Sidebar .sidebar-section {
-    color: #b8b8b8;
+    color: #9CA3AF;
     text-style: bold;
     padding: 1 0 0 0;
     width: 100%;
@@ -87,34 +100,17 @@ SidebarItem {
     padding: 0 1;
     width: 100%;
     height: 1;
-    color: #e6e6e6;
+    color: #E5E7EB;
 }
 
 SidebarItem:hover {
-    background: #121212;
+    background: #101010;
 }
 
 .sidebar-item--selected {
-    background: #0057b8;
+    background: #1D4ED8;
+    color: #FFFFFF;
     text-style: bold;
-}
-
-#shortcuts-box {
-    height: auto;
-    border-top: solid #444444;
-    margin: 1 0 0 0;
-    padding: 1 0 0 0;
-}
-
-.shortcuts-title {
-    color: #b8b8b8;
-    text-style: bold;
-    width: 100%;
-}
-
-.shortcuts-body {
-    color: #b8b8b8;
-    width: 100%;
 }
 
 /* ── Main content ── */
@@ -136,47 +132,92 @@ SidebarItem:hover {
     padding: 1 2;
 }
 
+#summary-row {
+    height: 6;
+    padding: 0 1 1 0;
+}
+
+#project-card {
+    width: 4fr;
+    height: 5;
+    padding: 1;
+    margin: 0 2 0 0;
+    border: solid #3A3A3A;
+    background: #050505;
+}
+
 #detail-header {
-    height: auto;
-    padding: 1 0 0 0;
+    height: 2;
+    padding: 0;
     text-style: bold;
 }
 
 /* ── Badges ── */
 
 #badge-row {
-    height: 3;
-    padding: 0 0 1 0;
+    height: 1;
+    padding: 0;
+}
+
+.source-icons {
+    width: auto;
+    height: 1;
+    margin: 0 1 0 0;
+    color: #E5E7EB;
+}
+
+#website-link {
+    height: 1;
+    padding: 0;
 }
 
 .badge {
-    height: 3;
+    height: 1;
     width: auto;
     padding: 0 1;
     margin: 0 1 0 0;
-    border: solid #444444;
-    color: #e6e6e6;
+    border: solid #3A3A3A;
+    color: #E5E7EB;
     content-align: center middle;
 }
 
 .badge--link {
-    color: #00d7ff;
+    color: #22D3EE;
 }
 
 /* ── Stat cards ── */
 
 #stat-cards {
+    width: 3fr;
     height: 5;
-    padding: 0 0 1 0;
+    padding: 0;
 }
 
 .stat-card {
     width: 1fr;
     height: 5;
-    padding: 0 1;
+    padding: 1;
     margin: 0 1 0 0;
-    border: solid #444444;
+    border: solid #3A3A3A;
     background: #050505;
+}
+
+.stat-card-label {
+    height: 1;
+    color: #9CA3AF;
+    text-style: bold;
+}
+
+.stat-card-value {
+    height: 2;
+    color: #39D353;
+    text-style: bold;
+    content-align: left middle;
+}
+
+.stat-card-delta {
+    height: 1;
+    color: #9CA3AF;
 }
 
 /* ── Tabs ── */
@@ -210,7 +251,7 @@ TabPane {
 
 .pane-heading {
     height: auto;
-    color: #1e90ff;
+    color: #3B82F6;
     text-style: bold;
 }
 
@@ -222,7 +263,7 @@ TabPane {
 
 .overview-row {
     height: 14;
-    padding: 0 0 1 0;
+    padding: 0 1 1 0;
 }
 
 .overview-row--bottom {
@@ -232,11 +273,11 @@ TabPane {
 Panel {
     width: 1fr;
     height: 1fr;
-    border: solid #444444;
+    border: solid #3A3A3A;
     background: #050505;
-    padding: 0 1;
+    padding: 1;
     margin: 0 1 0 0;
-    border-title-color: #1e90ff;
+    border-title-color: #3B82F6;
     border-title-style: bold;
 }
 
@@ -250,7 +291,7 @@ Panel.panel--wide {
 
 .panel-caption {
     height: 1;
-    color: #b8b8b8;
+    color: #9CA3AF;
     text-style: italic;
     dock: bottom;
 }
@@ -273,21 +314,21 @@ DataTable {
 
 DataTable > .datatable--header {
     background: #111111;
-    color: #e6e6e6;
+    color: #E5E7EB;
     text-style: bold;
 }
 
 /* ── Error / loading ── */
 
 #error-view {
-    color: #ff5f5f;
+    color: #EF4444;
     padding: 2 2;
-    border: solid #ff5f5f;
+    border: solid #3A3A3A;
 }
 
 #loading-view {
     padding: 2 2;
-    color: #b8b8b8;
+    color: #9CA3AF;
 }
 
 /* ── Modals ── */
@@ -302,7 +343,7 @@ SearchScreen {
     height: auto;
     max-height: 80%;
     background: #050505;
-    border: solid #1e90ff;
+    border: solid #3A3A3A;
     padding: 1 2;
 }
 
@@ -322,30 +363,32 @@ HelpScreen {
     width: 60;
     height: auto;
     background: #050505;
-    border: solid #1e90ff;
+    color: #E5E7EB;
+    border: solid #3A3A3A;
     padding: 1 2;
 }
 
 #help-body {
     height: auto;
     padding: 1 0;
+    color: #ffffff;
 }
 
 .modal-title {
     text-style: bold;
-    color: #1e90ff;
+    color: #ffffff;
     width: 100%;
 }
 
 .modal-hint {
     width: 100%;
-    color: #b8b8b8;
+    color: #ffffff;
 }
 
 /* ── Scrollbars ── */
 
 Scrollbar {
-    scrollbar-color: #444444;
-    scrollbar-color-hover: #1e90ff;
+    scrollbar-color: #3A3A3A;
+    scrollbar-color-hover: #3B82F6;
     scrollbar-size-vertical: 1;
 }

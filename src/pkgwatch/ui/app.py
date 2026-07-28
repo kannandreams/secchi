@@ -14,6 +14,7 @@ from textual import on
 
 from pkgwatch import derived as derive
 from pkgwatch.api.base import create_adapter
+from pkgwatch.cache import load_package_cache, save_package_cache
 from pkgwatch.history import (
     HistorySnapshot,
     append_snapshot,
@@ -72,6 +73,8 @@ class PkgWatch(App[None]):
         self._derived_data: dict[str, DerivedPackageData] = {}
         self._refreshed_at: datetime | None = None
         self._selected_ref: PackageRef | None = None
+        self._render_in_progress = False
+        self._render_again = False
 
     @property
     def project(self) -> Project:
@@ -146,13 +149,13 @@ class PkgWatch(App[None]):
 
     def on_mount(self) -> None:
         self.theme = "textual-dark"
-        self._select_default_package()
-        self._start_data_fetch()
+        self._select_default_package(render=False)
+        self._start_data_fetch(force=self._force_refresh)
 
     # ── actions ──
 
     def action_refresh(self) -> None:
-        self._start_data_fetch()
+        self._start_data_fetch(force=True)
 
     def action_toggle_filter(self) -> None:
         self.query_one(Sidebar).toggle_favorites_filter()
@@ -169,16 +172,17 @@ class PkgWatch(App[None]):
 
     # ── navigation ──
 
-    def _select_default_package(self) -> None:
+    def _select_default_package(self, *, render: bool = True) -> None:
         packages = self.visible_packages
         if not packages:
             return
         favorite = next((r for r in packages if r.favorite), None)
-        self.navigate_to_package(favorite or packages[0])
+        self.navigate_to_package(favorite or packages[0], render=render)
 
-    def navigate_to_package(self, ref: PackageRef) -> None:
+    def navigate_to_package(self, ref: PackageRef, *, render: bool = True) -> None:
         self._selected_ref = ref
-        self._render_selected()
+        if render:
+            self._render_selected()
         try:
             self.query_one(Sidebar).select_package(ref)
         except Exception:
@@ -191,27 +195,50 @@ class PkgWatch(App[None]):
     def _render_selected(self) -> None:
         if self._selected_ref is None:
             return
+        if self._render_in_progress:
+            self._render_again = True
+            return
+        self._render_in_progress = True
         self.run_worker(
-            self._render_selected_async(), exclusive=True, group="render"
+            self._render_selected_loop, exclusive=False, group="render"
         )
 
-    async def _render_selected_async(self) -> None:
-        ref = self._selected_ref
-        if ref is None:
-            return
+    async def _render_selected_loop(self) -> None:
         try:
-            main = self.query_one("#main-content", Container)
-        except Exception:
+            while True:
+                self._render_again = False
+                await self._render_selected_once()
+                if not self._render_again:
+                    break
+        except asyncio.CancelledError:
             return
-        info = self.get_package_info(ref)
-        error = self.get_package_error(ref)
-        derived = self.get_derived(ref)
-        await main.remove_children()
-        await main.mount(DetailView(ref, info, error, derived, parent_app=self))
+        finally:
+            self._render_in_progress = False
+            if self._render_again:
+                self._render_selected()
+
+    async def _render_selected_once(self) -> None:
+        try:
+            ref = self._selected_ref
+            if ref is None:
+                return
+            try:
+                main = self.query_one("#main-content", Container)
+            except Exception:
+                return
+            info = self.get_package_info(ref)
+            error = self.get_package_error(ref)
+            derived = self.get_derived(ref)
+            await main.remove_children()
+            if ref != self._selected_ref:
+                return
+            await main.mount(DetailView(ref, info, error, derived, parent_app=self))
+        except asyncio.CancelledError:
+            return
 
     # ── data fetching ──
 
-    def _start_data_fetch(self) -> None:
+    def _start_data_fetch(self, *, force: bool = False) -> None:
         self._refreshed_at = None
         for ref in self._project.packages:
             key = _package_key(ref)
@@ -219,19 +246,33 @@ class PkgWatch(App[None]):
                 self._package_data[key] = PackageInfo(
                     name=ref.name, registry=ref.registry
                 )
-        self.run_worker(self._fetch_all_packages(), exclusive=False)
+        self.run_worker(self._fetch_all_packages(force=force), exclusive=False)
 
-    async def _fetch_all_packages(self) -> None:
+    async def _fetch_all_packages(self, *, force: bool = False) -> None:
         for ref in self._project.packages:
-            await self._fetch_single_package(ref)
+            await self._fetch_single_package(ref, force=force)
 
-        self._refreshed_at = datetime.now(timezone.utc)
+        if self._refreshed_at is None:
+            self._refreshed_at = datetime.now(timezone.utc)
         self._notify_ui_update()
 
-    async def _fetch_single_package(self, ref: PackageRef) -> None:
+    async def _fetch_single_package(
+        self, ref: PackageRef, *, force: bool = False
+    ) -> None:
         adapter = create_adapter(ref.registry)
         key = _package_key(ref)
         try:
+            if not force:
+                cached = load_package_cache(key)
+                if cached is not None:
+                    info, fetched_at = cached
+                    self._package_data[key] = info
+                    self._package_errors.pop(key, None)
+                    self._derived_data[key] = derive.compute_all(info)
+                    self._refreshed_at = _oldest_time(self._refreshed_at, fetched_at)
+                    self._notify_ui_update(changed_ref=ref)
+                    return
+
             info = await adapter.fetch_package(ref.name)
 
             (
@@ -277,6 +318,9 @@ class PkgWatch(App[None]):
             self._package_data[key] = info
             self._package_errors.pop(key, None)
             self._derived_data[key] = derive.compute_all(info)
+            fetched_at = datetime.now(timezone.utc)
+            self._refreshed_at = _oldest_time(self._refreshed_at, fetched_at)
+            save_package_cache(key, info, fetched_at)
 
         except Exception as e:
             self._package_errors[key] = FetchError(
@@ -324,6 +368,12 @@ class PkgWatch(App[None]):
 
 def _package_key(ref: PackageRef) -> str:
     return f"{ref.registry.value}:{ref.name}"
+
+
+def _oldest_time(current: datetime | None, candidate: datetime) -> datetime:
+    if current is None:
+        return candidate
+    return current if current <= candidate else candidate
 
 
 def _logical_package_refs(refs: list[PackageRef]) -> list[PackageRef]:

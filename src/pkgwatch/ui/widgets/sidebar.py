@@ -1,24 +1,14 @@
-"""Sidebar — favorites + all packages, keyboard-navigable, with a shortcuts box."""
+"""Sidebar — favorites + all packages, keyboard-navigable."""
 
 from __future__ import annotations
 
 from textual.binding import Binding
-from textual.containers import Vertical, VerticalScroll
+from textual.containers import VerticalScroll
 from textual.message import Message
 from textual.widgets import Static
 
 from pkgwatch.models import PackageRef, Project
-
-
-_SHORTCUTS = [
-    ("↑/↓", "Navigate"),
-    ("Enter", "Select"),
-    ("/", "Search"),
-    ("r", "Refresh"),
-    ("f", "Filter"),
-    ("?", "Help"),
-    ("q", "Quit"),
-]
+from pkgwatch.ui import palette
 
 
 class SidebarItem(Static):
@@ -45,7 +35,7 @@ class SidebarItem(Static):
 
 
 class Sidebar(VerticalScroll):
-    """Left sidebar: PACKAGES (favorites + all) and a docked SHORTCUTS box."""
+    """Left sidebar: PACKAGES (favorites + all)."""
 
     can_focus = True
 
@@ -93,7 +83,7 @@ class Sidebar(VerticalScroll):
         if favorites:
             self.mount(
                 Static(
-                    f"[yellow]★ Favorites[/] [dim]({len(favorites)})[/]",
+                    f"[{palette.YELLOW}]★ Favorites[/] [dim]({len(favorites)})[/]",
                     classes="sidebar-section",
                 )
             )
@@ -109,16 +99,6 @@ class Sidebar(VerticalScroll):
         shown = favorites if self._favorites_only else all_pkgs
         for ref in shown:
             self._add_item(ref, key_suffix="all")
-
-        # docked shortcuts box
-        rows = "\n".join(f"[b]{k:<6}[/] {v}" for k, v in _SHORTCUTS)
-        self.mount(
-            Vertical(
-                Static("SHORTCUTS", classes="shortcuts-title"),
-                Static(rows, classes="shortcuts-body"),
-                id="shortcuts-box",
-            )
-        )
 
         self._refresh_versions()
         self._highlight()

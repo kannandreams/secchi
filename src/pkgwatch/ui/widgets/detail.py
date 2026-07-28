@@ -10,6 +10,7 @@ from textual.containers import Container, Horizontal, VerticalScroll
 from textual.widgets import DataTable, Markdown, Static, TabbedContent, TabPane
 
 from pkgwatch.models import DerivedPackageData, FetchError, PackageInfo, PackageRef
+from pkgwatch.ui import palette
 from pkgwatch.ui.widgets.badge import Badge
 from pkgwatch.ui.widgets.bar import render_bar
 from pkgwatch.ui.widgets.overview import OverviewTab
@@ -44,11 +45,9 @@ class DetailView(Container):
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(id="detail-content"):
-            yield Static(self._build_header(), id="detail-header")
-            yield from self._compose_badges()
+            yield from self._compose_summary_row()
 
             if self._info and self._info.latest_version:
-                yield from self._compose_stat_cards()
                 yield from self._compose_tabs()
             elif self._error:
                 yield Static(
@@ -57,22 +56,32 @@ class DetailView(Container):
             else:
                 yield Static("Loading…", id="loading-view")
 
+    def _compose_summary_row(self) -> ComposeResult:
+        with Horizontal(id="summary-row"):
+            with Container(id="project-card"):
+                yield Static(self._build_header(), id="detail-header")
+                yield from self._compose_badges()
+            if self._info and self._info.latest_version:
+                yield from self._compose_stat_cards()
+
     def _compose_badges(self) -> ComposeResult:
         if not self._info:
             return
         info = self._info
         registries = info.source_registries or [info.registry]
         with Horizontal(id="badge-row"):
-            for registry in registries:
-                yield Badge(registry.language, color="yellow")
+            icons = " ".join(_registry_icon_label(registry) for registry in registries)
+            if icons:
+                yield Static(icons, classes="source-icons")
             if info.license:
-                yield Badge(info.license, color="magenta")
+                yield Badge(info.license, color=palette.PURPLE)
             if info.package_kind:
-                yield Badge(info.package_kind, color="cyan")
-            if info.homepage:
-                yield Badge(
-                    _short_url(info.homepage), variant="link", url=info.homepage
-                )
+                yield Badge(info.package_kind, color=palette.CYAN)
+        if info.homepage:
+            yield Static(
+                f"[{palette.CYAN}]{_short_url(info.homepage)}[/]",
+                id="website-link",
+            )
 
     def _compose_stat_cards(self) -> ComposeResult:
         info = self._info
@@ -81,7 +90,7 @@ class DetailView(Container):
 
         # Latest version + age
         ver_card = StatCard(
-            "Latest Version",
+            "Version",
             info.latest_version,
             delta=format_age(info.latest_release_date),
         )
@@ -91,7 +100,7 @@ class DetailView(Container):
         pct = derived.downloads_30d_pct_change if derived else None
         pct_text, pct_color = format_pct_delta(pct)
         dl_card = StatCard(
-            "Downloads (30d)",
+            "Downloads",
             shorten_number(total),
             delta=pct_text,
             delta_color=pct_color,
@@ -100,7 +109,7 @@ class DetailView(Container):
         # GitHub stars + weekly delta
         gh = info.github_stats
         stars_card = StatCard(
-            "GitHub Stars",
+            "Stars",
             shorten_number(gh.stars) if gh.resolved else "—",
             delta=_delta_line(gh.stars_delta_7d, good_positive=True),
             delta_color=_delta_color(gh.stars_delta_7d, good_positive=True),
@@ -108,7 +117,7 @@ class DetailView(Container):
 
         # Open issues + weekly delta (fewer is better)
         issues_card = StatCard(
-            "Open Issues",
+            "Issues",
             shorten_number(gh.open_issues) if gh.resolved else "—",
             delta=_delta_line(gh.open_issues_delta_7d, good_positive=False),
             delta_color=_delta_color(gh.open_issues_delta_7d, good_positive=False),
@@ -119,10 +128,10 @@ class DetailView(Container):
         grade = health.grade if health else "—"
         grade_color = _grade_color(grade)
         health_card = StatCard(
-            "Health Score",
-            grade,
-            delta=f"{health.total} / 100" if health else "—",
-            value_color=grade_color,
+            "Health",
+            f"{health.total} / 100" if health else "—",
+            delta=_health_label(health.total) if health else "",
+            delta_color=grade_color,
         )
 
         with Horizontal(id="stat-cards"):
@@ -151,9 +160,9 @@ class DetailView(Container):
     # ── content builders ──
 
     def _build_header(self) -> str:
-        star = " [yellow]★[/]" if self._ref.favorite else ""
+        star = f" [{palette.YELLOW}]★[/]" if self._ref.favorite else ""
         name = self._ref.name
-        header = f"[b]{name}[/]{star}"
+        header = f"[b {palette.GREEN}]{name}[/]{star}"
         if self._info and self._info.description:
             header += f"\n[dim]{self._info.description[:120]}[/]"
         return header
@@ -168,9 +177,9 @@ class DetailView(Container):
             pct = adoption.get(ver.version, 0.0)
             bar = render_bar(pct / 100, width=12) if pct else ""
             age = format_age(ver.release_date)
-            yanked = " [red](yanked)[/]" if ver.is_yanked else ""
+            yanked = f" [{palette.RED}](yanked)[/]" if ver.is_yanked else ""
             lines.append(
-                f"[green]{ver.version:<12}[/]{yanked} [dim]{age:<14}[/] {bar} "
+                f"[{palette.GREEN}]{ver.version:<12}[/]{yanked} [dim]{age:<14}[/] {bar} "
                 f"[b]{pct:4.1f}%[/]"
             )
         body = "\n".join(lines) if lines else "[dim]No releases.[/]"
@@ -200,7 +209,7 @@ class DetailView(Container):
             date_str = ver.release_date.strftime("%Y-%m-%d") if ver.release_date else "—"
             label = f"(yanked) {ver.version}" if ver.is_yanked else ver.version
             table.add_row(
-                Text(label, style="red" if ver.is_yanked else ""),
+                Text(label, style=palette.RED if ver.is_yanked else ""),
                 date_str,
                 shorten_number(ver.downloads) if ver.downloads else "—",
                 shorten_bytes(ver.size_bytes),
@@ -212,10 +221,10 @@ class DetailView(Container):
         events = derived.activity if derived else []
         lines: list[str] = []
         for ev in events:
-            ref = f"[blue]{ev.ref}[/]: " if ev.ref else ""
+            ref = f"[{palette.BLUE}]{ev.ref}[/]: " if ev.ref else ""
             title = ev.title if len(ev.title) <= 70 else ev.title[:69] + "…"
             lines.append(
-                f"[green]{ev.kind.icon}[/] [b]{ev.kind.label:<12}[/] {ref}{title}"
+                f"[{palette.GREEN}]{ev.kind.icon}[/] [b]{ev.kind.label:<12}[/] {ref}{title}"
                 f"  [dim]{format_age(ev.timestamp)}[/]"
             )
         body = "\n".join(lines) if lines else "[dim]No recent activity.[/]"
@@ -236,18 +245,35 @@ def _delta_color(delta: int | None, *, good_positive: bool) -> str:
     if delta is None or delta == 0:
         return "dim"
     is_good = (delta > 0) if good_positive else (delta < 0)
-    return "green" if is_good else "red"
+    return palette.GREEN if is_good else palette.RED
 
 
 def _grade_color(grade: str) -> str:
-    return {
-        "A": "green",
-        "B": "green",
-        "C": "yellow",
-        "D": "red",
-        "F": "red",
-    }.get(grade, "dim")
+    if grade in {"A", "B"}:
+        return palette.GREEN
+    if grade == "C":
+        return palette.HEALTH_FAIR
+    return palette.RED
+
+
+def _health_label(score: int) -> str:
+    if score >= 90:
+        return "Excellent"
+    if score >= 75:
+        return "Good"
+    if score >= 50:
+        return "Fair"
+    return "Needs Attention"
 
 
 def _short_url(url: str) -> str:
     return url.replace("https://", "").replace("http://", "").rstrip("/")
+
+
+def _registry_icon_label(registry) -> str:
+    return {
+        "crates.io": "🦀",
+        "pypi": "🐍",
+        "npm": "⬢",
+        "docker": "🐳",
+    }.get(registry.value, registry.icon)

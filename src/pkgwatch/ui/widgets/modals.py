@@ -105,11 +105,11 @@ class HelpScreen(ModalScreen[None]):
     BINDINGS = [Binding("escape,q,question_mark", "dismiss_screen", "Close", show=False)]
 
     def compose(self) -> ComposeResult:
-        rows = "\n".join(f"[b blue]{k:<12}[/] {v}" for k, v in _SHORTCUTS)
+        rows = "\n".join(f"[b white]{k:<12}[/] [white]{v}[/]" for k, v in _SHORTCUTS)
         with Vertical(id="help-box"):
             yield Static("Keyboard Shortcuts", classes="modal-title")
             yield Static(rows, id="help-body")
-            yield Static("[dim]Press Esc to close[/]", classes="modal-hint")
+            yield Static("Press Esc to close", classes="modal-hint")
 
     def on_key(self) -> None:
         self.dismiss(None)
