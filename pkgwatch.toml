@@ -1,3 +1,18 @@
+[projects.demo]
+description = "PkgWatch demo — a mixed portfolio across registries"
+packages = [
+    { name = "serde", registry = "crates.io", favorite = true },
+    { name = "ripgrep", registry = "crates.io", favorite = true },
+    { name = "textual", registry = "pypi", favorite = true },
+    { name = "httpx", registry = "pypi" },
+    { name = "rich", registry = "pypi" },
+    { name = "tokio", registry = "crates.io" },
+    { name = "clap", registry = "crates.io" },
+    { name = "react", registry = "npm" },
+    { name = "express", registry = "npm" },
+    { name = "typescript", registry = "npm" },
+]
+
 [projects.opencode]
 description = "OpenCode CLI — AI coding agent"
 packages = [

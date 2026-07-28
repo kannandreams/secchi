@@ -66,6 +66,7 @@ def load_project(config_path: Path, project_name: str) -> Project:
     for pkg in raw.get("packages", []):
         name = pkg["name"]
         registry_raw = pkg.get("registry", "pypi")
+        favorite = bool(pkg.get("favorite", False))
         try:
             registry = Registry(registry_raw)
         except ValueError:
@@ -73,7 +74,9 @@ def load_project(config_path: Path, project_name: str) -> Project:
                 f"Unknown registry '{registry_raw}' for package '{name}'. "
                 f"Must be one of: {', '.join(r.value for r in Registry)}"
             )
-        project.packages.append(PackageRef(name=name, registry=registry))
+        project.packages.append(
+            PackageRef(name=name, registry=registry, favorite=favorite)
+        )
 
     return project
 

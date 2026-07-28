@@ -11,12 +11,18 @@ from pkgwatch.models import (
     GitHubStats,
     PackageInfo,
     Registry,
+    ReverseDependency,
     Version,
 )
 
 
 class RegistryAdapter(Protocol):
-    """Protocol that all registry API adapters must implement."""
+    """Protocol that all registry API adapters must implement.
+
+    The two capability methods at the bottom have real default bodies rather
+    than `...`, so a concrete adapter that lacks a given real signal simply
+    inherits an honest empty result instead of silently returning None.
+    """
 
     @property
     def registry(self) -> Registry: ...
@@ -34,6 +40,18 @@ class RegistryAdapter(Protocol):
     async def fetch_download_counts(self, name: str) -> DownloadCounts: ...
 
     async def fetch_release_notes(self, name: str, version: str) -> str: ...
+
+    async def fetch_reverse_dependencies(
+        self, name: str, limit: int = 5
+    ) -> list[ReverseDependency]:
+        """Packages depending on this one. Default: no reverse-dep API."""
+        return []
+
+    async def fetch_version_download_breakdown(
+        self, name: str
+    ) -> dict[int | str, int]:
+        """Per-version download totals keyed by version id. Default: no API."""
+        return {}
 
 
 def create_adapter(registry: Registry) -> RegistryAdapter:

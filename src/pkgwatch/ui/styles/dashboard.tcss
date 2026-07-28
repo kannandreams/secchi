@@ -1,26 +1,61 @@
-/* pkgwatch — btop-style (Tokyo Night) */
+/* pkgwatch — package-intelligence dashboard (Tokyo Night) */
 
 Screen {
     background: $background;
+    layers: base overlay;
 }
 
-Header {
+/* ── Custom header bar ── */
+
+PkgWatchHeader {
     dock: top;
-    background: $primary-darken-2;
+    height: 1;
+    background: $primary-darken-3;
     color: $text;
-    text-style: bold;
 }
 
-Footer {
-    dock: bottom;
-    background: $primary-darken-2;
+PkgWatchHeader #header-left {
+    width: 1fr;
+    height: 1;
+    content-align: left middle;
+    padding: 0 1;
+}
+
+PkgWatchHeader #header-right {
+    width: auto;
+    height: 1;
+    content-align: right middle;
+    padding: 0 1;
     color: $text-muted;
+}
+
+/* ── Custom footer/status bar ── */
+
+PkgWatchFooter {
+    dock: bottom;
+    height: 1;
+    background: $primary-darken-3;
+    color: $text-muted;
+}
+
+PkgWatchFooter #footer-left {
+    width: 1fr;
+    height: 1;
+    content-align: left middle;
+    padding: 0 1;
+}
+
+PkgWatchFooter #footer-right {
+    width: auto;
+    height: 1;
+    content-align: right middle;
+    padding: 0 1;
 }
 
 /* ── Sidebar ── */
 
 Sidebar {
-    width: 24;
+    width: 28;
     height: 100%;
     background: $panel-darken-1;
     border-right: tall $primary-darken-2;
@@ -28,54 +63,59 @@ Sidebar {
     overflow-y: auto;
 }
 
+Sidebar:focus {
+    border-right: tall $primary;
+}
+
 Sidebar .sidebar-title {
     text-style: bold;
-    color: $text;
+    color: $accent;
     padding: 1 0 0 0;
     width: 100%;
 }
 
-Sidebar .sidebar-subtitle {
-    color: $text-muted;
-    text-style: italic;
-    padding-bottom: 1;
-    width: 100%;
-}
-
-Sidebar .sidebar-group-header {
+Sidebar .sidebar-section {
     color: $text-muted;
     text-style: bold;
     padding: 1 0 0 0;
     width: 100%;
-}
-
-Sidebar .sidebar-divider {
-    height: 1;
-    background: $boost;
-    margin: 0 0;
 }
 
 SidebarItem {
-    padding: 0 0 0 2;
+    padding: 0 1;
     width: 100%;
     height: 1;
+    color: $text;
 }
 
 SidebarItem:hover {
     background: $boost;
 }
 
-SidebarItem:focus {
-    background: $primary-darken-2;
-    text-style: bold;
-}
-
 .sidebar-item--selected {
-    background: $primary-darken-2;
+    background: $primary-darken-1;
     text-style: bold;
 }
 
-/* ── Main Content Area ── */
+#shortcuts-box {
+    height: auto;
+    border-top: tall $primary-darken-2;
+    margin: 1 0 0 0;
+    padding: 1 0 0 0;
+}
+
+.shortcuts-title {
+    color: $text-muted;
+    text-style: bold;
+    width: 100%;
+}
+
+.shortcuts-body {
+    color: $text-muted;
+    width: 100%;
+}
+
+/* ── Main content ── */
 
 #main-content {
     width: 1fr;
@@ -83,26 +123,150 @@ SidebarItem:focus {
     background: $background;
 }
 
-/* ── Dashboard ── */
-
-StatCard {
+#detail-view {
     width: 1fr;
-    height: 4;
-    padding: 0 2;
+    height: 1fr;
+}
+
+#detail-content {
+    width: 1fr;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#detail-header {
+    height: auto;
+    padding: 1 0 0 0;
+    text-style: bold;
+}
+
+/* ── Badges ── */
+
+#badge-row {
+    height: 3;
+    padding: 0 0 1 0;
+}
+
+.badge {
+    height: 3;
+    width: auto;
+    padding: 0 1;
     margin: 0 1 0 0;
-    border: solid $primary-darken-2;
-    background: $surface;
+    border: round $primary-darken-2;
+    color: $text;
     content-align: center middle;
 }
 
-#package-table {
+.badge--link {
+    color: $accent;
+}
+
+/* ── Stat cards ── */
+
+#stat-cards {
+    height: 5;
+    padding: 0 0 1 0;
+}
+
+.stat-card {
+    width: 1fr;
+    height: 5;
+    padding: 0 1;
+    margin: 0 1 0 0;
+    border: round $primary-darken-2;
+    background: $surface;
+}
+
+/* ── Tabs ── */
+
+#detail-tabs {
+    height: 1fr;
+}
+
+TabbedContent {
+    height: 1fr;
+}
+
+Tabs {
+    background: transparent;
+}
+
+TabPane {
+    padding: 1 0;
+    height: 1fr;
+}
+
+.tab-scroll {
+    height: 1fr;
+    padding: 0 1;
+}
+
+.pane-block {
+    height: auto;
+    padding: 0 1;
+}
+
+.pane-heading {
+    height: auto;
+    color: $accent;
+    text-style: bold;
+}
+
+/* ── Overview grid ── */
+
+#overview-tab {
+    height: auto;
+}
+
+.overview-row {
+    height: 14;
+    padding: 0 0 1 0;
+}
+
+.overview-row--bottom {
+    height: 12;
+}
+
+Panel {
     width: 1fr;
     height: 1fr;
-    border: solid $primary-darken-2;
+    border: round $primary-darken-2;
+    background: $surface;
+    padding: 0 1;
+    margin: 0 1 0 0;
+    border-title-color: $accent;
+    border-title-style: bold;
 }
+
+Panel.panel--wide {
+    width: 2fr;
+}
+
+.panel-body {
+    height: 1fr;
+}
+
+.panel-caption {
+    height: 1;
+    color: $text-muted;
+    text-style: italic;
+    dock: bottom;
+}
+
+.ov-summary {
+    height: 1;
+}
+
+#ov-trend-chart {
+    height: 1fr;
+    width: 1fr;
+}
+
+/* ── Tables ── */
 
 DataTable {
     background: $surface;
+    height: auto;
 }
 
 DataTable > .datatable--header {
@@ -111,84 +275,69 @@ DataTable > .datatable--header {
     text-style: bold;
 }
 
-DataTable > .datatable--cursor {
-    background: $primary-darken-1;
-    color: $text;
-}
-
-/* ── Status Bar ── */
-
-#status-bar {
-    dock: bottom;
-    height: 1;
-    background: $panel;
-    color: $text-muted;
-    padding: 0 2;
-}
-
-.status-left {
-    width: 1fr;
-}
-
-.status-right {
-    width: auto;
-}
-
-/* ── Detail ── */
-
-#detail-content {
-    width: 1fr;
-    height: 1fr;
-}
-
-#detail-header {
-    height: auto;
-    padding: 1 0;
-}
-
-#detail-meta {
-    height: auto;
-    padding: 0 0 1 0;
-    color: $text-muted;
-}
+/* ── Error / loading ── */
 
 #error-view {
     color: $error;
     padding: 2 2;
-    border: solid $error;
+    border: round $error;
 }
 
-#notes-content {
-    height: 1fr;
-    padding: 1;
-    border: solid $primary-darken-2;
+#loading-view {
+    padding: 2 2;
+    color: $text-muted;
 }
 
-/* ── Tabs ── */
+/* ── Modals ── */
 
-TabbedContent {
-    height: 1fr;
-    border: solid $primary-darken-2;
+SearchScreen {
+    align: center middle;
+    background: $background 60%;
 }
 
-TabPane {
+#search-box {
+    width: 70;
+    height: auto;
+    max-height: 80%;
+    background: $surface;
+    border: round $primary;
+    padding: 1 2;
+}
+
+#search-results {
+    height: auto;
+    max-height: 18;
+    margin: 1 0 0 0;
+    background: $surface;
+}
+
+HelpScreen {
+    align: center middle;
+    background: $background 60%;
+}
+
+#help-box {
+    width: 60;
+    height: auto;
+    background: $surface;
+    border: round $primary;
+    padding: 1 2;
+}
+
+#help-body {
+    height: auto;
     padding: 1 0;
 }
 
-Tabs {
-    background: $primary-darken-2;
+.modal-title {
+    text-style: bold;
+    color: $accent;
+    width: 100%;
 }
 
-Tabs > .underline--active-tab {
-    background: $primary;
-}
-
-/* ── Chart ── */
-
-PlotextPlot {
-    height: 1fr;
-    width: 1fr;
-    padding: 1;
+.modal-hint {
+    width: 100%;
+    color: $text-muted;
 }
 
 /* ── Scrollbars ── */

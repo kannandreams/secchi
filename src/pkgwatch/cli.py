@@ -93,8 +93,14 @@ def cmd_init() -> None:
             registry_raw = input("    Registry [pypi/crates.io/npm, default: pypi]: ").strip()
             registry = registry_raw if registry_raw in ("pypi", "crates.io", "npm") else "pypi"
 
-            packages.append({"name": pkg_name, "registry": registry})
-            print(f"    [+] Added {pkg_name} ({registry})")
+            fav_raw = input("    Favorite? [y/N]: ").strip().lower()
+            entry: dict = {"name": pkg_name, "registry": registry}
+            if fav_raw in ("y", "yes"):
+                entry["favorite"] = True
+
+            packages.append(entry)
+            star = " ★" if entry.get("favorite") else ""
+            print(f"    [+] Added {pkg_name} ({registry}){star}")
 
         if not packages:
             print("  No packages added, skipping project.")

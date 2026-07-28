@@ -14,11 +14,20 @@ from pkgwatch.models import (
     DownloadTrendPoint,
     PackageInfo,
     Registry,
+    ReleaseFile,
     Version,
 )
 
 PYPI_JSON = "https://pypi.org/pypi"
 PYPI_STATS = "https://pypistats.org/api"
+
+
+def _derive_kind(classifiers: list[str]) -> str:
+    """Best-effort package kind from PyPI trove classifiers."""
+    text = " ".join(classifiers)
+    if "Environment :: Console" in text or "Topic :: Utilities" in text:
+        return "CLI"
+    return "Library"
 
 
 class PyPIAdapter(RegistryAdapter):
@@ -50,6 +59,15 @@ class PyPIAdapter(RegistryAdapter):
                     except (ValueError, TypeError):
                         pass
 
+            release_files = [
+                ReleaseFile(
+                    packagetype=f.get("packagetype", "") or "",
+                    size=f.get("size", 0) or 0,
+                    filename=f.get("filename", "") or "",
+                )
+                for f in latest_files
+            ]
+
             project_urls = info.get("project_urls") or {}
             homepage = info.get("home_page", "")
             repo_url = project_urls.get("Source", "")
@@ -72,6 +90,8 @@ class PyPIAdapter(RegistryAdapter):
                 documentation_url=docs_url,
                 latest_version=latest_version,
                 latest_release_date=upload_time,
+                package_kind=_derive_kind(info.get("classifiers", []) or []),
+                latest_release_files=release_files,
             )
 
     async def fetch_versions(self, name: str) -> list[Version]:
@@ -94,12 +114,14 @@ class PyPIAdapter(RegistryAdapter):
                             pass
 
                 yanked = any(f.get("yanked", False) for f in files)
+                size = sum(f.get("size", 0) or 0 for f in files) or None
 
                 versions.append(
                     Version(
                         version=ver_str,
                         release_date=upload_time,
                         is_yanked=yanked,
+                        size_bytes=size,
                     )
                 )
 

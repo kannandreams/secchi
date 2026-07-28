@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
@@ -14,6 +14,7 @@ from pkgwatch.models import (
     DownloadTrendPoint,
     PackageInfo,
     Registry,
+    ReleaseFile,
     Version,
 )
 
@@ -65,6 +66,18 @@ class NpmAdapter(RegistryAdapter):
 
             total_downloads = await self._fetch_total_downloads(name)
 
+            kind = "CLI" if latest_info.get("bin") else "Library"
+            release_files: list[ReleaseFile] = []
+            unpacked = latest_info.get("dist", {}).get("unpackedSize")
+            if unpacked:
+                release_files.append(
+                    ReleaseFile(
+                        packagetype="npm-package",
+                        size=unpacked,
+                        filename=f"{name}-{latest_tag}.tgz",
+                    )
+                )
+
             return PackageInfo(
                 name=data["name"],
                 registry=Registry.NPM,
@@ -76,6 +89,8 @@ class NpmAdapter(RegistryAdapter):
                 latest_version=latest_tag,
                 latest_release_date=latest_release_date,
                 total_downloads=total_downloads,
+                package_kind=kind,
+                latest_release_files=release_files,
             )
 
     async def fetch_versions(self, name: str) -> list[Version]:
@@ -89,10 +104,12 @@ class NpmAdapter(RegistryAdapter):
             time_data = data.get("time", {})
             for ver, info in data.get("versions", {}).items():
                 release_date = _parse_npm_time(time_data.get(ver))
+                size = info.get("dist", {}).get("unpackedSize") if isinstance(info, dict) else None
                 versions.append(
                     Version(
                         version=ver,
                         release_date=release_date,
+                        size_bytes=size,
                     )
                 )
 
@@ -132,9 +149,13 @@ class NpmAdapter(RegistryAdapter):
     ) -> list[DownloadTrendPoint]:
         async with httpx.AsyncClient() as client:
             try:
-                resp = await client.get(
-                    f"{NPM_DOWNLOADS}/range/last-month/{name}"
-                )
+                if days <= 31:
+                    url = f"{NPM_DOWNLOADS}/range/last-month/{name}"
+                else:
+                    end = datetime.now(timezone.utc).date()
+                    start = end - timedelta(days=days)
+                    url = f"{NPM_DOWNLOADS}/range/{start:%Y-%m-%d}:{end:%Y-%m-%d}/{name}"
+                resp = await client.get(url)
                 resp.raise_for_status()
                 data = resp.json()
             except httpx.HTTPError:
