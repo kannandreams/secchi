@@ -150,12 +150,7 @@ class ReleasesPanel(Panel):
         adoption = self._derived.release_adoption
         for ver in self._info.versions[:5]:
             pct = adoption.get(ver.version, 0.0)
-            bar = render_bar(
-                pct / 100,
-                width=8,
-                filled_char="─",
-                empty_char="─",
-            )
+            bar = render_bar(pct / 100, width=8)
             age = format_age_short(ver.release_date)
             version = ver.version if len(ver.version) <= 8 else ver.version[:7] + "…"
             line = (
@@ -183,12 +178,7 @@ class InstallMethodsPanel(Panel):
         rows: list[Widget] = []
         max_count_width = max(len(shorten_number(m.count)) for m in methods)
         for m in methods:
-            bar = render_bar(
-                m.percent / 100,
-                width=20,
-                filled_char="─",
-                empty_char="─",
-            )
+            bar = render_bar(m.percent / 100, width=20)
             label = m.label if len(m.label) <= 15 else m.label[:14] + "…"
             count = shorten_number(m.count)
             rows.append(
