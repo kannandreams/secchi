@@ -15,6 +15,7 @@ from textual import on
 from secchi import derived as derive
 from secchi.api.base import create_adapter
 from secchi.cache import load_package_cache, save_package_cache
+from secchi.export import export_package_json, save_export
 from secchi.history import (
     HistorySnapshot,
     append_snapshot,
@@ -36,7 +37,7 @@ from secchi.spotlight import fetch_spotlight, spotlight_disabled
 from secchi.trending import load_cached_trending, fetch_trending, save_cached_trending
 from secchi.ui.widgets.detail import DetailView
 from secchi.ui.widgets.header_bar import SecchiHeader
-from secchi.ui.widgets.modals import HelpScreen, SearchScreen
+from secchi.ui.widgets.modals import ExportScreen, HelpScreen, SearchScreen
 from secchi.ui.widgets.sidebar import Sidebar
 from secchi.ui.widgets.status_bar import SecchiFooter
 from secchi.utils import (
@@ -53,6 +54,7 @@ class Secchi(App[None]):
 
     BINDINGS = [
         Binding("r", "refresh", "Refresh", priority=True),
+        Binding("e", "export", "Export"),
         Binding("slash", "search", "Search"),
         Binding("question_mark", "help", "Help"),
         Binding("f", "toggle_filter", "Filter"),
@@ -173,6 +175,30 @@ class Secchi(App[None]):
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
+
+    def action_export(self) -> None:
+        if self._selected_ref is None:
+            self.notify("No package selected.", severity="warning")
+            return
+
+        def _on_export(format_id: str | None) -> None:
+            if format_id is None:
+                return
+            ref = self._selected_ref
+            if ref is None:
+                return
+            info = self.get_package_info(ref)
+            derived = self.get_derived(ref)
+            if info is None:
+                self.notify("No data loaded yet.", severity="warning")
+                return
+            json_str = export_package_json(
+                info, derived, ref, self._project.name
+            )
+            path = save_export(json_str, self._project.name, ref.name)
+            self.notify(f"Exported to {path.name}", title="Export")
+
+        self.push_screen(ExportScreen(), _on_export)
 
     def _start_spotlight_fetch(self) -> None:
         if spotlight_disabled():

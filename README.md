@@ -88,7 +88,7 @@ secchi monitor <project>     Alias for --project
 Live reload during development:
 
 ```bash
-uv run textual run --dev src/secchi/cli.py -- -p tuffcli
+uv run textual run --dev src/secchi/dev.py -- -p tuffcli
 ```
 
 Press `ctrl+r` to manually reload the dashboard without exiting.

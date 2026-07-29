@@ -446,6 +446,37 @@ HelpScreen {
     color: #ffffff;
 }
 
+ExportScreen {
+    align: center middle;
+    background: #000000 60%;
+}
+
+#export-box {
+    width: 52;
+    height: auto;
+    background: #050505;
+    color: #E5E7EB;
+    border: solid #3A3A3A;
+    padding: 1 2;
+}
+
+#export-options {
+    height: auto;
+    margin: 1 0;
+    background: #050505;
+}
+
+#export-buttons {
+    width: 100%;
+    height: auto;
+    align-horizontal: right;
+    padding: 1 0 0 0;
+}
+
+#export-buttons Button {
+    margin: 0 0 0 1;
+}
+
 .modal-title {
     text-style: bold;
     color: #ffffff;

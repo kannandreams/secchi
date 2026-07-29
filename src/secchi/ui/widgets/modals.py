@@ -5,9 +5,9 @@ from __future__ import annotations
 from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Input, OptionList, Static
+from textual.widgets import Button, Input, OptionList, Static
 from textual.widgets.option_list import Option
 
 from secchi.models import PackageRef, Project
@@ -115,4 +115,71 @@ class HelpScreen(ModalScreen[None]):
         self.dismiss(None)
 
     def action_dismiss_screen(self) -> None:
+        self.dismiss(None)
+
+
+class ExportScreen(ModalScreen[str | None]):
+    """Export modal — JSON, PNG screenshot, or HTML."""
+
+    BINDINGS = [
+        Binding("escape", "dismiss_none", "Cancel", show=False),
+        Binding("left", "focus_left", "Left", show=False),
+        Binding("right", "focus_right", "Right", show=False),
+    ]
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="export-box"):
+            yield Static("Export Package Data", classes="modal-title")
+            yield OptionList(
+                Option("JSON Output", id="json"),
+                Option(
+                    "Terminal Screenshot as Image in PNG Format [dim](coming soon)[/]",
+                    id="png",
+                ),
+                Option(
+                    "Single HTML file [dim](coming soon)[/]",
+                    id="html",
+                ),
+                id="export-options",
+            )
+            with Horizontal(id="export-buttons"):
+                yield Button("OK", variant="primary", id="export-ok")
+                yield Button("Cancel", variant="default", id="export-cancel")
+
+    def on_mount(self) -> None:
+        options = self.query_one("#export-options", OptionList)
+        options.highlighted = 0
+        options.focus()
+
+    @on(OptionList.OptionSelected, "#export-options")
+    def _on_option_select(self) -> None:
+        self._do_export()
+
+    @on(Button.Pressed, "#export-ok")
+    def _on_ok(self) -> None:
+        self._do_export()
+
+    @on(Button.Pressed, "#export-cancel")
+    def _on_cancel(self) -> None:
+        self.dismiss(None)
+
+    def _do_export(self) -> None:
+        options = self.query_one("#export-options", OptionList)
+        if options.highlighted is not None:
+            option = options.get_option_at_index(options.highlighted)
+            if option.id == "json":
+                self.dismiss(option.id)
+                return
+            self.notify("Coming soon", severity="warning")
+            self.query_one("#export-options", OptionList).focus()
+            return
+        self.dismiss(None)
+
+    def action_focus_left(self) -> None:
+        self.query_one("#export-ok", Button).focus()
+
+    def action_focus_right(self) -> None:
+        self.query_one("#export-cancel", Button).focus()
+
+    def action_dismiss_none(self) -> None:
         self.dismiss(None)
