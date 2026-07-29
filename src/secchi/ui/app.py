@@ -53,7 +53,6 @@ class Secchi(App[None]):
 
     BINDINGS = [
         Binding("r", "refresh", "Refresh", priority=True),
-        Binding("ctrl+r", "reload", "Reload", priority=True),
         Binding("slash", "search", "Search"),
         Binding("question_mark", "help", "Help"),
         Binding("f", "toggle_filter", "Filter"),
@@ -161,9 +160,6 @@ class Secchi(App[None]):
 
     def action_refresh(self) -> None:
         self._start_data_fetch(force=True)
-
-    def action_reload(self) -> None:
-        self.exit()
 
     def action_toggle_filter(self) -> None:
         self.query_one(Sidebar).toggle_favorites_filter()
