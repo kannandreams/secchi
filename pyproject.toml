@@ -25,3 +25,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/secchi"]
+
+[dependency-groups]
+dev = [
+    "textual-dev>=1.8.0",
+]

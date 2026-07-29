@@ -19,9 +19,10 @@ def _format_key(key: str) -> str:
 
 SHORTCUTS = (
     f"{_format_key('r')} Refresh  "
+    f"{_format_key('ctrl+r')} Reload  "
     f"{_format_key('/')} Search  "
-    f"{_format_key('?')} Help  "
     f"{_format_key('f')} Filter  "
+    f"{_format_key('?')} Help  "
     f"{_format_key('q')} Quit"
 )
 

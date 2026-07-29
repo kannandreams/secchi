@@ -83,6 +83,16 @@ secchi init                  Interactively create secchi.toml
 secchi monitor <project>     Alias for --project
 ```
 
+## Development
+
+Live reload during development:
+
+```bash
+uv run textual run --dev src/secchi/cli.py -- -p tuffcli
+```
+
+Press `ctrl+r` to manually reload the dashboard without exiting.
+
 ## License
 
 MIT
