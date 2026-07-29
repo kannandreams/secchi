@@ -63,11 +63,15 @@ class Sidebar(Vertical):
         self._spotlight: Spotlight | None = (
             None if spotlight_disabled() else FALLBACK_SPOTLIGHT
         )
+        self._last_spotlight_markup: str = ""
 
     def compose(self) -> ComposeResult:
         yield VerticalScroll(id="sidebar-list")
         if self._spotlight is not None:
-            yield Static(self._spotlight_markup(), classes="sidebar-promo")
+            self._last_spotlight_markup = self._spotlight_markup()
+            promo = Static(self._last_spotlight_markup, classes="sidebar-promo")
+            promo.border_title = "SPOTLIGHT"
+            yield promo
 
     def on_mount(self) -> None:
         self._build()
@@ -136,16 +140,22 @@ class Sidebar(Vertical):
 
     def set_spotlight(self, spotlight: Spotlight | None) -> None:
         self._spotlight = None if spotlight_disabled() else spotlight
+        new_markup = self._spotlight_markup()
         try:
             promo = self.query_one(".sidebar-promo", Static)
         except Exception:
             if self._spotlight is not None and self.is_mounted:
-                self.mount(Static(self._spotlight_markup(), classes="sidebar-promo"))
+                self._last_spotlight_markup = new_markup
+                promo = Static(new_markup, classes="sidebar-promo")
+                promo.border_title = "SPOTLIGHT"
+                self.mount(promo)
             return
         if self._spotlight is None:
             promo.remove()
-        else:
-            promo.update(self._spotlight_markup())
+            self._last_spotlight_markup = ""
+        elif new_markup != self._last_spotlight_markup:
+            self._last_spotlight_markup = new_markup
+            promo.update(new_markup)
 
     # ── selection / highlight ──
 
@@ -205,8 +215,7 @@ class Sidebar(Vertical):
         if self._spotlight is None:
             return ""
         return (
-            f"[b {palette.YELLOW}]Spotlight[/]\n"
             f"[b white]{self._spotlight.title}[/]\n"
-            f"[white]{self._spotlight.description}[/]\n"
-            f"[{palette.YELLOW}]{self._spotlight.url}[/]"
+            f"[#94A3B8]{self._spotlight.description}[/]\n"
+            f"[#22D3EE]{self._spotlight.url}[/]"
         )
