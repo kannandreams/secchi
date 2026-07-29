@@ -1,4 +1,4 @@
-"""Custom bottom status bar — replaces Textual's default Footer."""
+"""Custom bottom status bar — terminal-editor style with shortcut keys."""
 
 from __future__ import annotations
 
@@ -11,6 +11,19 @@ from textual.widgets import Static
 
 from secchi import __version__
 from secchi.ui import palette
+
+
+def _format_key(key: str) -> str:
+    return f"[black on {palette.SECCHI}] {key} [/]"
+
+
+SHORTCUTS = (
+    f"{_format_key('r')} Refresh  "
+    f"{_format_key('/')} Search  "
+    f"{_format_key('?')} Help  "
+    f"{_format_key('f')} Filter  "
+    f"{_format_key('q')} Quit"
+)
 
 
 def format_path(path: Path | None) -> str:
@@ -37,7 +50,7 @@ def _age_text(refreshed_at: datetime | None) -> str:
 
 
 class SecchiFooter(Horizontal):
-    """Docked bottom bar: version + data-freshness left, config path right."""
+    """Docked bottom bar: info left, shortcuts center, config right."""
 
     def __init__(self, config_path: Path | None) -> None:
         super().__init__()
@@ -45,6 +58,7 @@ class SecchiFooter(Horizontal):
 
     def compose(self) -> ComposeResult:
         yield Static("", id="footer-left")
+        yield Static(SHORTCUTS, id="footer-center")
         yield Static(
             f"Config: {format_path(self._config_path)}", id="footer-right"
         )
@@ -58,7 +72,8 @@ class SecchiFooter(Horizontal):
         age = _age_text(refreshed_at)
         try:
             self.query_one("#footer-left", Static).update(
-                f"[{palette.GREEN}]secchi[/] {__version__}   [dim]│[/]   Data updated: {age}"
+                f"[{palette.GREEN}]secchi[/] {__version__}  "
+                f"[dim]│[/]  Data: {age}"
             )
         except Exception:
             pass

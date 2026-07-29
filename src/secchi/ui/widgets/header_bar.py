@@ -11,7 +11,7 @@ from secchi.ui import palette
 
 
 class SecchiHeader(Horizontal):
-    """Docked top bar: SECCHI wordmark, product line, and shortcut hints."""
+    """Docked top bar: SECCHI wordmark and product line."""
 
     def compose(self) -> ComposeResult:
         brand = "SECCHI"
@@ -19,12 +19,5 @@ class SecchiHeader(Horizontal):
             "Open Source Package Intelligence   "
             f"[{palette.TEXT_MUTED}]v.{__version__}[/]"
         )
-        right = (
-            "/ Search   "
-            "r Refresh   "
-            "? Help   "
-            "q Quit"
-        )
         yield Static(brand, id="header-brand")
         yield Static(product, id="header-product")
-        yield Static(right, id="header-right")

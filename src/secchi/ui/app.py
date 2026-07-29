@@ -33,6 +33,7 @@ from secchi.models import (
     Registry,
 )
 from secchi.spotlight import fetch_spotlight, spotlight_disabled
+from secchi.trending import load_cached_trending, fetch_trending, save_cached_trending
 from secchi.ui.widgets.detail import DetailView
 from secchi.ui.widgets.header_bar import SecchiHeader
 from secchi.ui.widgets.modals import HelpScreen, SearchScreen
@@ -152,6 +153,7 @@ class Secchi(App[None]):
         self.theme = "textual-dark"
         self._select_default_package(render=False)
         self._start_spotlight_fetch()
+        self._start_trending_fetch()
         self._start_data_fetch(force=self._force_refresh)
 
     # ── actions ──
@@ -185,6 +187,25 @@ class Secchi(App[None]):
         spotlight = await fetch_spotlight()
         try:
             self.query_one(Sidebar).set_spotlight(spotlight)
+        except Exception:
+            pass
+
+    def _start_trending_fetch(self) -> None:
+        try:
+            sidebar = self.query_one(Sidebar)
+            cached = load_cached_trending()
+            if cached is not None:
+                sidebar.set_trending(cached)
+        except Exception:
+            pass
+        self.run_worker(self._fetch_trending(), exclusive=False, group="trending")
+
+    async def _fetch_trending(self) -> None:
+        trending = await fetch_trending()
+        if trending is not None:
+            save_cached_trending(trending)
+        try:
+            self.query_one(Sidebar).set_trending(trending)
         except Exception:
             pass
 

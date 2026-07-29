@@ -10,6 +10,7 @@ from textual.widgets import Static
 
 from secchi.models import PackageRef, Project
 from secchi.spotlight import FALLBACK_SPOTLIGHT, Spotlight, spotlight_disabled
+from secchi.trending import FALLBACK_TRENDING, TrendingRepo
 from secchi.ui import palette
 
 
@@ -64,6 +65,8 @@ class Sidebar(Vertical):
             None if spotlight_disabled() else FALLBACK_SPOTLIGHT
         )
         self._last_spotlight_markup: str = ""
+        self._trending: TrendingRepo | None = FALLBACK_TRENDING
+        self._last_trending_markup: str = ""
 
     def compose(self) -> ComposeResult:
         yield VerticalScroll(id="sidebar-list")
@@ -72,6 +75,11 @@ class Sidebar(Vertical):
             promo = Static(self._last_spotlight_markup, classes="sidebar-promo")
             promo.border_title = "SPOTLIGHT"
             yield promo
+        if self._trending is not None:
+            self._last_trending_markup = self._trending_markup()
+            trending = Static(self._last_trending_markup, classes="sidebar-trending")
+            trending.border_title = "TRENDING"
+            yield trending
 
     def on_mount(self) -> None:
         self._build()
@@ -157,6 +165,25 @@ class Sidebar(Vertical):
             self._last_spotlight_markup = new_markup
             promo.update(new_markup)
 
+    def set_trending(self, trending: TrendingRepo | None) -> None:
+        self._trending = trending
+        new_markup = self._trending_markup()
+        try:
+            card = self.query_one(".sidebar-trending", Static)
+        except Exception:
+            if self._trending is not None and self.is_mounted:
+                self._last_trending_markup = new_markup
+                card = Static(new_markup, classes="sidebar-trending")
+                card.border_title = "TRENDING"
+                self.mount(card)
+            return
+        if self._trending is None:
+            card.remove()
+            self._last_trending_markup = ""
+        elif new_markup != self._last_trending_markup:
+            self._last_trending_markup = new_markup
+            card.update(new_markup)
+
     # ── selection / highlight ──
 
     def _pkg_key(self, ref: PackageRef) -> str:
@@ -218,4 +245,19 @@ class Sidebar(Vertical):
             f"[b white]{self._spotlight.title}[/]\n"
             f"[#94A3B8]{self._spotlight.description}[/]\n"
             f"[#22D3EE]{self._spotlight.url}[/]"
+        )
+
+    def _trending_markup(self) -> str:
+        if self._trending is None:
+            return ""
+        lang = (
+            f" [{palette.PURPLE}]{self._trending.language}[/]"
+            if self._trending.language
+            else ""
+        )
+        return (
+            f"[b white]{self._trending.title}[/]{lang}\n"
+            f"[#94A3B8]{self._trending.description}[/]\n"
+            f"[#22D3EE]{self._trending.url}[/]   "
+            f"[{palette.YELLOW}]★ {self._trending.stars}[/]"
         )

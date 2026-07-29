@@ -36,16 +36,6 @@ SecchiHeader #header-product {
     text-style: bold;
 }
 
-SecchiHeader #header-right {
-    width: auto;
-    height: 1;
-    content-align: right middle;
-    padding: 0 1;
-    margin: 1 0 0 0;
-    background: #243D34;
-    color: #E5E7EB;
-}
-
 /* ── Custom footer/status bar ── */
 
 SecchiFooter {
@@ -60,14 +50,21 @@ SecchiFooter #footer-left {
     width: 1fr;
     height: 1;
     content-align: left middle;
-    padding: 0;
+    padding: 0 1;
+}
+
+SecchiFooter #footer-center {
+    width: auto;
+    height: 1;
+    content-align: center middle;
+    padding: 0 1;
 }
 
 SecchiFooter #footer-right {
-    width: auto;
+    width: 1fr;
     height: 1;
     content-align: right middle;
-    padding: 0;
+    padding: 0 1;
 }
 
 /* ── Sidebar ── */
@@ -123,7 +120,7 @@ SidebarItem:hover {
 
 .sidebar-promo {
     width: 100%;
-    height: 6;
+    height: 7;
     padding: 1 1 0 1;
     margin: 1 0 0 0;
     border: solid #3A3A3A;
@@ -131,6 +128,19 @@ SidebarItem:hover {
     border-title-background: #0D1520;
     border-title-style: bold;
     background: #0D1520;
+    color: #FFFFFF;
+}
+
+.sidebar-trending {
+    width: 100%;
+    height: 7;
+    padding: 1 1 0 1;
+    margin: 1 0 0 0;
+    border: solid #3A3A3A;
+    border-title-color: #FACC15;
+    border-title-background: #1A1225;
+    border-title-style: bold;
+    background: #1A1225;
     color: #FFFFFF;
 }
 
