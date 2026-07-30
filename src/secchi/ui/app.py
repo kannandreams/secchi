@@ -28,6 +28,7 @@ from secchi.models import (
     FetchError,
     InstallBreakdown,
     InstallMethod,
+    MetricTimelinePoint,
     PackageInfo,
     PackageRef,
     Project,
@@ -347,15 +348,17 @@ class Secchi(App[None]):
                 gh_result,
                 version_dl,
                 reverse_deps,
+                reverse_dep_count,
             ) = await asyncio.gather(
                 adapter.fetch_versions(ref.name),
-                adapter.fetch_download_trend(ref.name, days=60),
+                adapter.fetch_download_trend(ref.name, days=730),
                 adapter.fetch_download_counts(ref.name),
                 fetch_github_extended_stats_for_package(
                     info.homepage, info.repository_url
                 ),
                 adapter.fetch_version_download_breakdown(ref.name),
                 adapter.fetch_reverse_dependencies(ref.name),
+                adapter.fetch_reverse_dependency_count(ref.name),
             )
 
             gh_stats, issue_events = gh_result
@@ -366,6 +369,7 @@ class Secchi(App[None]):
             info.github_issue_events = issue_events
             info.version_downloads_recent = version_dl
             info.reverse_dependencies = reverse_deps
+            info.reverse_dependency_count = reverse_dep_count
 
             self._apply_history_deltas(key, info)
 
@@ -398,21 +402,34 @@ class Secchi(App[None]):
 
     def _apply_history_deltas(self, key: str, info: PackageInfo) -> None:
         gh = info.github_stats
-        if not gh.resolved:
-            return
-        baseline = find_baseline(load_snapshots(key))
-        gh.stars_delta_7d = compute_delta(
-            gh.stars, baseline.stars if baseline else None
-        )
-        gh.open_issues_delta_7d = compute_delta(
-            gh.open_issues, baseline.open_issues if baseline else None
-        )
+        snapshots = load_snapshots(key)
+
+        if gh.resolved:
+            baseline = find_baseline(snapshots)
+            gh.stars_delta_7d = compute_delta(
+                gh.stars, baseline.stars if baseline else None
+            )
+            gh.open_issues_delta_7d = compute_delta(
+                gh.open_issues, baseline.open_issues if baseline else None
+            )
+
+        health_total = derive.compute_health_score(info).total
+        monthly = find_baseline(snapshots, min_age_days=28, max_age_days=35)
+        if info.reverse_dependency_count is not None:
+            info.reverse_dependency_monthly_growth = compute_delta(
+                info.reverse_dependency_count,
+                monthly.reverse_dependency_count if monthly else None,
+            )
+        info.health_history = _health_history_points(snapshots, health_total)
+
         append_snapshot(
             key,
             HistorySnapshot(
                 timestamp=datetime.now(timezone.utc),
                 stars=gh.stars,
                 open_issues=gh.open_issues,
+                health_score=health_total,
+                reverse_dependency_count=info.reverse_dependency_count,
             ),
         )
 
@@ -472,6 +489,12 @@ def _combine_package_infos(ref: PackageRef, infos: list[PackageInfo]) -> Package
     crates_info = next((info for info in infos if info.registry is Registry.CRATES), None)
     if crates_info is not None:
         combined.reverse_dependencies = crates_info.reverse_dependencies
+        combined.reverse_dependency_count = crates_info.reverse_dependency_count
+        combined.reverse_dependency_monthly_growth = (
+            crates_info.reverse_dependency_monthly_growth
+        )
+
+    combined.health_history = primary.health_history
 
     return combined
 
@@ -507,7 +530,7 @@ def _combine_download_trends(infos: list[PackageInfo]):
 def _combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
     totals: dict[str, int] = {}
     for info in infos:
-        label = info.registry.install_command
+        label = info.registry.display_name
         count = info.download_counts.month or sum(p.count for p in info.download_trend[-30:])
         if count == 0:
             count = info.total_downloads
@@ -517,7 +540,7 @@ def _combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
     if total <= 0:
         return InstallBreakdown(
             methods=[],
-            caption="No 30-day install/download data available across registries.",
+            caption="No 30-day download data available across ecosystems.",
         )
 
     methods = [
@@ -528,3 +551,28 @@ def _combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
         methods=methods,
         caption="Combined from registry 30-day download totals.",
     )
+
+
+def _health_history_points(
+    snapshots: list[HistorySnapshot],
+    current_health: int,
+) -> list[MetricTimelinePoint]:
+    latest_by_month: dict[str, tuple[datetime, int]] = {}
+    for snap in snapshots:
+        if snap.health_score is None:
+            continue
+        ts = snap.timestamp
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        key = ts.strftime("%Y-%m")
+        current = latest_by_month.get(key)
+        if current is None or ts > current[0]:
+            latest_by_month[key] = (ts, snap.health_score)
+
+    now = datetime.now(timezone.utc)
+    latest_by_month[now.strftime("%Y-%m")] = (now, current_health)
+    points = [
+        MetricTimelinePoint(label=ts.strftime("%b"), value=value)
+        for _, (ts, value) in sorted(latest_by_month.items())
+    ]
+    return points[-12:]

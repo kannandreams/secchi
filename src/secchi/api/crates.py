@@ -232,6 +232,20 @@ class CratesAdapter(RegistryAdapter):
             results.sort(key=lambda r: r.downloads, reverse=True)
             return results[:limit]
 
+    async def fetch_reverse_dependency_count(self, name: str) -> int | None:
+        async with httpx.AsyncClient(headers=_HEADERS) as client:
+            try:
+                resp = await client.get(
+                    f"{CRATES_API}/crates/{name}/reverse_dependencies",
+                    params={"per_page": "1"},
+                )
+                resp.raise_for_status()
+                data = resp.json()
+            except httpx.HTTPError:
+                return None
+
+        return _reverse_dependency_total(data)
+
     async def fetch_release_notes(self, name: str, version: str) -> str:
         return ""  # fetched via GitHub in utils
 
@@ -244,3 +258,14 @@ def _parse_date(raw: str | None) -> datetime | None:
         return datetime.fromisoformat(raw_clean)
     except (ValueError, TypeError):
         return None
+
+
+def _reverse_dependency_total(data: dict) -> int | None:
+    meta = data.get("meta", {})
+    for key in ("total", "total_count", "count"):
+        value = meta.get(key)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str) and value.isdigit():
+            return int(value)
+    return None

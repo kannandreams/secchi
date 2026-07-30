@@ -15,6 +15,7 @@ from secchi.ui.widgets.bar import render_bar
 from secchi.ui.widgets.overview import OverviewTab
 from secchi.ui.widgets.stat_card import StatCard
 from secchi.utils import (
+    derive_github_repo,
     format_age,
     format_pct_delta,
     shorten_bytes,
@@ -89,13 +90,27 @@ class DetailView(Container):
         if info.description:
             lines.append(f"[#E5E7EB]{info.description[:120]}[/]")
         if info.homepage:
-            lines.append("")
             lines.append(f"[{palette.CYAN}]{_short_url(info.homepage)}[/]")
+
+        repo = derive_github_repo([info.repository_url, info.homepage])
+        repo_str = f"github.com/{repo[0]}/{repo[1]}" if repo else (info.repository_url or "—")
+        docs_str = _short_url(info.documentation_url) if info.documentation_url else "—"
+
+        lines.append("")
+        lines.append(
+            f"[dim]Repository[/] [{palette.CYAN}]{repo_str}[/]   "
+            f"[dim]Docs[/] [{palette.CYAN}]{docs_str}[/]"
+        )
+
+        lines.append("")
+        size = _resolve_size(info)
         meta: list[str] = []
         if icons:
             meta.append(f"[dim]Ecosystem[/] {icons}")
         if info.license:
             meta.append(f"[dim]License[/] [{palette.PURPLE}]{info.license}[/]")
+        if size:
+            meta.append(f"[dim]Size[/] {shorten_bytes(size)}")
         if meta:
             lines.append("   ".join(meta))
         return "\n".join(lines)
@@ -282,6 +297,17 @@ def _health_label(score: int) -> str:
 
 def _short_url(url: str) -> str:
     return url.replace("https://", "").replace("http://", "").rstrip("/")
+
+
+def _resolve_size(info) -> int | None:
+    for v in info.versions:
+        if v.version == info.latest_version and v.size_bytes:
+            return v.size_bytes
+    if info.latest_release_files:
+        total = sum(f.size for f in info.latest_release_files)
+        if total:
+            return total
+    return None
 
 
 def _registry_icon_label(registry) -> str:

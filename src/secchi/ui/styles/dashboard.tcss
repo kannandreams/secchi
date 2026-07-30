@@ -124,10 +124,10 @@ SidebarItem:hover {
     padding: 1 1 0 1;
     margin: 1 0 0 0;
     border: solid #3A3A3A;
-    border-title-color: #FACC15;
-    border-title-background: #0D1520;
+    border-title-color: #A1D998;
+    border-title-background: #0D1A15;
     border-title-style: bold;
-    background: #0D1520;
+    background: #0D1A15;
     color: #FFFFFF;
 }
 
@@ -137,10 +137,10 @@ SidebarItem:hover {
     padding: 1 1 0 1;
     margin: 1 0 0 0;
     border: solid #3A3A3A;
-    border-title-color: #FACC15;
-    border-title-background: #1A1225;
+    border-title-color: #C2A1D9;
+    border-title-background: #150D1A;
     border-title-style: bold;
-    background: #1A1225;
+    background: #150D1A;
     color: #FFFFFF;
 }
 
@@ -164,13 +164,13 @@ SidebarItem:hover {
 }
 
 #summary-row {
-    height: 12;
+    height: 14;
     padding: 0 1 1 0;
 }
 
 #project-card {
     width: 3fr;
-    height: 11;
+    height: 13;
     padding: 1;
     margin: 0 2 0 0;
     border: solid #3A3A3A;
@@ -239,7 +239,7 @@ SidebarItem:hover {
 
 #stat-cards {
     width: 4fr;
-    height: 11;
+    height: 13;
     layout: grid;
     grid-size: 3 2;
     grid-gutter: 1 1;
@@ -318,6 +318,45 @@ TabPane {
     height: 1fr;
 }
 
+#overview-range {
+    height: 3;
+    padding: 0 1 1 0;
+}
+
+.overview-range-label {
+    width: auto;
+    height: 1;
+    margin: 1 1 0 0;
+    color: #6B7280;
+}
+
+.overview-range-button {
+    width: 7;
+    height: 1;
+    min-width: 7;
+    margin: 1 1 0 0;
+    padding: 0 1;
+    border: none;
+    background: #111111;
+    color: #9CA3AF;
+}
+
+.overview-range-button--active {
+    background: #1D4ED8;
+    color: #FFFFFF;
+    text-style: bold;
+}
+
+#overview-grid {
+    height: 1fr;
+    width: 1fr;
+    layout: grid;
+    grid-size: 3 2;
+    grid-gutter: 1 1;
+    grid-columns: 1fr 1fr 1fr;
+    grid-rows: 1fr 1fr;
+}
+
 .overview-row {
     height: 1fr;
     padding: 0 0 1 0;
@@ -334,25 +373,10 @@ Panel {
     border: solid #3A3A3A;
     background: #050505;
     padding: 1 1 0 1;
-    margin: 0 1 0 0;
+    margin: 0;
     overflow: hidden;
     border-title-color: #3B82F6;
     border-title-style: bold;
-}
-
-Panel.panel--wide {
-    width: 2fr;
-}
-
-.overview-split {
-    width: 1fr;
-    height: 1fr;
-    padding: 0;
-    margin: 0 1 0 0;
-}
-
-.overview-split Panel {
-    margin: 0 1 0 0;
 }
 
 .panel-body {
@@ -372,9 +396,16 @@ Panel.panel--wide {
     margin-top: 1;
 }
 
-#ov-trend-chart {
+.ov-chart-block {
     height: 1fr;
     width: 1fr;
+    overflow: hidden;
+}
+
+.ov-big-number {
+    height: 3;
+    content-align: center middle;
+    text-style: bold;
 }
 
 /* ── Tables ── */

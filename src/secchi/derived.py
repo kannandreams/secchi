@@ -17,6 +17,7 @@ from secchi.models import (
     HealthSubScore,
     InstallBreakdown,
     InstallMethod,
+    ReverseDependencySummary,
     PackageInfo,
     Registry,
 )
@@ -155,6 +156,24 @@ def _score_activity(info: PackageInfo) -> int:
     return 20
 
 
+def _score_security(info: PackageInfo) -> int:
+    """Best-effort registry security signal from locally fetched metadata.
+
+    Secchi does not fetch advisory databases yet, so this category stays honest:
+    yanked recent releases and a missing source repository reduce confidence,
+    while the absence of those signals is treated as healthy.
+    """
+    score = 20
+    recent = info.versions[:5]
+    if any(v.is_yanked for v in recent):
+        score -= 8
+    if recent and recent[0].is_yanked:
+        score -= 6
+    if not (info.repository_url or info.github_stats.resolved):
+        score -= 4
+    return max(score, 0)
+
+
 def _grade(total: int) -> str:
     if total >= 90:
         return "A"
@@ -168,12 +187,16 @@ def _grade(total: int) -> str:
 
 
 def compute_health_score(info: PackageInfo) -> HealthScore:
+    def scaled(raw_20: int, max_score: int) -> int:
+        return round(max(0, min(raw_20, 20)) / 20 * max_score)
+
     subs = [
-        HealthSubScore("Maintained", _score_maintained(info)),
-        HealthSubScore("Documentation", _score_documentation(info)),
-        HealthSubScore("Testing", _score_testing(info)),
-        HealthSubScore("Community", _score_community(info)),
-        HealthSubScore("Activity", _score_activity(info)),
+        HealthSubScore("Maintenance", _score_maintained(info), 20),
+        HealthSubScore("Community", scaled(_score_community(info), 15), 15),
+        HealthSubScore("Documentation", scaled(_score_documentation(info), 15), 15),
+        HealthSubScore("Releases", scaled(_score_activity(info), 15), 15),
+        HealthSubScore("Security", _score_security(info), 20),
+        HealthSubScore("Testing", scaled(_score_testing(info), 15), 15),
     ]
     total = sum(s.score for s in subs)
     return HealthScore(sub_scores=subs, total=total, grade=_grade(total))
@@ -237,52 +260,50 @@ def _adoption_from_trend(info: PackageInfo, versions) -> dict[str, int]:
     return raw
 
 
-# ── Install methods ──────────────────────────────────────────────────────────
+# ── Ecosystem distribution ───────────────────────────────────────────────────
 
 
 def compute_install_breakdown(info: PackageInfo) -> InstallBreakdown:
-    if info.registry is Registry.PYPI:
-        return _pypi_install(info)
+    """Return download share by ecosystem.
 
-    # npm / crates.io: no per-channel telemetry — single honest bucket.
-    label = info.registry.install_command
-    count = info.download_counts.month or info.total_downloads
-    caption = (
-        f"{info.registry.display_name} has no install-channel breakdown API; "
-        "shown as a single channel."
-    )
+    The model name is kept for compatibility with existing views/export, but
+    the Overview dashboard renders this as ecosystem distribution rather than
+    installation commands.
+    """
+    count = _registry_activity_count(info)
+    label = info.registry.display_name
+    caption = "Download share by supported ecosystem."
     return InstallBreakdown(
-        methods=[InstallMethod(label=label, count=count, percent=100.0)],
+        methods=[
+            InstallMethod(
+                label=label,
+                count=count,
+                percent=100.0 if count > 0 else 0.0,
+            )
+        ] if count > 0 else [],
         caption=caption,
         is_estimate=False,
     )
 
 
-def _pypi_install(info: PackageInfo) -> InstallBreakdown:
-    labels = {
-        "bdist_wheel": "pip install (wheel)",
-        "sdist": "source build (sdist)",
-    }
-    counts: dict[str, int] = {}
-    for f in info.latest_release_files:
-        label = labels.get(f.packagetype, "other")
-        counts[label] = counts.get(label, 0) + 1
+def _registry_activity_count(info: PackageInfo) -> int:
+    count = info.download_counts.month or sum(p.count for p in info.download_trend[-30:])
+    return count or info.total_downloads
 
-    total = sum(counts.values())
-    caption = (
-        "Based on published artifacts for the latest version — "
-        "PyPI has no per-filetype download telemetry."
+
+# ── Reverse dependencies + historical health ────────────────────────────────
+
+
+def compute_reverse_dependency_summary(info: PackageInfo) -> ReverseDependencySummary:
+    if info.reverse_dependency_count is None:
+        caption = f"{info.registry.display_name} reverse-dependency count unavailable."
+    else:
+        caption = "Projects depending on this package."
+    return ReverseDependencySummary(
+        count=info.reverse_dependency_count,
+        monthly_growth=info.reverse_dependency_monthly_growth,
+        caption=caption,
     )
-    if total == 0:
-        return InstallBreakdown(methods=[], caption=caption, is_estimate=True)
-
-    order = ["pip install (wheel)", "source build (sdist)", "other"]
-    methods = [
-        InstallMethod(label=lbl, count=counts[lbl], percent=counts[lbl] / total * 100)
-        for lbl in order
-        if lbl in counts
-    ]
-    return InstallBreakdown(methods=methods, caption=caption, is_estimate=True)
 
 
 # ── Activity timeline ────────────────────────────────────────────────────────
@@ -357,6 +378,8 @@ def compute_all(info: PackageInfo) -> DerivedPackageData:
     return DerivedPackageData(
         health_score=compute_health_score(info),
         install_breakdown=compute_install_breakdown(info),
+        reverse_dependency_summary=compute_reverse_dependency_summary(info),
+        health_timeline=info.health_history,
         activity=compute_activity_timeline(info),
         release_adoption=adoption,
         adoption_caption=adoption_caption,

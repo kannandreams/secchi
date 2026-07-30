@@ -133,6 +133,15 @@ class HistorySnapshot:
     timestamp: datetime
     stars: int
     open_issues: int
+    health_score: int | None = None
+    reverse_dependency_count: int | None = None
+
+
+@dataclass
+class MetricTimelinePoint:
+    """A compact labeled metric point for dashboard sparklines."""
+    label: str
+    value: int
 
 
 # ── Derived-display dataclasses (produced by derived.py, consumed by widgets) ──
@@ -150,6 +159,13 @@ class InstallBreakdown:
     methods: list[InstallMethod] = field(default_factory=list)
     caption: str = ""
     is_estimate: bool = False
+
+
+@dataclass
+class ReverseDependencySummary:
+    count: int | None = None
+    monthly_growth: int | None = None
+    caption: str = ""
 
 
 class ActivityEventKind(str, Enum):
@@ -191,8 +207,8 @@ class ActivityEvent:
 
 @dataclass
 class HealthSubScore:
-    label: str  # "Maintained" | "Documentation" | "Testing" | "Community" | "Activity"
-    score: int  # 0-20
+    label: str
+    score: int
     max_score: int = 20
 
 
@@ -208,6 +224,8 @@ class DerivedPackageData:
     """All display-ready metrics derived (via arithmetic, no I/O) from a PackageInfo."""
     health_score: HealthScore = field(default_factory=HealthScore)
     install_breakdown: InstallBreakdown = field(default_factory=InstallBreakdown)
+    reverse_dependency_summary: ReverseDependencySummary = field(default_factory=ReverseDependencySummary)
+    health_timeline: list[MetricTimelinePoint] = field(default_factory=list)
     activity: list[ActivityEvent] = field(default_factory=list)
     release_adoption: dict[str, float] = field(default_factory=dict)
     adoption_caption: str = ""
@@ -241,6 +259,9 @@ class PackageInfo:
     latest_release_files: list[ReleaseFile] = field(default_factory=list)
     version_downloads_recent: dict[int | str, int] = field(default_factory=dict)  # crates.io only
     reverse_dependencies: list[ReverseDependency] = field(default_factory=list)    # crates.io only
+    reverse_dependency_count: int | None = None
+    reverse_dependency_monthly_growth: int | None = None
+    health_history: list[MetricTimelinePoint] = field(default_factory=list)
     github_issue_events: list[GitHubIssueEvent] = field(default_factory=list)
 
 

@@ -58,12 +58,14 @@ def load_snapshots(key: str) -> list[HistorySnapshot]:
                 timestamp=timestamp,
                 stars=raw.get("stars", 0),
                 open_issues=raw.get("open_issues", 0),
+                health_score=raw.get("health_score"),
+                reverse_dependency_count=raw.get("reverse_dependency_count"),
             )
         )
     return snapshots
 
 
-def append_snapshot(key: str, snapshot: HistorySnapshot, max_keep: int = 60) -> None:
+def append_snapshot(key: str, snapshot: HistorySnapshot, max_keep: int = 420) -> None:
     data = _load_all()
     entries = data.get(key, [])
     entries.append(
@@ -71,6 +73,8 @@ def append_snapshot(key: str, snapshot: HistorySnapshot, max_keep: int = 60) -> 
             "timestamp": snapshot.timestamp.isoformat(),
             "stars": snapshot.stars,
             "open_issues": snapshot.open_issues,
+            "health_score": snapshot.health_score,
+            "reverse_dependency_count": snapshot.reverse_dependency_count,
         }
     )
     data[key] = entries[-max_keep:]

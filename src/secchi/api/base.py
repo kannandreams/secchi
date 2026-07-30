@@ -47,6 +47,10 @@ class RegistryAdapter(Protocol):
         """Packages depending on this one. Default: no reverse-dep API."""
         return []
 
+    async def fetch_reverse_dependency_count(self, name: str) -> int | None:
+        """Total projects depending on this package. Default: no API."""
+        return None
+
     async def fetch_version_download_breakdown(
         self, name: str
     ) -> dict[int | str, int]:

@@ -15,6 +15,7 @@ from secchi.models import (
     DownloadTrendPoint,
     GitHubIssueEvent,
     GitHubStats,
+    MetricTimelinePoint,
     PackageInfo,
     Registry,
     ReleaseFile,
@@ -116,6 +117,14 @@ def _decode_package_info(raw: dict[str, Any]) -> PackageInfo:
     info.reverse_dependencies = [
         ReverseDependency(name=d.get("name", ""), downloads=d.get("downloads", 0))
         for d in raw.get("reverse_dependencies", [])
+    ]
+    info.reverse_dependency_count = raw.get("reverse_dependency_count")
+    info.reverse_dependency_monthly_growth = raw.get(
+        "reverse_dependency_monthly_growth"
+    )
+    info.health_history = [
+        MetricTimelinePoint(label=p.get("label", ""), value=p.get("value", 0))
+        for p in raw.get("health_history", [])
     ]
     info.github_issue_events = [
         _decode_issue_event(e) for e in raw.get("github_issue_events", [])

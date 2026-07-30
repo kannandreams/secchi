@@ -104,6 +104,11 @@ def _serialize_package_info(info: PackageInfo) -> dict[str, Any]:
         "download_trend": [
             {"date": p.date, "count": p.count} for p in info.download_trend
         ],
+        "reverse_dependency_count": info.reverse_dependency_count,
+        "reverse_dependency_monthly_growth": info.reverse_dependency_monthly_growth,
+        "health_history": [
+            {"label": p.label, "value": p.value} for p in info.health_history
+        ],
     }
 
 
@@ -124,6 +129,13 @@ def _serialize_derived(derived: DerivedPackageData) -> dict[str, Any]:
         "install_breakdown": [
             {"label": m.label, "count": m.count, "percent": m.percent}
             for m in derived.install_breakdown.methods
+        ],
+        "reverse_dependencies": {
+            "count": derived.reverse_dependency_summary.count,
+            "monthly_growth": derived.reverse_dependency_summary.monthly_growth,
+        },
+        "health_timeline": [
+            {"label": p.label, "value": p.value} for p in derived.health_timeline
         ],
         "activity": [
             {
