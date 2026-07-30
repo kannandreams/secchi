@@ -2,7 +2,7 @@
 
 Beautiful TUI dashboard to monitor packages across PyPI, crates.io, and npm.
 
-![secchi TUI dashboard](assets/tui-result.png)
+![secchi TUI dashboard](assets/duck-db-demo.png)
 
 ## Features
 
