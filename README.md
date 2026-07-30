@@ -1,6 +1,13 @@
-# secchi
+<p align="center">
+  <img src="assets/secchi-logo.png" alt="Secchi logo" width="180">
+</p>
 
-Beautiful TUI dashboard to monitor packages across PyPI, crates.io, and npm.
+<h1 align="center">secchi</h1>
+
+<p align="center"><strong>Opensource Package Intelligence CLI tool</strong></p>
+
+Secchi is a terminal dashboard that turns package registry data into clear
+signals about adoption, health, dependencies, releases, and version rollout.
 
 ![secchi TUI dashboard](assets/duck-db-demo.png)
 
