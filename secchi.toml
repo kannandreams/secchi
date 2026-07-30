@@ -13,6 +13,13 @@ packages = [
     { name = "typescript", registry = "npm" },
 ]
 
+[projects.duckdb]
+description = "DuckDB — embeddable analytical database"
+packages = [
+    { name = "duckdb", registry = "pypi", favorite = true },
+    { name = "duckdb", registry = "npm", favorite = true },
+]
+
 [projects.opencode]
 description = "OpenCode CLI — AI coding agent"
 packages = [

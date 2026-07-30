@@ -88,21 +88,23 @@ class DetailView(Container):
 
         lines = [title]
         if info.description:
-            lines.append(f"[#E5E7EB]{info.description[:120]}[/]")
-        if info.homepage:
-            lines.append(f"[{palette.CYAN}]{_short_url(info.homepage)}[/]")
+            lines.append(f"[#E5E7EB]{info.description[:96]}[/]")
 
         repo = derive_github_repo([info.repository_url, info.homepage])
         repo_str = f"github.com/{repo[0]}/{repo[1]}" if repo else (info.repository_url or "—")
-        docs_str = _short_url(info.documentation_url) if info.documentation_url else "—"
+        docs_str = _short_url(info.documentation_url or info.homepage) if (info.documentation_url or info.homepage) else "—"
+        stars = shorten_number(info.github_stats.stars) if info.github_stats.resolved else "—"
+        latest = f"v{info.latest_version}" if info.latest_version else "—"
 
-        lines.append("")
         lines.append(
-            f"[dim]Repository[/] [{palette.CYAN}]{repo_str}[/]   "
+            f"[dim]Latest[/] [{palette.GREEN}]{latest}[/]   "
+            f"[dim]Stars[/] [{palette.YELLOW}]{stars}[/]"
+        )
+        lines.append(
+            f"[dim]Repo[/] [{palette.CYAN}]{repo_str}[/]   "
             f"[dim]Docs[/] [{palette.CYAN}]{docs_str}[/]"
         )
 
-        lines.append("")
         size = _resolve_size(info)
         meta: list[str] = []
         if icons:
@@ -120,58 +122,57 @@ class DetailView(Container):
         derived = self._derived
         assert info is not None
 
-        # Latest version + age
-        ver_card = StatCard(
-            "Version",
-            info.latest_version,
-            delta=format_age(info.latest_release_date),
-        )
-
-        # Downloads 30d + pct change
         total = derived.downloads_30d_total if derived else info.download_counts.month
         pct = derived.downloads_30d_pct_change if derived else None
         pct_text, pct_color = format_pct_delta(pct)
-        dl_card = StatCard(
-            "DLs",
+        adoption_card = StatCard(
+            "ADOPTION",
             shorten_number(total),
             delta=pct_text,
+            signal=_trend_label(pct),
             delta_color=pct_color,
+            signal_color=_trend_color(pct),
         )
 
-        # GitHub stars + weekly delta
-        gh = info.github_stats
-        stars_card = StatCard(
-            "Stars",
-            shorten_number(gh.stars) if gh.resolved else "—",
-            delta=_delta_line(gh.stars_delta_7d, good_positive=True),
-            delta_color=_delta_color(gh.stars_delta_7d, good_positive=True),
-        )
-
-        # Open issues + weekly delta (fewer is better)
-        issues_card = StatCard(
-            "Issues",
-            shorten_number(gh.open_issues) if gh.resolved else "—",
-            delta=_delta_line(gh.open_issues_delta_7d, good_positive=False),
-            delta_color=_delta_color(gh.open_issues_delta_7d, good_positive=False),
-        )
-
-        # Health score
         health = derived.health_score if derived else None
         grade = health.grade if health else "—"
         grade_color = _grade_color(grade)
+        health_delta, health_delta_color = _health_mom(derived)
         health_card = StatCard(
-            "Health",
+            "HEALTH",
             f"{health.total} / 100" if health else "—",
-            delta=_health_label(health.total) if health else "",
-            delta_color=grade_color,
+            delta=health_delta,
+            signal=_health_label(health.total) if health else "",
+            delta_color=health_delta_color,
+            signal_color=grade_color,
+        )
+
+        deps = derived.reverse_dependency_summary if derived else None
+        dep_growth = deps.monthly_growth if deps else None
+        dep_card = StatCard(
+            "DEPENDENTS",
+            shorten_number(deps.count) if deps and deps.count is not None else "—",
+            delta=_dependent_delta(dep_growth),
+            signal=_dependent_signal(dep_growth, deps.count if deps else None),
+            delta_color=_growth_color(dep_growth),
+            signal_color=_growth_color(dep_growth),
+        )
+
+        latest_pct = _latest_version_adoption(info, derived)
+        latest_card = StatCard(
+            "LATEST VERSION",
+            f"v{info.latest_version}" if info.latest_version else "—",
+            delta=f"{latest_pct:.0f}% adoption" if latest_pct is not None else "— adoption",
+            signal=_rollout_signal(latest_pct),
+            delta_color=_rollout_color(latest_pct),
+            signal_color=_rollout_color(latest_pct),
         )
 
         with Grid(id="stat-cards"):
-            yield ver_card
-            yield dl_card
-            yield stars_card
-            yield issues_card
+            yield adoption_card
             yield health_card
+            yield dep_card
+            yield latest_card
 
     def _compose_tabs(self) -> ComposeResult:
         info = self._info
@@ -263,20 +264,6 @@ class DetailView(Container):
 # ── helpers ──
 
 
-def _delta_line(delta: int | None, *, good_positive: bool) -> str:
-    if delta is None or delta == 0:
-        return "—" if delta is None else "no change this week"
-    arrow = "↑" if delta > 0 else "↓"
-    return f"{arrow} {abs(delta)} this week"
-
-
-def _delta_color(delta: int | None, *, good_positive: bool) -> str:
-    if delta is None or delta == 0:
-        return "dim"
-    is_good = (delta > 0) if good_positive else (delta < 0)
-    return palette.GREEN if is_good else palette.RED
-
-
 def _grade_color(grade: str) -> str:
     if grade in {"A", "B"}:
         return palette.GREEN
@@ -293,6 +280,82 @@ def _health_label(score: int) -> str:
     if score >= 50:
         return "Fair"
     return "Needs Attention"
+
+
+def _trend_label(pct: float | None) -> str:
+    if pct is None or abs(pct) < 5:
+        return "Stable"
+    return "Growing" if pct > 0 else "Declining"
+
+
+def _trend_color(pct: float | None) -> str:
+    if pct is None or abs(pct) < 5:
+        return "dim"
+    return palette.GREEN if pct > 0 else palette.RED
+
+
+def _health_mom(derived: DerivedPackageData | None) -> tuple[str, str]:
+    points = derived.health_timeline if derived else []
+    if len(points) < 2:
+        return "— MoM", "dim"
+    delta = points[-1].value - points[-2].value
+    sign = "+" if delta > 0 else ""
+    color = palette.GREEN if delta >= 0 else palette.RED
+    return f"{sign}{delta} MoM", color
+
+
+def _dependent_delta(growth: int | None) -> str:
+    if growth is None:
+        return "— this month"
+    sign = "+" if growth >= 0 else ""
+    return f"{sign}{shorten_number(growth)} this month"
+
+
+def _dependent_signal(growth: int | None, count: int | None) -> str:
+    if count is None:
+        return "Unavailable"
+    if growth is None:
+        return "Tracking"
+    if growth > 0:
+        return "Accelerating"
+    if growth == 0:
+        return "Stable"
+    return "Contracting"
+
+
+def _growth_color(growth: int | None) -> str:
+    if growth is None or growth == 0:
+        return "dim"
+    return palette.GREEN if growth > 0 else palette.RED
+
+
+def _latest_version_adoption(
+    info: PackageInfo,
+    derived: DerivedPackageData | None,
+) -> float | None:
+    if not info.latest_version or not derived:
+        return None
+    return derived.release_adoption.get(info.latest_version)
+
+
+def _rollout_signal(pct: float | None) -> str:
+    if pct is None:
+        return "Unknown rollout"
+    if pct >= 50:
+        return "Healthy rollout"
+    if pct >= 25:
+        return "Mixed rollout"
+    return "Lagging rollout"
+
+
+def _rollout_color(pct: float | None) -> str:
+    if pct is None:
+        return "dim"
+    if pct >= 50:
+        return palette.GREEN
+    if pct >= 25:
+        return palette.HEALTH_FAIR
+    return palette.RED
 
 
 def _short_url(url: str) -> str:
