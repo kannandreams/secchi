@@ -1,22 +1,37 @@
-<p align="center">
-  <img src="assets/secchi-logo.png" alt="Secchi logo" width="180">
-</p>
+<table>
+  <tr>
+    <td><img src="assets/secchi-logo.png" alt="Secchi logo" width="110"></td>
+    <td>
+      <h1>secchi</h1>
+      <p><strong>Open Source Package Intelligence</strong></p>
+    </td>
+  </tr>
+</table>
 
-<h1 align="center">secchi</h1>
-
-<p align="center"><strong>Opensource Package Intelligence CLI tool</strong></p>
-
-Secchi is a terminal dashboard that turns package registry data into clear
-signals about adoption, health, dependencies, releases, and version rollout.
+Secchi lets you explore, compare, monitor, and report on package health,
+adoption, dependencies, releases, and ecosystem signals from your terminal.
 
 ![secchi TUI dashboard](assets/duck-db-demo.png)
 
-## Features
+## Capabilities
 
-- Real-time package version monitoring across multiple registries
-- Track latest versions, release dates, and install methods for each package
-- Snapshot history with delta tracking between runs
-- Keyboard-driven navigation with customizable favorites
+| Type | Capability | Status |
+| --- | --- | :---: |
+| Explore | CLI | ✅ |
+| Explore | Interactive TUI | ✅ |
+| Explore | Search packages | ✅ |
+| Explore | Compare packages | ✅ |
+| Report | HTML | 🚧 |
+| Report | JSON | 🚧 |
+| Report | Markdown | ⏳ |
+| Report | CSV | ⏳ |
+| Automate | Repository configuration | ⏳ |
+| Automate | Policy checks | ⏳ |
+| Automate | GitHub Actions | ⏳ |
+| Automate | CI integration | ⏳ |
+| Integrate | MCP Server | ⏳ |
+| Integrate | REST API | ⏳ |
+| Integrate | Python SDK | ⏳ |
 
 ## Install
 
