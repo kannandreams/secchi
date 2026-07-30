@@ -273,3 +273,16 @@ class FetchError:
     package_name: str
     registry: Registry
     message: str
+
+
+@dataclass
+class SearchResult:
+    """A normalized package discovery result from a registry search."""
+
+    name: str
+    registry: Registry
+    version: str = ""
+    description: str = ""
+    url: str = ""
+    score: float = 0.0
+    exact: bool = False

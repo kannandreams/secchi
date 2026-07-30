@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+from html import unescape
+import re
 from typing import Any
 
 import httpx
@@ -15,6 +17,7 @@ from secchi.models import (
     PackageInfo,
     Registry,
     ReleaseFile,
+    SearchResult,
     Version,
 )
 
@@ -205,3 +208,58 @@ class PyPIAdapter(RegistryAdapter):
 
     async def fetch_release_notes(self, name: str, version: str) -> str:
         return ""  # fetched via GitHub in utils
+
+    async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
+        """Search PyPI's public search page (the JSON API has no search route)."""
+        async with httpx.AsyncClient() as client:
+            # PyPI's JSON API is dependable for exact package resolution even
+            # when its HTML search page changes markup or is unavailable.
+            try:
+                exact_response = await client.get(f"{PYPI_JSON}/{query}/json")
+                exact_response.raise_for_status()
+                exact_info = exact_response.json().get("info", {})
+                return [
+                    SearchResult(
+                        name=exact_info.get("name", query),
+                        registry=Registry.PYPI,
+                        version=exact_info.get("version", ""),
+                        description=exact_info.get("summary", "") or "",
+                        url=f"https://pypi.org/project/{exact_info.get('name', query)}/",
+                        score=1.0,
+                        exact=True,
+                    )
+                ]
+            except (httpx.HTTPError, ValueError, KeyError):
+                pass
+            try:
+                response = await client.get(
+                    "https://pypi.org/search/",
+                    params={"q": query, "page": 1},
+                    headers={"Accept": "text/html"},
+                )
+                response.raise_for_status()
+            except httpx.HTTPError:
+                return []
+
+        pattern = re.compile(
+            r'data-project-url="([^"]+)"[^>]*>.*?'
+            r'class="package-snippet__name">\s*([^<]+).*?'
+            r'class="package-snippet__version">\s*([^<]+).*?'
+            r'class="package-snippet__description">\s*([^<]*)',
+            re.DOTALL,
+        )
+        results: list[SearchResult] = []
+        for url, name, version, description in pattern.findall(response.text)[:limit]:
+            clean_name = unescape(name).strip()
+            results.append(
+                SearchResult(
+                    name=clean_name,
+                    registry=Registry.PYPI,
+                    version=unescape(version).strip(),
+                    description=" ".join(unescape(description).split()),
+                    url=f"https://pypi.org{url}" if url.startswith("/") else url,
+                    exact=clean_name.lower() == query.lower(),
+                    score=1.0 if clean_name.lower() == query.lower() else 0.0,
+                )
+            )
+        return results

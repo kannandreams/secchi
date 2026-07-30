@@ -19,7 +19,7 @@ adoption, dependencies, releases, and ecosystem signals from your terminal.
 | --- | --- | :---: |
 | Explore | CLI | ✅ |
 | Explore | Interactive TUI | ✅ |
-| Explore | Exact package discovery across registries | ✅ |
+| Explore | Package discovery across registries | ✅ |
 | Explore | Compare packages | ✅ |
 | Report | HTML | ✅ |
 | Report | JSON | ✅ |
@@ -74,7 +74,7 @@ secchi report duckdb --format html --output duckdb-report.html
 secchi check duckdb --min-health 80 --require-ci
 ```
 
-`show`, `dashboard`, and `report` use the same data collection and scoring
+`search`, `show`, `dashboard`, and `report` use the same data collection and scoring
 pipeline. Add `--registry pypi`, `--registry crates.io`, or `--registry npm`
 when a package name needs an explicit ecosystem.
 
@@ -124,7 +124,7 @@ package-level `favorite` entries remain supported for compatibility.
 ```
 secchi dashboard [package]              Launch the TUI (workspace when omitted)
 secchi show <package>                   Print a concise intelligence summary
-secchi search <package>                 Check exact package availability across registries
+secchi search <package>                 Search packages across supported registries
 secchi report <package> --format <type> Generate json, html, or md output
 secchi check <package>                 Evaluate health and CI policies for automation
 secchi --project <name>                 Backwards-compatible project dashboard

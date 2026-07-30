@@ -16,6 +16,7 @@ from secchi.models import (
     Registry,
     ReleaseFile,
     ReverseDependency,
+    SearchResult,
     Version,
 )
 
@@ -248,6 +249,32 @@ class CratesAdapter(RegistryAdapter):
 
     async def fetch_release_notes(self, name: str, version: str) -> str:
         return ""  # fetched via GitHub in utils
+
+    async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
+        async with httpx.AsyncClient(headers=_HEADERS) as client:
+            try:
+                response = await client.get(
+                    f"{CRATES_API}/crates",
+                    params={"q": query, "per_page": limit},
+                )
+                response.raise_for_status()
+            except httpx.HTTPError:
+                return []
+        results: list[SearchResult] = []
+        for crate in response.json().get("crates", [])[:limit]:
+            name = crate.get("id", crate.get("name", ""))
+            results.append(
+                SearchResult(
+                    name=name,
+                    registry=Registry.CRATES,
+                    version=crate.get("max_version", ""),
+                    description=crate.get("description", "") or "",
+                    url=f"https://crates.io/crates/{name}",
+                    score=float(crate.get("recent_downloads", 0) or 0),
+                    exact=name.lower() == query.lower(),
+                )
+            )
+        return results
 
 
 def _parse_date(raw: str | None) -> datetime | None:

@@ -14,6 +14,7 @@ from secchi.models import (
     PackageInfo,
     Registry,
     ReleaseFile,
+    SearchResult,
     Version,
 )
 
@@ -214,6 +215,34 @@ class NpmAdapter(RegistryAdapter):
                 return resp.json().get("downloads", 0)
             except httpx.HTTPError:
                 return 0
+
+    async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    f"{NPM_REGISTRY}/-/v1/search",
+                    params={"text": query, "size": limit},
+                )
+                response.raise_for_status()
+            except httpx.HTTPError:
+                return []
+        results: list[SearchResult] = []
+        for item in response.json().get("objects", [])[:limit]:
+            package = item.get("package", {})
+            name = package.get("name", "")
+            score_data = item.get("score", {})
+            results.append(
+                SearchResult(
+                    name=name,
+                    registry=Registry.NPM,
+                    version=package.get("version", ""),
+                    description=package.get("description", "") or "",
+                    url=package.get("links", {}).get("npm", ""),
+                    score=float(score_data.get("final", 0.0) or 0.0),
+                    exact=name.lower() == query.lower(),
+                )
+            )
+        return results
 
 
 def _parse_npm_time(raw: str | None) -> datetime | None:

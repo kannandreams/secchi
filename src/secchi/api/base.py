@@ -11,6 +11,7 @@ from secchi.models import (
     PackageInfo,
     Registry,
     ReverseDependency,
+    SearchResult,
     Version,
 )
 
@@ -55,6 +56,10 @@ class RegistryAdapter(Protocol):
     ) -> dict[int | str, int]:
         """Per-version download totals keyed by version id. Default: no API."""
         return {}
+
+    async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
+        """Find packages in this registry; adapters may implement richer search."""
+        return []
 
 
 def create_adapter(registry: Registry) -> RegistryAdapter:

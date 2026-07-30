@@ -1,0 +1,42 @@
+"""Cross-registry package discovery and deterministic result ranking."""
+
+from __future__ import annotations
+
+import asyncio
+import math
+
+from secchi.api.base import create_adapter
+from secchi.models import Registry, SearchResult
+
+
+class PackageSearchService:
+    """Search configured registries concurrently and normalize their results."""
+
+    async def search(
+        self,
+        query: str,
+        *,
+        registries: list[Registry] | None = None,
+        limit: int = 10,
+    ) -> list[SearchResult]:
+        selected = registries or list(Registry)
+
+        async def search_registry(registry: Registry) -> list[SearchResult]:
+            try:
+                return await create_adapter(registry).search(query, limit=limit)
+            except Exception:
+                # One unavailable registry should not hide results from the others.
+                return []
+
+        batches = await asyncio.gather(*(search_registry(registry) for registry in selected))
+        results = [result for batch in batches for result in batch]
+        results.sort(key=lambda result: self._sort_key(result, query))
+        return results[:limit * len(selected)]
+
+    @staticmethod
+    def _sort_key(result: SearchResult, query: str) -> tuple[int, int, float, str]:
+        exact = 0 if result.exact or result.name.casefold() == query.casefold() else 1
+        # Registry APIs use incompatible score scales. Compress large download
+        # scores while preserving useful ordering within a registry.
+        normalized_score = math.log10(result.score + 1) if result.score > 1 else result.score
+        return (exact, 0 if result.name.casefold().startswith(query.casefold()) else 1, -normalized_score, result.name.casefold())

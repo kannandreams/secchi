@@ -15,7 +15,8 @@ from secchi.policy import evaluate_default_policy
 from secchi.renderers.reports import render_report
 from secchi.renderers.summary import render_summary
 from secchi.services.intelligence import PackageIntelligenceService
-from secchi.services.resolver import parse_package_spec
+from secchi.services.resolver import parse_package_spec, resolve_package
+from secchi.services.search import PackageSearchService
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -43,7 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
     show.add_argument("--registry", choices=[item.value for item in Registry])
     show.add_argument("--refresh", "-r", action="store_true")
 
-    search = sub.add_parser("search", help="Find an exact package across supported registries")
+    search = sub.add_parser("search", help="Find packages across supported registries")
     search.add_argument("package", help="Exact package name")
     search.add_argument("--registry", choices=[item.value for item in Registry])
     search.add_argument("--refresh", "-r", action="store_true")
@@ -145,10 +146,10 @@ def _dashboard(args: argparse.Namespace, parser: argparse.ArgumentParser) -> Non
         if configured is not None:
             project = configured
         elif args.registry is None:
-            project = Project(
-                name=ref.name,
-                packages=[PackageRef(ref.name, registry) for registry in Registry],
-            )
+            refs = asyncio.run(resolve_package(package))
+            if not refs:
+                parser.error(f"No exact package named '{package}' was found across registries.")
+            project = Project(name=ref.name, packages=refs)
         else:
             project = Project(name=ref.name, packages=[ref])
         config_path = config_path or (Path.cwd() / "secchi.toml")
@@ -168,24 +169,17 @@ def _dashboard(args: argparse.Namespace, parser: argparse.ArgumentParser) -> Non
 
 def _search(args: argparse.Namespace) -> None:
     registries = [Registry(args.registry)] if args.registry else list(Registry)
-
-    async def fetch_all():
-        service = PackageIntelligenceService()
-        return await asyncio.gather(
-            *(service.fetch_package(PackageRef(args.package, registry), force_refresh=args.refresh) for registry in registries)
-        )
-
-    results = asyncio.run(fetch_all())
-    matches = [result for result in results if result.info is not None]
-    if not matches:
-        print(f"No exact package named '{args.package}' found in the selected registries.")
+    results = asyncio.run(
+        PackageSearchService().search(args.package, registries=registries, limit=10)
+    )
+    if not results:
+        print(f"No packages matching '{args.package}' found in the selected registries.")
         return
     print(f"Matches for {args.package}:\n")
-    for result in matches:
-        info = result.info
-        assert info is not None
-        description = (info.description or "No description").splitlines()[0]
-        print(f"{result.ref.registry.display_name:<10} {info.name:<24} {info.latest_version or '—':<12} {description}")
+    for result in results:
+        description = (result.description or "No description").splitlines()[0]
+        marker = "exact" if result.exact else "match"
+        print(f"{result.registry.display_name:<10} {result.name:<24} {result.version or '—':<12} {marker:<6} {description}")
 
 
 def main() -> None:
