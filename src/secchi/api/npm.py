@@ -7,7 +7,6 @@ from datetime import datetime, timedelta, timezone
 import httpx
 
 from secchi.api.base import RegistryAdapter
-from secchi.config import get_env_token
 from secchi.models import (
     Dependency,
     DownloadCounts,

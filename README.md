@@ -111,6 +111,11 @@ git push origin v0.1.0
 Before the first release, configure PyPI Trusted Publishing for the GitHub
 repository and `.github/workflows/release.yml` workflow.
 
+GitHub Actions runs the CI matrix on every pull request and push to `main`.
+The security workflow runs CodeQL, audits locked runtime dependencies with
+`pip-audit`, reviews dependency changes on pull requests, and performs a
+weekly scheduled scan.
+
 ## License
 
 MIT

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Container, Grid, Horizontal, VerticalScroll

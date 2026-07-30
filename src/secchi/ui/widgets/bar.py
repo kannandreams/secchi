@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
+from secchi.ui import palette
+
 _FULL = "▅"
 _EMPTY = "░"
-
-
-from secchi.ui import palette
 
 
 def render_bar(

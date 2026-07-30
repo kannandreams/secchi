@@ -8,7 +8,6 @@ from secchi.models import (
     Dependency,
     DownloadCounts,
     DownloadTrendPoint,
-    GitHubStats,
     PackageInfo,
     Registry,
     ReverseDependency,

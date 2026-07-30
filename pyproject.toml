@@ -34,5 +34,10 @@ packages = ["src/secchi"]
 
 [dependency-groups]
 dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.0",
     "textual-dev>=1.8.0",
 ]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
