@@ -1,185 +1,261 @@
-"""CLI entry point — argparse + init command."""
+"""Command line entry point for package intelligence workflows."""
 
 from __future__ import annotations
 
 import argparse
-import sys
+import asyncio
 from pathlib import Path
 
 from tomli_w import dumps as toml_dumps
 
 from secchi import __version__
-from secchi.config import find_config, list_projects, load_project
+from secchi.config import find_config, list_projects, load_project, load_projects
+from secchi.models import PackageRef, Project, Registry
+from secchi.policy import evaluate_default_policy
+from secchi.renderers.reports import render_report
+from secchi.renderers.summary import render_summary
+from secchi.services.intelligence import PackageIntelligenceService
+from secchi.services.resolver import parse_package_spec
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="secchi",
-        description="TUI dashboard to monitor your packages across registries.",
+        prog="secchi", description="Open source package intelligence from your terminal."
     )
     parser.add_argument("--version", action="version", version=f"secchi {__version__}")
-    parser.add_argument(
-        "--project",
-        "-p",
-        type=str,
-        default=None,
-        help="Project name to load from config (e.g., 'myproject')",
-    )
-    parser.add_argument(
-        "--config",
-        "-c",
-        type=str,
-        default=None,
-        help=(
-            "Path to config file (default: ./secchi.toml, ./pkgwatch.toml, "
-            "or ~/.config/secchi/config.toml)"
-        ),
-    )
-    parser.add_argument(
-        "--refresh",
-        "-r",
-        action="store_true",
-        help="Force refresh all package data on startup",
-    )
-    parser.add_argument(
-        "--list",
-        "-l",
-        action="store_true",
-        help="List available projects in config and exit",
-    )
+    parser.add_argument("--project", "-p", help="Project name from configuration")
+    parser.add_argument("--config", "-c", help="Path to secchi.toml or .secchi.toml")
+    parser.add_argument("--refresh", "-r", action="store_true", help="Bypass local cache")
+    parser.add_argument("--list", "-l", action="store_true", help="List configured projects and exit")
 
     sub = parser.add_subparsers(dest="command")
-    sub.add_parser("init", help="Interactively create a secchi.toml config file")
-    monitor_parser = sub.add_parser("monitor", help="Monitor a project (alias for --project)")
-    monitor_parser.add_argument("project_name", type=str, help="Project name to monitor")
+    sub.add_parser("init", help="Interactively create secchi.toml")
 
+    dashboard = sub.add_parser("dashboard", help="Launch the interactive dashboard")
+    dashboard.add_argument("package", nargs="?", help="Package name or registry:name")
+    dashboard.add_argument("--registry", choices=[item.value for item in Registry])
+    dashboard.add_argument("--project", "-p", dest="dashboard_project")
+    dashboard.add_argument("--config", "-c", dest="dashboard_config")
+    dashboard.add_argument("--refresh", "-r", dest="dashboard_refresh", action="store_true")
+
+    show = sub.add_parser("show", help="Print a concise package intelligence summary")
+    show.add_argument("package", help="Package name or registry:name")
+    show.add_argument("--registry", choices=[item.value for item in Registry])
+    show.add_argument("--refresh", "-r", action="store_true")
+
+    search = sub.add_parser("search", help="Find an exact package across supported registries")
+    search.add_argument("package", help="Exact package name")
+    search.add_argument("--registry", choices=[item.value for item in Registry])
+    search.add_argument("--refresh", "-r", action="store_true")
+
+    report = sub.add_parser("report", help="Generate a package report")
+    report.add_argument("package", help="Package name or registry:name")
+    report.add_argument("--registry", choices=[item.value for item in Registry])
+    report.add_argument("--format", choices=["json", "html", "md", "markdown"], default="json")
+    report.add_argument("--output", "-o", type=Path, help="Write report to this file instead of stdout")
+    report.add_argument("--refresh", "-r", action="store_true")
+
+    check = sub.add_parser("check", help="Evaluate simple package health policies")
+    check.add_argument("package", help="Package name or registry:name")
+    check.add_argument("--registry", choices=[item.value for item in Registry])
+    check.add_argument("--min-health", type=int, default=70)
+    check.add_argument("--require-ci", action="store_true")
+    check.add_argument("--refresh", "-r", action="store_true")
+
+    monitor = sub.add_parser("monitor", help="Alias for dashboard --project")
+    monitor.add_argument("project_name", help="Project name to monitor")
     return parser
 
 
 def cmd_init() -> None:
-    """Interactively scaffold a secchi.toml file."""
     output_path = Path.cwd() / "secchi.toml"
-
-    print("🚀  secchi init — create a new config file")
-    print()
-
+    print("🚀  secchi init — create a new config file\n")
     if output_path.exists():
         answer = input(f"'{output_path}' already exists. Overwrite? [y/N]: ")
         if answer.lower() not in ("y", "yes"):
             print("Aborted.")
             return
-
     projects: dict[str, dict] = {}
-
     while True:
-        print()
         name = input("Project name (e.g., 'my-libs'): ").strip()
         if not name:
             print("Project name is required.")
             continue
-
-        desc = input("  Description (optional): ").strip()
-        packages: list[dict] = []
-
-        print("  Add packages. Enter name and registry. Leave name empty to finish.")
+        description = input("  Description (optional): ").strip()
+        favorite = input("  Favourite project? [y/N]: ").strip().lower() in ("y", "yes")
+        packages: list[dict[str, str]] = []
+        print("  Add packages. Leave name empty to finish.")
         while True:
-            pkg_name = input("    Package name: ").strip()
-            if not pkg_name:
+            package_name = input("    Package name: ").strip()
+            if not package_name:
                 break
-
-            registry_raw = input("    Registry [pypi/crates.io/npm, default: pypi]: ").strip()
-            registry = registry_raw if registry_raw in ("pypi", "crates.io", "npm") else "pypi"
-
-            fav_raw = input("    Favorite? [y/N]: ").strip().lower()
-            entry: dict = {"name": pkg_name, "registry": registry}
-            if fav_raw in ("y", "yes"):
-                entry["favorite"] = True
-
-            packages.append(entry)
-            star = " ★" if entry.get("favorite") else ""
-            print(f"    [+] Added {pkg_name} ({registry}){star}")
-
-        if not packages:
-            print("  No packages added, skipping project.")
-            continue
-
-        projects[name] = {"description": desc, "packages": packages}
-        print(f"  [+] Project '{name}' saved with {len(packages)} package(s).")
-
-        more = input("\nAdd another project? [y/N]: ")
-        if more.lower() not in ("y", "yes"):
+            registry = input("    Registry [pypi/crates.io/npm, default: pypi]: ").strip()
+            packages.append({"name": package_name, "registry": registry or "pypi"})
+        if packages:
+            projects[name] = {"description": description, "favorite": favorite, "packages": packages}
+        if input("Add another project? [y/N]: ").strip().lower() not in ("y", "yes"):
             break
-
     if not projects:
         print("No projects created. Aborting.")
         return
-
-    config = {"projects": projects}
-    output_path.write_text(toml_dumps(config))
+    output_path.write_text(toml_dumps({"projects": projects}))
     print(f"\n✅  Config written to {output_path}")
-    first = next(iter(projects))
-    print(f"   Run: secchi monitor {first}")
+
+
+def _fetch_one(ref: PackageRef, refresh: bool):
+    return asyncio.run(PackageIntelligenceService().fetch_package(ref, force_refresh=refresh))
+
+
+def _require_result(ref: PackageRef, refresh: bool):
+    result = _fetch_one(ref, refresh)
+    if result.error or result.info is None or result.derived is None:
+        message = result.error.message if result.error else "No package data returned."
+        raise RuntimeError(f"Could not load {ref.name} from {ref.registry.value}: {message}")
+    return result
+
+
+def _workspace_project(config_path: Path) -> Project:
+    projects = load_projects(config_path)
+    refs: list[PackageRef] = []
+    for project in projects:
+        for ref in project.packages:
+            refs.append(PackageRef(ref.name, ref.registry, ref.favorite or project.favorite))
+    return Project(name="Workspace", description="Configured Secchi workspace", packages=refs)
+
+
+def _dashboard(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+    config_arg = getattr(args, "dashboard_config", None) or args.config
+    refresh = getattr(args, "dashboard_refresh", False) or args.refresh
+    project_name = getattr(args, "dashboard_project", None) or args.project
+    package = getattr(args, "package", None)
+    if package:
+        try:
+            ref = parse_package_spec(package, args.registry)
+        except ValueError as exc:
+            parser.error(str(exc))
+        config_path = find_config(config_arg)
+        configured = None
+        if config_path and args.registry is None:
+            for candidate in load_projects(config_path):
+                if candidate.name.lower() == package.lower() or any(
+                    item.name.lower() == package.lower() for item in candidate.packages
+                ):
+                    configured = candidate
+                    break
+        if configured is not None:
+            project = configured
+        elif args.registry is None:
+            project = Project(
+                name=ref.name,
+                packages=[PackageRef(ref.name, registry) for registry in Registry],
+            )
+        else:
+            project = Project(name=ref.name, packages=[ref])
+        config_path = config_path or (Path.cwd() / "secchi.toml")
+    else:
+        config_path = find_config(config_arg)
+        if not config_path:
+            parser.error("No config found. Use 'secchi dashboard PACKAGE' or create secchi.toml.")
+        try:
+            project = load_project(config_path, project_name) if project_name else _workspace_project(config_path)
+        except ValueError as exc:
+            parser.error(str(exc))
+    if not project.packages:
+        parser.error("The selected workspace has no packages.")
+    from secchi.ui.app import Secchi
+    Secchi(project=project, config_path=config_path, force_refresh=refresh).run()
+
+
+def _search(args: argparse.Namespace) -> None:
+    registries = [Registry(args.registry)] if args.registry else list(Registry)
+
+    async def fetch_all():
+        service = PackageIntelligenceService()
+        return await asyncio.gather(
+            *(service.fetch_package(PackageRef(args.package, registry), force_refresh=args.refresh) for registry in registries)
+        )
+
+    results = asyncio.run(fetch_all())
+    matches = [result for result in results if result.info is not None]
+    if not matches:
+        print(f"No exact package named '{args.package}' found in the selected registries.")
+        return
+    print(f"Matches for {args.package}:\n")
+    for result in matches:
+        info = result.info
+        assert info is not None
+        description = (info.description or "No description").splitlines()[0]
+        print(f"{result.ref.registry.display_name:<10} {info.name:<24} {info.latest_version or '—':<12} {description}")
 
 
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-
     if args.command == "init":
         cmd_init()
         return
-
     if args.command == "monitor":
-        args.project = args.project_name
-
-    config_path = find_config(args.config)
-
-    if args.list:
-        if not config_path:
-            print("No config file found. Run 'secchi init' to create one.")
-            print("Searched: ./secchi.toml, ./pkgwatch.toml, ~/.config/secchi/config.toml")
-            sys.exit(1)
-
-        projects = list_projects(config_path)
-        if not projects:
-            print(f"No projects found in {config_path}")
-            sys.exit(0)
-
-        print(f"Projects in {config_path}:")
-        for p in projects:
-            print(f"  - {p}")
+        args.command = "dashboard"
+        args.package = None
+        args.dashboard_project = args.project_name
+        args.dashboard_config = None
+        args.dashboard_refresh = args.refresh
+        _dashboard(args, parser)
+        return
+    if args.command == "dashboard":
+        _dashboard(args, parser)
+        return
+    if args.command == "show":
+        try:
+            result = _require_result(parse_package_spec(args.package, args.registry), args.refresh)
+        except (RuntimeError, ValueError) as exc:
+            parser.error(str(exc))
+        print(render_summary(result.info, result.derived))
+        return
+    if args.command == "search":
+        _search(args)
+        return
+    if args.command == "report":
+        try:
+            ref = parse_package_spec(args.package, args.registry)
+            result = _require_result(ref, args.refresh)
+        except (RuntimeError, ValueError) as exc:
+            parser.error(str(exc))
+        format_name = "md" if args.format == "markdown" else args.format
+        content = render_report(format_name, result.info, result.derived, ref, ref.name)
+        if args.output:
+            args.output.write_text(content)
+            print(f"Wrote {format_name} report to {args.output}")
+        else:
+            print(content)
+        return
+    if args.command == "check":
+        try:
+            result = _require_result(parse_package_spec(args.package, args.registry), args.refresh)
+        except (RuntimeError, ValueError) as exc:
+            parser.error(str(exc))
+        checks = evaluate_default_policy(
+            result.info,
+            result.derived,
+            min_health=args.min_health,
+            require_ci=args.require_ci,
+        )
+        for check in checks:
+            print(f"{'PASS' if check.passed else 'FAIL'}  {check.name}: {check.detail}")
+        if not all(check.passed for check in checks):
+            raise SystemExit(1)
         return
 
-    # Launch TUI
-    if not config_path:
-        print("No config file found.")
-        print("Run 'secchi init' to create one, or use --config to specify a path.")
-        print("Searched: ./secchi.toml, ./pkgwatch.toml, ~/.config/secchi/config.toml")
-        sys.exit(1)
+    # Backwards-compatible default: config-driven dashboard.
+    if args.list:
+        config_path = find_config(args.config)
+        if not config_path:
+            parser.error("No config file found.")
+        for name in list_projects(config_path):
+            print(name)
+        return
+    _dashboard(args, parser)
 
-    if not args.project:
-        projects = list_projects(config_path)
-        if len(projects) == 1:
-            args.project = projects[0]
-        elif projects:
-            print(f"Projects in {config_path}:")
-            for project_name in projects:
-                print(f"  - {project_name}")
-            parser.error("--project/-p is required when config has multiple projects")
-        else:
-            print(f"No projects found in {config_path}")
-            sys.exit(1)
-
-    try:
-        project = load_project(config_path, args.project)
-    except ValueError as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-
-    from secchi.ui.app import Secchi
-
-    app = Secchi(project=project, config_path=config_path, force_refresh=args.refresh)
-    app.run()
 
 if __name__ == "__main__":
     main()

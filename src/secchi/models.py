@@ -40,6 +40,8 @@ class Project:
     """A named collection of packages to monitor."""
     name: str
     description: str = ""
+    favorite: bool = False
+    repository_url: str = ""
     packages: list[PackageRef] = field(default_factory=list)
 
 

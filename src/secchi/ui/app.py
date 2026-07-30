@@ -13,38 +13,25 @@ from textual.containers import Container, Horizontal
 from textual import on
 
 from secchi import derived as derive
-from secchi.api.base import create_adapter
-from secchi.cache import load_package_cache, save_package_cache
 from secchi.export import export_package_json, save_export
-from secchi.history import (
-    HistorySnapshot,
-    append_snapshot,
-    compute_delta,
-    find_baseline,
-    load_snapshots,
-)
 from secchi.models import (
     DerivedPackageData,
     FetchError,
     InstallBreakdown,
     InstallMethod,
-    MetricTimelinePoint,
     PackageInfo,
     PackageRef,
     Project,
     Registry,
 )
 from secchi.spotlight import fetch_spotlight, spotlight_disabled
+from secchi.services.intelligence import PackageIntelligenceService
 from secchi.trending import load_cached_trending, fetch_trending, save_cached_trending
 from secchi.ui.widgets.detail import DetailView
 from secchi.ui.widgets.header_bar import SecchiHeader
 from secchi.ui.widgets.modals import ExportScreen, HelpScreen, SearchScreen
 from secchi.ui.widgets.sidebar import Sidebar
 from secchi.ui.widgets.status_bar import SecchiFooter
-from secchi.utils import (
-    fetch_github_extended_stats_for_package,
-    fetch_release_notes_for_package,
-)
 
 
 class Secchi(App[None]):
@@ -80,6 +67,7 @@ class Secchi(App[None]):
         self._selected_ref: PackageRef | None = None
         self._render_in_progress = False
         self._render_again = False
+        self._intelligence = PackageIntelligenceService()
 
     @property
     def project(self) -> Project:
@@ -315,123 +303,32 @@ class Secchi(App[None]):
         self.run_worker(self._fetch_all_packages(force=force), exclusive=False)
 
     async def _fetch_all_packages(self, *, force: bool = False) -> None:
-        for ref in self._project.packages:
-            await self._fetch_single_package(ref, force=force)
-
-        if self._refreshed_at is None:
-            self._refreshed_at = datetime.now(timezone.utc)
+        result = await self._intelligence.fetch_project(
+            self._project.packages, force_refresh=force
+        )
+        for key, package_result in result.results.items():
+            if package_result.info is not None:
+                self._package_data[key] = package_result.info
+                self._package_errors.pop(key, None)
+            if package_result.derived is not None:
+                self._derived_data[key] = package_result.derived
+            if package_result.error is not None:
+                self._package_errors[key] = package_result.error
+        self._refreshed_at = result.refreshed_at or datetime.now(timezone.utc)
         self._notify_ui_update()
 
     async def _fetch_single_package(
         self, ref: PackageRef, *, force: bool = False
     ) -> None:
-        adapter = create_adapter(ref.registry)
         key = _package_key(ref)
-        try:
-            if not force:
-                cached = load_package_cache(key)
-                if cached is not None:
-                    info, fetched_at = cached
-                    self._package_data[key] = info
-                    self._package_errors.pop(key, None)
-                    self._derived_data[key] = derive.compute_all(info)
-                    self._refreshed_at = _oldest_time(self._refreshed_at, fetched_at)
-                    self._notify_ui_update(changed_ref=ref)
-                    return
-
-            info = await adapter.fetch_package(ref.name)
-
-            (
-                versions,
-                trend,
-                counts,
-                gh_result,
-                version_dl,
-                reverse_deps,
-                reverse_dep_count,
-            ) = await asyncio.gather(
-                adapter.fetch_versions(ref.name),
-                adapter.fetch_download_trend(ref.name, days=730),
-                adapter.fetch_download_counts(ref.name),
-                fetch_github_extended_stats_for_package(
-                    info.homepage, info.repository_url
-                ),
-                adapter.fetch_version_download_breakdown(ref.name),
-                adapter.fetch_reverse_dependencies(ref.name),
-                adapter.fetch_reverse_dependency_count(ref.name),
-            )
-
-            gh_stats, issue_events = gh_result
-            info.versions = versions
-            info.download_trend = trend
-            info.download_counts = counts
-            info.github_stats = gh_stats
-            info.github_issue_events = issue_events
-            info.version_downloads_recent = version_dl
-            info.reverse_dependencies = reverse_deps
-            info.reverse_dependency_count = reverse_dep_count
-
-            self._apply_history_deltas(key, info)
-
-            if info.latest_version:
-                info.dependencies = await adapter.fetch_dependencies(
-                    ref.name, info.latest_version
-                )
-                notes = await adapter.fetch_release_notes(ref.name, info.latest_version)
-                if not notes and (info.homepage or info.repository_url):
-                    notes = await fetch_release_notes_for_package(
-                        info.homepage, info.repository_url, info.latest_version
-                    )
-                info.release_notes = notes
-
-            self._package_data[key] = info
-            self._package_errors.pop(key, None)
-            self._derived_data[key] = derive.compute_all(info)
-            fetched_at = datetime.now(timezone.utc)
-            self._refreshed_at = _oldest_time(self._refreshed_at, fetched_at)
-            save_package_cache(key, info, fetched_at)
-
-        except Exception as e:
-            self._package_errors[key] = FetchError(
-                package_name=ref.name,
-                registry=ref.registry,
-                message=str(e),
-            )
-
+        result = await self._intelligence.fetch_package(ref, force_refresh=force)
+        if result.info is not None:
+            self._package_data[key] = result.info
+        if result.derived is not None:
+            self._derived_data[key] = result.derived
+        if result.error is not None:
+            self._package_errors[key] = result.error
         self._notify_ui_update(changed_ref=ref)
-
-    def _apply_history_deltas(self, key: str, info: PackageInfo) -> None:
-        gh = info.github_stats
-        snapshots = load_snapshots(key)
-
-        if gh.resolved:
-            baseline = find_baseline(snapshots)
-            gh.stars_delta_7d = compute_delta(
-                gh.stars, baseline.stars if baseline else None
-            )
-            gh.open_issues_delta_7d = compute_delta(
-                gh.open_issues, baseline.open_issues if baseline else None
-            )
-
-        health_total = derive.compute_health_score(info).total
-        monthly = find_baseline(snapshots, min_age_days=28, max_age_days=35)
-        if info.reverse_dependency_count is not None:
-            info.reverse_dependency_monthly_growth = compute_delta(
-                info.reverse_dependency_count,
-                monthly.reverse_dependency_count if monthly else None,
-            )
-        info.health_history = _health_history_points(snapshots, health_total)
-
-        append_snapshot(
-            key,
-            HistorySnapshot(
-                timestamp=datetime.now(timezone.utc),
-                stars=gh.stars,
-                open_issues=gh.open_issues,
-                health_score=health_total,
-                reverse_dependency_count=info.reverse_dependency_count,
-            ),
-        )
 
     def _notify_ui_update(self, changed_ref: PackageRef | None = None) -> None:
         try:
@@ -551,28 +448,3 @@ def _combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
         methods=methods,
         caption="Combined from registry 30-day download totals.",
     )
-
-
-def _health_history_points(
-    snapshots: list[HistorySnapshot],
-    current_health: int,
-) -> list[MetricTimelinePoint]:
-    latest_by_month: dict[str, tuple[datetime, int]] = {}
-    for snap in snapshots:
-        if snap.health_score is None:
-            continue
-        ts = snap.timestamp
-        if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
-        key = ts.strftime("%Y-%m")
-        current = latest_by_month.get(key)
-        if current is None or ts > current[0]:
-            latest_by_month[key] = (ts, snap.health_score)
-
-    now = datetime.now(timezone.utc)
-    latest_by_month[now.strftime("%Y-%m")] = (now, current_health)
-    points = [
-        MetricTimelinePoint(label=ts.strftime("%b"), value=value)
-        for _, (ts, value) in sorted(latest_by_month.items())
-    ]
-    return points[-12:]

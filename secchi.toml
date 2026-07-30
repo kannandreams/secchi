@@ -1,9 +1,10 @@
 [projects.demo]
 description = "Secchi demo — a mixed portfolio across registries"
+favorite = true
 packages = [
-    { name = "serde", registry = "crates.io", favorite = true },
-    { name = "ripgrep", registry = "crates.io", favorite = true },
-    { name = "textual", registry = "pypi", favorite = true },
+    { name = "serde", registry = "crates.io" },
+    { name = "ripgrep", registry = "crates.io" },
+    { name = "textual", registry = "pypi" },
     { name = "httpx", registry = "pypi" },
     { name = "rich", registry = "pypi" },
     { name = "tokio", registry = "crates.io" },
@@ -15,9 +16,11 @@ packages = [
 
 [projects.duckdb]
 description = "DuckDB — embeddable analytical database"
+favorite = true
+repository = "https://github.com/duckdb/duckdb"
 packages = [
-    { name = "duckdb", registry = "pypi", favorite = true },
-    { name = "duckdb", registry = "npm", favorite = true },
+    { name = "duckdb", registry = "pypi" },
+    { name = "duckdb", registry = "npm" },
 ]
 
 [projects.opencode]
@@ -28,9 +31,10 @@ packages = [
 
 [projects.tuffcli]
 description = "tuffcli — capability lifecycle manager for coding agents"
+favorite = true
 packages = [
-    { name = "tuffcli", registry = "crates.io", favorite = true },
-    { name = "tuffcli", registry = "pypi", favorite = true },
+    { name = "tuffcli", registry = "crates.io" },
+    { name = "tuffcli", registry = "pypi" },
 ]
 
 [projects.textual]

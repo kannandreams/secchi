@@ -18,6 +18,7 @@ def _config_locations() -> list[Path]:
     """Return candidate config file paths in priority order."""
     candidates: list[Path] = []
     candidates.append(Path.cwd() / "secchi.toml")
+    candidates.append(Path.cwd() / ".secchi.toml")
     candidates.append(Path.cwd() / "pkgwatch.toml")
     if platform := os.environ.get("XDG_CONFIG_HOME", ""):
         candidates.append(Path(platform) / "secchi" / "config.toml")
@@ -29,7 +30,7 @@ def _config_locations() -> list[Path]:
 def find_config(explicit: str | None = None) -> Path | None:
     """Locate the config file.
 
-    Priority: explicit path > ./secchi.toml > ./pkgwatch.toml >
+    Priority: explicit path > ./secchi.toml > ./.secchi.toml > ./pkgwatch.toml >
     ~/.config/secchi/config.toml
     """
     if explicit:
@@ -63,12 +64,17 @@ def load_project(config_path: Path, project_name: str) -> Project:
     project = Project(
         name=project_name,
         description=raw.get("description", ""),
+        favorite=bool(raw.get("favorite", False)),
+        repository_url=raw.get("repository", raw.get("repository_url", "")),
     )
 
     for pkg in raw.get("packages", []):
         name = pkg["name"]
         registry_raw = pkg.get("registry", "pypi")
-        favorite = bool(pkg.get("favorite", False))
+        # Package-level favorites are retained for compatibility with existing
+        # configs. New configs should put this navigation preference on the
+        # project instead.
+        favorite = bool(pkg.get("favorite", raw.get("favorite", False)))
         try:
             registry = Registry(registry_raw)
         except ValueError:
@@ -87,6 +93,11 @@ def list_projects(config_path: Path) -> list[str]:
     """List all project names in the config file."""
     data = tomllib.loads(config_path.read_text())
     return list(data.get("projects", {}).keys())
+
+
+def load_projects(config_path: Path) -> list[Project]:
+    """Load every project in configuration order for workspace dashboards."""
+    return [load_project(config_path, name) for name in list_projects(config_path)]
 
 
 def get_env_token(var_name: str) -> str | None:

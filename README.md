@@ -19,11 +19,11 @@ adoption, dependencies, releases, and ecosystem signals from your terminal.
 | --- | --- | :---: |
 | Explore | CLI | ✅ |
 | Explore | Interactive TUI | ✅ |
-| Explore | Search packages | ✅ |
+| Explore | Exact package discovery across registries | ✅ |
 | Explore | Compare packages | ✅ |
-| Report | HTML | 🚧 |
-| Report | JSON | 🚧 |
-| Report | Markdown | ⏳ |
+| Report | HTML | ✅ |
+| Report | JSON | ✅ |
+| Report | Markdown | ✅ |
 | Report | CSV | ⏳ |
 | Automate | Repository configuration | ⏳ |
 | Automate | Policy checks | ⏳ |
@@ -64,6 +64,20 @@ secchi -p tuffcli
 secchi --project opencode
 ```
 
+Explore a package directly, without a configuration file:
+
+```bash
+secchi show duckdb
+secchi dashboard duckdb
+secchi search duckdb
+secchi report duckdb --format html --output duckdb-report.html
+secchi check duckdb --min-health 80 --require-ci
+```
+
+`show`, `dashboard`, and `report` use the same data collection and scoring
+pipeline. Add `--registry pypi`, `--registry crates.io`, or `--registry npm`
+when a package name needs an explicit ecosystem.
+
 List available projects:
 
 ```bash
@@ -76,19 +90,26 @@ Secchi looks for config in this order:
 
 1. `--config` / `-c` path
 2. `./secchi.toml`
-3. `./pkgwatch.toml` (legacy)
-4. `~/.config/secchi/config.toml`
+3. `./.secchi.toml`
+4. `./pkgwatch.toml` (legacy)
+5. `~/.config/secchi/config.toml`
 
 Example `secchi.toml`:
 
 ```toml
 [projects.tuffcli]
 description = "tuffcli — capability lifecycle manager for coding agents"
+favorite = true
+repository = "https://github.com/example/tuffcli"
 packages = [
-    { name = "tuffcli", registry = "crates.io", favorite = true },
-    { name = "tuffcli", registry = "pypi", favorite = true },
+    { name = "tuffcli", registry = "crates.io" },
+    { name = "tuffcli", registry = "pypi" },
 ]
 ```
+
+`favorite` belongs to the project, which makes workspace navigation clear when
+one project contains several registry variants of the same package. Existing
+package-level `favorite` entries remain supported for compatibility.
 
 ## Supported Registries
 
@@ -101,12 +122,14 @@ packages = [
 ## CLI Options
 
 ```
-secchi --project <name>     Monitor a project
-secchi --list                List projects in config
-secchi --refresh             Force refresh all package data
-secchi --config <path>       Use a specific config file
-secchi init                  Interactively create secchi.toml
-secchi monitor <project>     Alias for --project
+secchi dashboard [package]              Launch the TUI (workspace when omitted)
+secchi show <package>                   Print a concise intelligence summary
+secchi search <package>                 Check exact package availability across registries
+secchi report <package> --format <type> Generate json, html, or md output
+secchi check <package>                 Evaluate health and CI policies for automation
+secchi --project <name>                 Backwards-compatible project dashboard
+secchi --list                           List projects in config
+secchi init                             Interactively create secchi.toml
 ```
 
 ## Development

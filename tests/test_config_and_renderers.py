@@ -1,0 +1,46 @@
+from pathlib import Path
+
+from secchi.config import load_project
+from secchi.models import DerivedPackageData, HealthScore, PackageInfo, PackageRef, Registry
+from secchi.policy import evaluate_default_policy
+from secchi.renderers.summary import render_summary
+from secchi.services.resolver import parse_package_spec
+
+
+def test_project_favorite_is_applied_to_package_refs(tmp_path: Path) -> None:
+    config = tmp_path / "secchi.toml"
+    config.write_text(
+        """[projects.demo]
+favorite = true
+repository = "https://example.test/repo"
+packages = [{ name = "demo", registry = "pypi" }]
+"""
+    )
+    project = load_project(config, "demo")
+    assert project.favorite is True
+    assert project.repository_url == "https://example.test/repo"
+    assert project.packages[0].favorite is True
+
+
+def test_registry_prefixed_package_spec() -> None:
+    ref = parse_package_spec("npm:duckdb")
+    assert ref == PackageRef(name="duckdb", registry=Registry.NPM)
+
+
+def test_summary_includes_primary_signals() -> None:
+    info = PackageInfo(name="duckdb", registry=Registry.PYPI, latest_version="1.5.5")
+    info.github_stats.resolved = True
+    info.github_stats.stars = 34_000
+    derived = DerivedPackageData(health_score=HealthScore(total=92))
+    output = render_summary(info, derived)
+    assert "Health Score      92 / 100" in output
+    assert "Latest Version    1.5.5" in output
+    assert "GitHub Stars      34.0k" in output
+
+
+def test_default_policy_reports_a_failed_health_threshold() -> None:
+    info = PackageInfo(name="demo", registry=Registry.PYPI)
+    results = evaluate_default_policy(
+        info, DerivedPackageData(health_score=HealthScore(total=69)), min_health=70
+    )
+    assert results[0].passed is False
