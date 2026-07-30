@@ -120,7 +120,14 @@ def _workspace_project(config_path: Path) -> Project:
     refs: list[PackageRef] = []
     for project in projects:
         for ref in project.packages:
-            refs.append(PackageRef(ref.name, ref.registry, ref.favorite or project.favorite))
+            refs.append(
+                PackageRef(
+                    ref.name,
+                    ref.registry,
+                    ref.favorite or project.favorite,
+                    project.name,
+                )
+            )
     return Project(name="Workspace", description="Configured Secchi workspace", packages=refs)
 
 
@@ -158,13 +165,23 @@ def _dashboard(args: argparse.Namespace, parser: argparse.ArgumentParser) -> Non
         if not config_path:
             parser.error("No config found. Use 'secchi dashboard PACKAGE' or create secchi.toml.")
         try:
-            project = load_project(config_path, project_name) if project_name else _workspace_project(config_path)
+            workspace = None
+            if project_name:
+                project = load_project(config_path, project_name)
+            else:
+                workspace = load_projects(config_path)
+                project = _workspace_project(config_path)
         except ValueError as exc:
             parser.error(str(exc))
     if not project.packages:
         parser.error("The selected workspace has no packages.")
     from secchi.ui.app import Secchi
-    Secchi(project=project, config_path=config_path, force_refresh=refresh).run()
+    Secchi(
+        project=project,
+        config_path=config_path,
+        force_refresh=refresh,
+        workspace=workspace if not package else None,
+    ).run()
 
 
 def _search(args: argparse.Namespace) -> None:

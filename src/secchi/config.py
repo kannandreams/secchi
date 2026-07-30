@@ -83,7 +83,12 @@ def load_project(config_path: Path, project_name: str) -> Project:
                 f"Must be one of: {', '.join(r.value for r in Registry)}"
             )
         project.packages.append(
-            PackageRef(name=name, registry=registry, favorite=favorite)
+            PackageRef(
+                name=name,
+                registry=registry,
+                favorite=favorite,
+                project_name=project_name,
+            )
         )
 
     return project

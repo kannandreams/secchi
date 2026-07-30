@@ -2,6 +2,7 @@ import asyncio
 from pathlib import Path
 
 from secchi.config import load_project
+from secchi.aggregate import package_key
 from secchi.models import DerivedPackageData, HealthScore, PackageInfo, PackageRef, Registry
 from secchi.policy import evaluate_default_policy
 from secchi.renderers.summary import render_summary
@@ -23,6 +24,13 @@ packages = [{ name = "demo", registry = "pypi" }]
     assert project.favorite is True
     assert project.repository_url == "https://example.test/repo"
     assert project.packages[0].favorite is True
+    assert project.packages[0].project_name == "demo"
+
+
+def test_workspace_package_keys_keep_same_name_projects_separate() -> None:
+    first = PackageRef("shared", Registry.PYPI, project_name="first")
+    second = PackageRef("shared", Registry.PYPI, project_name="second")
+    assert package_key(first) != package_key(second)
 
 
 def test_registry_prefixed_package_spec() -> None:

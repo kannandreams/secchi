@@ -16,7 +16,8 @@ from secchi.models import (
 
 
 def package_key(ref: PackageRef) -> str:
-    return f"{ref.registry.value}:{ref.name}"
+    project = f"{ref.project_name}:" if ref.project_name else ""
+    return f"{project}{ref.registry.value}:{ref.name}"
 
 
 def logical_package_refs(refs: list[PackageRef]) -> list[PackageRef]:

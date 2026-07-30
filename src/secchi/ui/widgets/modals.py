@@ -56,7 +56,8 @@ class SearchScreen(ModalScreen[PackageRef | None]):
             results.add_option(Option(label, id=self._key(ref)))
 
     def _key(self, ref: PackageRef) -> str:
-        return f"{ref.registry.value}:{ref.name}"
+        project = f"{ref.project_name}:" if ref.project_name else ""
+        return f"{project}{ref.registry.value}:{ref.name}"
 
     @on(Input.Changed, "#search-input")
     def _on_change(self, event: Input.Changed) -> None:
@@ -87,10 +88,12 @@ class SearchScreen(ModalScreen[PackageRef | None]):
     def _visible_packages(self) -> list[PackageRef]:
         seen: dict[str, PackageRef] = {}
         for ref in self._project.packages:
-            key = ref.name.lower()
+            key = f"{ref.project_name}:{ref.name.lower()}"
             current = seen.get(key)
             if current is None:
-                seen[key] = PackageRef(ref.name, ref.registry, ref.favorite)
+                seen[key] = PackageRef(
+                    ref.name, ref.registry, ref.favorite, ref.project_name
+                )
             elif ref.favorite and not current.favorite:
                 current.favorite = True
         return list(seen.values())

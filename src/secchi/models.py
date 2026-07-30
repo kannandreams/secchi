@@ -33,6 +33,7 @@ class PackageRef:
     name: str
     registry: Registry
     favorite: bool = False
+    project_name: str = ""
 
 
 @dataclass

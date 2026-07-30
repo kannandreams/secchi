@@ -101,6 +101,21 @@ Sidebar .sidebar-section {
     width: 100%;
 }
 
+Sidebar .sidebar-project {
+    color: #E5E7EB;
+    text-style: bold;
+    padding: 1 0 0 0;
+    width: 100%;
+    height: 2;
+}
+
+Sidebar .sidebar-project-repository {
+    color: #6B7280;
+    padding: 0 0 0 1;
+    width: 100%;
+    height: 1;
+}
+
 SidebarItem {
     padding: 0 1;
     width: 100%;

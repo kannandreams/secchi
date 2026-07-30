@@ -15,7 +15,7 @@ from secchi.ui import palette
 
 
 class SidebarItem(Static):
-    """A clickable/selectable package entry showing name + version."""
+    """A clickable/selectable package source showing name + registry + version."""
 
     def __init__(self, ref: PackageRef) -> None:
         self.ref = ref
@@ -29,9 +29,10 @@ class SidebarItem(Static):
 
     def _content(self) -> str:
         name = self.ref.name
-        display = name if len(name) <= 14 else name[:13] + "…"
+        display = name if len(name) <= 13 else name[:12] + "…"
         version = self._version or "…"
-        return f"{display:<14}[dim]{version:>6}[/]"
+        registry = self.ref.registry.display_name
+        return f"{display:<13} [dim]{registry:<8} {version:>6}[/]"
 
     def on_click(self) -> None:
         self.post_message(Sidebar.PackageSelected(self.ref))
@@ -96,6 +97,35 @@ class Sidebar(Vertical):
         if not hasattr(app, "project"):
             return
         project: Project = app.project
+        workspace = getattr(app, "workspace_projects", [])
+
+        if workspace:
+            listing.mount(Static("PROJECTS", classes="sidebar-title"))
+            projects = workspace
+            if self._favorites_only:
+                projects = [project for project in projects if project.favorite]
+            for project in projects:
+                star = f"[{palette.YELLOW}]★[/] " if project.favorite else ""
+                description = f" [dim]— {project.description[:24]}[/]" if project.description else ""
+                listing.mount(
+                    Static(
+                        f"{star}[b]{project.name}[/]{description}",
+                        classes="sidebar-project",
+                    )
+                )
+                if project.repository_url:
+                    listing.mount(
+                        Static(
+                            f" [dim]{project.repository_url[:38]}[/]",
+                            classes="sidebar-project-repository",
+                        )
+                    )
+                for ref in project.packages:
+                    self._add_item(ref, key_suffix=f"project:{project.name}")
+            self._refresh_versions()
+            self._highlight()
+            return
+
         packages = getattr(app, "visible_packages", project.packages)
 
         listing.mount(Static("PACKAGES", classes="sidebar-title"))
@@ -139,7 +169,7 @@ class Sidebar(Vertical):
         app = self.app
         data = getattr(app, "package_data", {})
         for order_key, item in self._items.items():
-            info = data.get(f"{item.ref.registry.value}:{item.ref.name}")
+            info = data.get(self._pkg_key(item.ref))
             if info and info.latest_version:
                 item.set_version(info.latest_version)
 
@@ -187,7 +217,8 @@ class Sidebar(Vertical):
     # ── selection / highlight ──
 
     def _pkg_key(self, ref: PackageRef) -> str:
-        return f"{ref.registry.value}:{ref.name}"
+        project = f"{ref.project_name}:" if ref.project_name else ""
+        return f"{project}{ref.registry.value}:{ref.name}"
 
     def select_package(self, ref: PackageRef) -> None:
         target = self._pkg_key(ref)

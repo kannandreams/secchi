@@ -55,9 +55,11 @@ class Secchi(App[None]):
         project: Project,
         config_path: Path,
         force_refresh: bool = False,
+        workspace: list[Project] | None = None,
     ) -> None:
         super().__init__()
         self._project = project
+        self._workspace = workspace or []
         self._config_path = config_path
         self._force_refresh = force_refresh
         self._package_data: dict[str, PackageInfo] = {}
@@ -75,7 +77,13 @@ class Secchi(App[None]):
 
     @property
     def visible_packages(self) -> list[PackageRef]:
+        if self._workspace:
+            return list(self._project.packages)
         return _logical_package_refs(self._project.packages)
+
+    @property
+    def workspace_projects(self) -> list[Project]:
+        return self._workspace
 
     @property
     def refreshed_at(self) -> datetime | None:
@@ -130,7 +138,13 @@ class Secchi(App[None]):
 
     def _matching_refs(self, ref: PackageRef) -> list[PackageRef]:
         target = ref.name.lower()
-        return [r for r in self._project.packages if r.name.lower() == target] or [ref]
+        refs = [
+            r
+            for r in self._project.packages
+            if r.name.lower() == target
+            and (not ref.project_name or r.project_name == ref.project_name)
+        ]
+        return refs or [ref]
 
     def compose(self) -> ComposeResult:
         yield SecchiHeader()
@@ -346,7 +360,8 @@ class Secchi(App[None]):
 
 
 def _package_key(ref: PackageRef) -> str:
-    return f"{ref.registry.value}:{ref.name}"
+    project = f"{ref.project_name}:" if ref.project_name else ""
+    return f"{project}{ref.registry.value}:{ref.name}"
 
 
 def _oldest_time(current: datetime | None, candidate: datetime) -> datetime:
