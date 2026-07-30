@@ -13,14 +13,18 @@ Beautiful TUI dashboard to monitor packages across PyPI, crates.io, and npm.
 
 ## Install
 
-```bash
-pip install secchi
-```
-
-Or with uv:
+Recommended installation methods:
 
 ```bash
 uv tool install secchi
+```
+
+```bash
+pipx install secchi
+```
+
+```bash
+pip install secchi
 ```
 
 ## Quick Start
@@ -92,6 +96,20 @@ uv run textual run --dev src/secchi/dev.py -- -p tuffcli
 ```
 
 Press `ctrl+r` to manually reload the dashboard without exiting.
+
+## Release
+
+Releases are published automatically from GitHub Actions using PyPI Trusted
+Publishing. The package version is derived from the release tag, so create a
+tag with the `v` prefix:
+
+```bash
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+Before the first release, configure PyPI Trusted Publishing for the GitHub
+repository and `.github/workflows/release.yml` workflow.
 
 ## License
 

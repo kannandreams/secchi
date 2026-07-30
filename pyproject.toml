@@ -1,12 +1,15 @@
 [project]
 name = "secchi"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Beautiful TUI dashboard to monitor packages across PyPI, crates.io, and npm"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
 authors = [
-    { name = "Secchi Contributors" },
+    { name = "Kannan Kalidasan" },
+]
+maintainers = [
+    { name = "kannandreams" },
 ]
 dependencies = [
     "textual>=8.0",
@@ -20,8 +23,11 @@ dependencies = [
 secchi = "secchi.cli:main"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/secchi"]
