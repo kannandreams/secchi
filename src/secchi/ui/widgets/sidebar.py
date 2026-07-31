@@ -272,9 +272,15 @@ class Sidebar(Vertical):
     def _spotlight_markup(self) -> str:
         if self._spotlight is None:
             return ""
+        stars = (
+            f"[{palette.YELLOW}]★ {self._spotlight.stars}[/]   "
+            if self._spotlight.stars is not None
+            else ""
+        )
         return (
             f"[b white]{self._spotlight.title}[/]\n"
             f"[#94A3B8]{self._spotlight.description}[/]\n"
+            f"{stars}[dim]{self._spotlight.project_stage}[/]\n"
             f"[#22D3EE]{self._spotlight.url}[/]"
         )
 

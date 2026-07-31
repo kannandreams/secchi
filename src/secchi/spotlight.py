@@ -26,13 +26,26 @@ class Spotlight:
     url: str
     accent: str = ""
     expires_at: datetime | None = None
+    stars: int | None = None
+
+    @property
+    def project_stage(self) -> str:
+        """Editorial context for discovery; never controls Spotlight visibility."""
+        if self.stars is None:
+            return "Spotlight project"
+        if self.stars < 50:
+            return "Early project"
+        if self.stars < 500:
+            return "Growing project"
+        return "Established project"
 
 
 FALLBACK_SPOTLIGHT = Spotlight(
     title="tuffcli",
-    description="Capability manager",
+    description="Capability lifecycle manager for coding agents.",
     url="github.com/kannandreams/tuff",
     accent="blue",
+    stars=1,
 )
 
 
@@ -72,6 +85,7 @@ def save_cached_spotlight(spotlight: Spotlight, fetched_at: datetime) -> None:
             "expires_at": spotlight.expires_at.isoformat()
             if spotlight.expires_at
             else "",
+            "stars": spotlight.stars,
         },
     }
     try:
@@ -108,6 +122,7 @@ def _decode_spotlight(raw: dict[str, Any]) -> Spotlight:
     description = _clean_text(raw.get("description", ""), max_len=72)
     url = _clean_url(raw.get("url", ""))
     accent = _clean_text(raw.get("accent", ""), max_len=16)
+    stars = _parse_stars(raw.get("stars"))
     expires_at = _parse_datetime(raw.get("expires_at"))
     if not title or not description or not url:
         raise ValueError("Spotlight requires title, description, and url")
@@ -119,6 +134,7 @@ def _decode_spotlight(raw: dict[str, Any]) -> Spotlight:
         url=url,
         accent=accent,
         expires_at=expires_at,
+        stars=stars,
     )
 
 
@@ -144,4 +160,13 @@ def _parse_datetime(raw: Any) -> datetime | None:
     try:
         return datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
     except ValueError:
+        return None
+
+
+def _parse_stars(raw: Any) -> int | None:
+    if raw is None or isinstance(raw, bool):
+        return None
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
         return None
