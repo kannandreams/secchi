@@ -91,8 +91,7 @@ Secchi looks for config in this order:
 1. `--config` / `-c` path
 2. `./secchi.toml`
 3. `./.secchi.toml`
-4. `./pkgwatch.toml` (legacy)
-5. `~/.config/secchi/config.toml`
+4. `~/.config/secchi/config.toml`
 
 Example `secchi.toml`:
 

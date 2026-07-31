@@ -19,7 +19,6 @@ def _config_locations() -> list[Path]:
     candidates: list[Path] = []
     candidates.append(Path.cwd() / "secchi.toml")
     candidates.append(Path.cwd() / ".secchi.toml")
-    candidates.append(Path.cwd() / "pkgwatch.toml")
     if platform := os.environ.get("XDG_CONFIG_HOME", ""):
         candidates.append(Path(platform) / "secchi" / "config.toml")
     else:
@@ -30,7 +29,7 @@ def _config_locations() -> list[Path]:
 def find_config(explicit: str | None = None) -> Path | None:
     """Locate the config file.
 
-    Priority: explicit path > ./secchi.toml > ./.secchi.toml > ./pkgwatch.toml >
+    Priority: explicit path > ./secchi.toml > ./.secchi.toml >
     ~/.config/secchi/config.toml
     """
     if explicit:
@@ -110,11 +109,6 @@ def get_env_token(var_name: str) -> str | None:
 
     Supported vars:
     - SECCHI_GITHUB_TOKEN — GitHub API token for release notes
-    - PKGWATCH_GITHUB_TOKEN — legacy fallback for SECCHI_GITHUB_TOKEN
     """
     token = os.environ.get(var_name)
-    if token:
-        return token
-    if var_name == "SECCHI_GITHUB_TOKEN":
-        return os.environ.get("PKGWATCH_GITHUB_TOKEN")
-    return None
+    return token or None
