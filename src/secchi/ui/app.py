@@ -67,6 +67,8 @@ class Secchi(App[None]):
         self._derived_data: dict[str, DerivedPackageData] = {}
         self._refreshed_at: datetime | None = None
         self._selected_ref: PackageRef | None = None
+        self._loaded_projects: set[str] = set()
+        self._loading_projects: set[str] = set()
         self._render_in_progress = False
         self._render_again = False
         self._intelligence = PackageIntelligenceService()
@@ -164,7 +166,8 @@ class Secchi(App[None]):
     # ── actions ──
 
     def action_refresh(self) -> None:
-        self._start_data_fetch(force=True)
+        project_name = self._selected_ref.project_name if self._selected_ref else None
+        self._start_data_fetch(force=True, project_name=project_name)
 
     def action_toggle_filter(self) -> None:
         self.query_one(Sidebar).toggle_favorites_filter()
@@ -244,11 +247,21 @@ class Secchi(App[None]):
         packages = self.visible_packages
         if not packages:
             return
-        favorite = next((r for r in packages if r.favorite), None)
-        self.navigate_to_package(favorite or packages[0], render=render)
+        if self._workspace:
+            favorite_project = next((p for p in self._workspace if p.favorite), None)
+            project = favorite_project or self._workspace[0]
+            selected = project.packages[0] if project.packages else None
+        else:
+            selected = next((r for r in packages if r.favorite), None) or packages[0]
+        if selected is not None:
+            self.navigate_to_package(selected, render=render, load=False)
 
-    def navigate_to_package(self, ref: PackageRef, *, render: bool = True) -> None:
+    def navigate_to_package(
+        self, ref: PackageRef, *, render: bool = True, load: bool = True
+    ) -> None:
         self._selected_ref = ref
+        if load and self._workspace and ref.project_name:
+            self._start_data_fetch(project_name=ref.project_name)
         if render:
             self._render_selected()
         try:
@@ -259,6 +272,13 @@ class Secchi(App[None]):
     @on(Sidebar.PackageSelected)
     def _on_package_selected(self, event: Sidebar.PackageSelected) -> None:
         self.navigate_to_package(event.ref)
+
+    @on(Sidebar.ProjectSelected)
+    def _on_project_selected(self, event: Sidebar.ProjectSelected) -> None:
+        if not event.project.packages:
+            self.notify("This project has no package sources.", severity="warning")
+            return
+        self.navigate_to_package(event.project.packages[0])
 
     def _render_selected(self) -> None:
         if self._selected_ref is None:
@@ -306,19 +326,48 @@ class Secchi(App[None]):
 
     # ── data fetching ──
 
-    def _start_data_fetch(self, *, force: bool = False) -> None:
+    def _start_data_fetch(
+        self, *, force: bool = False, project_name: str | None = None
+    ) -> None:
         self._refreshed_at = None
-        for ref in self._project.packages:
+        refs = self._project.packages
+        effective_project = project_name
+        if self._workspace:
+            target = project_name or (
+                self._selected_ref.project_name if self._selected_ref else ""
+            )
+            if not target:
+                return
+            if not force and target in self._loaded_projects:
+                return
+            if target in self._loading_projects:
+                return
+            refs = [ref for ref in self._project.packages if ref.project_name == target]
+            self._loading_projects.add(target)
+            effective_project = target
+
+        for ref in refs:
             key = _package_key(ref)
             if key not in self._package_data:
                 self._package_data[key] = PackageInfo(
                     name=ref.name, registry=ref.registry
                 )
-        self.run_worker(self._fetch_all_packages(force=force), exclusive=False)
+        group = f"fetch:{effective_project}" if effective_project else "fetch"
+        self.run_worker(
+            self._fetch_all_packages(refs, force=force, project_name=effective_project),
+            exclusive=False,
+            group=group,
+        )
 
-    async def _fetch_all_packages(self, *, force: bool = False) -> None:
+    async def _fetch_all_packages(
+        self,
+        refs: list[PackageRef],
+        *,
+        force: bool = False,
+        project_name: str | None = None,
+    ) -> None:
         result = await self._intelligence.fetch_project(
-            self._project.packages, force_refresh=force
+            refs, force_refresh=force
         )
         for key, package_result in result.results.items():
             if package_result.info is not None:
@@ -329,6 +378,9 @@ class Secchi(App[None]):
             if package_result.error is not None:
                 self._package_errors[key] = package_result.error
         self._refreshed_at = result.refreshed_at or datetime.now(timezone.utc)
+        if project_name:
+            self._loading_projects.discard(project_name)
+            self._loaded_projects.add(project_name)
         self._notify_ui_update()
 
     async def _fetch_single_package(

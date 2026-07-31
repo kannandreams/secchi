@@ -16,12 +16,14 @@ def test_project_favorite_is_applied_to_package_refs(tmp_path: Path) -> None:
     config.write_text(
         """[projects.demo]
 favorite = true
+title = "Demo Project"
 repository = "https://example.test/repo"
 packages = [{ name = "demo", registry = "pypi" }]
 """
     )
     project = load_project(config, "demo")
     assert project.favorite is True
+    assert project.title == "Demo Project"
     assert project.repository_url == "https://example.test/repo"
     assert project.packages[0].favorite is True
     assert project.packages[0].project_name == "demo"

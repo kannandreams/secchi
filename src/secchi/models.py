@@ -44,6 +44,7 @@ class Project:
     favorite: bool = False
     repository_url: str = ""
     packages: list[PackageRef] = field(default_factory=list)
+    title: str = ""
 
 
 @dataclass

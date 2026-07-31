@@ -97,6 +97,7 @@ Example `secchi.toml`:
 
 ```toml
 [projects.tuffcli]
+title = "TuffCLI"
 description = "tuffcli — capability lifecycle manager for coding agents"
 favorite = true
 repository = "https://github.com/example/tuffcli"

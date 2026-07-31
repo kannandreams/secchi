@@ -15,6 +15,7 @@ packages = [
 ]
 
 [projects.duckdb]
+title = "DuckDB"
 description = "DuckDB — embeddable analytical database"
 favorite = true
 repository = "https://github.com/duckdb/duckdb"

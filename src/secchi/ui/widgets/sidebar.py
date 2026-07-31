@@ -38,6 +38,18 @@ class SidebarItem(Static):
         self.post_message(Sidebar.PackageSelected(self.ref))
 
 
+class ProjectItem(Static):
+    """Clickable workspace project heading."""
+
+    def __init__(self, project: Project) -> None:
+        self.project = project
+        super().__init__()
+        self.can_focus = False
+
+    def on_click(self) -> None:
+        self.post_message(Sidebar.ProjectSelected(self.project))
+
+
 class Sidebar(Vertical):
     """Left sidebar: PACKAGES (favorites + all)."""
 
@@ -55,6 +67,13 @@ class Sidebar(Vertical):
         def __init__(self, ref: PackageRef) -> None:
             super().__init__()
             self.ref = ref
+
+    class ProjectSelected(Message):
+        """Emitted when a workspace project heading is chosen."""
+
+        def __init__(self, project: Project) -> None:
+            super().__init__()
+            self.project = project
 
     def __init__(self) -> None:
         super().__init__()
@@ -107,12 +126,11 @@ class Sidebar(Vertical):
             for project in projects:
                 star = f"[{palette.YELLOW}]★[/] " if project.favorite else ""
                 description = f" [dim]— {project.description[:24]}[/]" if project.description else ""
-                listing.mount(
-                    Static(
-                        f"{star}[b]{project.name}[/]{description}",
-                        classes="sidebar-project",
-                    )
-                )
+                title = project.title or project.name
+                project_item = ProjectItem(project)
+                project_item.update(f"{star}[b]{title}[/]{description}")
+                project_item.add_class("sidebar-project")
+                listing.mount(project_item)
                 if project.repository_url:
                     listing.mount(
                         Static(

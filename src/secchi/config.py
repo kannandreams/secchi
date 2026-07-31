@@ -62,6 +62,7 @@ def load_project(config_path: Path, project_name: str) -> Project:
     raw = projects[project_name]
     project = Project(
         name=project_name,
+        title=raw.get("title", project_name),
         description=raw.get("description", ""),
         favorite=bool(raw.get("favorite", False)),
         repository_url=raw.get("repository", raw.get("repository_url", "")),

@@ -109,6 +109,10 @@ Sidebar .sidebar-project {
     height: 2;
 }
 
+Sidebar .sidebar-project:hover {
+    background: #101010;
+}
+
 Sidebar .sidebar-project-repository {
     color: #6B7280;
     padding: 0 0 0 1;
