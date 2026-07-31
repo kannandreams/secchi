@@ -9,22 +9,53 @@ class Registry(str, Enum):
     PYPI = "pypi"
     CRATES = "crates.io"
     NPM = "npm"
+    HOMEBREW = "homebrew"
+    GO = "go"
+    CRAN = "cran"
 
     @property
     def display_name(self) -> str:
-        return {self.PYPI: "PyPI", self.CRATES: "crates.io", self.NPM: "npm"}[self]
+        return {
+            self.PYPI: "PyPI",
+            self.CRATES: "crates.io",
+            self.NPM: "npm",
+            self.HOMEBREW: "Homebrew",
+            self.GO: "Go Modules",
+            self.CRAN: "CRAN",
+        }[self]
 
     @property
     def icon(self) -> str:
-        return {self.PYPI: "📦", self.CRATES: "🦀", self.NPM: "📜"}[self]
+        return {
+            self.PYPI: "📦",
+            self.CRATES: "🦀",
+            self.NPM: "📜",
+            self.HOMEBREW: "🍺",
+            self.GO: "🐹",
+            self.CRAN: "📈",
+        }[self]
 
     @property
     def language(self) -> str:
-        return {self.PYPI: "Python", self.CRATES: "Rust", self.NPM: "JavaScript"}[self]
+        return {
+            self.PYPI: "Python",
+            self.CRATES: "Rust",
+            self.NPM: "JavaScript",
+            self.HOMEBREW: "Ruby/C++",
+            self.GO: "Go",
+            self.CRAN: "R",
+        }[self]
 
     @property
     def install_command(self) -> str:
-        return {self.PYPI: "pip install", self.CRATES: "cargo install", self.NPM: "npm install"}[self]
+        return {
+            self.PYPI: "pip install",
+            self.CRATES: "cargo install",
+            self.NPM: "npm install",
+            self.HOMEBREW: "brew install",
+            self.GO: "go get",
+            self.CRAN: "install.packages",
+        }[self]
 
 
 @dataclass

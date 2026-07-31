@@ -122,6 +122,9 @@ package-level `favorite` entries remain supported for compatibility.
 | PyPI       | `pypi`        |
 | crates.io  | `crates.io`   |
 | npm        | `npm`         |
+| Homebrew   | `homebrew`    |
+| Go Modules | `go`          |
+| CRAN (R)   | `cran`        |
 
 ## CLI Options
 

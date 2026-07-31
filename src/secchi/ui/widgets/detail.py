@@ -29,6 +29,8 @@ ECOSYSTEM_ICONS: dict[str, str] = {
     "pypi": "🐍",
     "npm": "⬢",
     "homebrew": "🍺",
+    "go": "🐹",
+    "cran": "📈",
     "docker": "🐳",
     "nix": "❄️",
     "winget": "🪟",

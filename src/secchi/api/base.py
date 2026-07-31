@@ -65,6 +65,9 @@ class RegistryAdapter(Protocol):
 def create_adapter(registry: Registry) -> RegistryAdapter:
     """Factory: return the correct adapter for a given registry."""
     from secchi.api.crates import CratesAdapter
+    from secchi.api.cran import CranAdapter
+    from secchi.api.golang import GoModuleAdapter
+    from secchi.api.homebrew import HomebrewAdapter
     from secchi.api.npm import NpmAdapter
     from secchi.api.pypi import PyPIAdapter
 
@@ -72,6 +75,9 @@ def create_adapter(registry: Registry) -> RegistryAdapter:
         Registry.PYPI: PyPIAdapter,
         Registry.CRATES: CratesAdapter,
         Registry.NPM: NpmAdapter,
+        Registry.HOMEBREW: HomebrewAdapter,
+        Registry.GO: GoModuleAdapter,
+        Registry.CRAN: CranAdapter,
     }
     cls = adapters[registry]
     return cls()

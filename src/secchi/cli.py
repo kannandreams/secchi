@@ -100,7 +100,9 @@ def cmd_init() -> None:
             package_name = input("    Package name: ").strip()
             if not package_name:
                 break
-            registry = input("    Registry [pypi/crates.io/npm, default: pypi]: ").strip()
+            registry = input(
+                "    Registry [pypi/crates.io/npm/homebrew/go/cran, default: pypi]: "
+            ).strip()
             packages.append({"name": package_name, "registry": registry or "pypi"})
         if packages:
             projects[name] = {"description": description, "favorite": favorite, "packages": packages}
