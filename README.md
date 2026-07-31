@@ -129,6 +129,19 @@ packages = [
 one project contains several registry variants of the same package. Existing
 package-level `favorite` entries remain supported for compatibility.
 
+## Optional Spotlight Feed
+
+The dashboard can show a small, curated Spotlight card from Secchi's public
+feed. Spotlight is cached locally and can be disabled completely when you do
+not want Secchi to request the feed.
+
+```bash
+SECCHI_DISABLE_SPOTLIGHT=1 secchi dashboard duckdb
+```
+
+When this variable is set to `1`, `true`, `yes`, or `on`, Secchi does not read
+or fetch Spotlight data and removes the card from the dashboard.
+
 ## Supported Registries
 
 | Registry   | Key           |
