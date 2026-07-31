@@ -81,6 +81,32 @@ def test_default_policy_reports_a_failed_health_threshold() -> None:
     assert results[0].passed is False
 
 
+def test_default_policy_can_require_ci() -> None:
+    info = PackageInfo(name="demo", registry=Registry.PYPI)
+    info.github_stats.has_ci = True
+    results = evaluate_default_policy(
+        info,
+        DerivedPackageData(health_score=HealthScore(total=90)),
+        require_ci=True,
+    )
+    assert all(result.passed for result in results)
+
+
+def test_package_reports_include_repository_attribution() -> None:
+    info = PackageInfo(
+        name="demo",
+        registry=Registry.PYPI,
+        repository_url="https://github.com/example/demo",
+    )
+    derived = DerivedPackageData(health_score=HealthScore(total=90))
+    ref = PackageRef("demo", Registry.PYPI)
+
+    from secchi.renderers.reports import render_report
+
+    assert "⭐ Star the project" in render_report("md", info, derived, ref, "demo")
+    assert "⭐ Star the project" in render_report("html", info, derived, ref, "demo")
+
+
 def test_project_report_contains_sources_in_all_formats() -> None:
     project = Project(
         name="demo",

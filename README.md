@@ -108,6 +108,53 @@ package inspection, cross-registry search, configured project reports, and
 health policy checks. It reuses the same cached intelligence pipeline as the
 CLI, dashboard, and report commands.
 
+## Use Secchi with MCP
+
+Secchi can be added to an MCP-compatible coding agent or desktop client as a
+local stdio server. If `secchi` is installed as a tool, use:
+
+```json
+{
+  "mcpServers": {
+    "secchi": {
+      "command": "secchi-mcp"
+    }
+  }
+}
+```
+
+When running from a source checkout with uv, point the client at the project:
+
+```json
+{
+  "mcpServers": {
+    "secchi": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "/path/to/secchi",
+        "secchi-mcp"
+      ]
+    }
+  }
+}
+```
+
+The exact configuration file location depends on the MCP client. After the
+server is added, the agent can use these tools:
+
+| MCP tool | Use it for |
+| --- | --- |
+| `inspect_package` | Inspect health, adoption, releases, dependencies, and repository signals |
+| `search_packages` | Find matching packages across PyPI, npm, crates.io, Homebrew, Go Modules, and CRAN |
+| `inspect_project` | Read a configured project from `secchi.toml` and summarize all its package sources |
+| `check_package` | Evaluate minimum health and repository CI policies |
+
+Package inspection uses Secchi's local cache by default. Ask the agent to
+refresh the data when current registry information is required. The MCP server
+is read-only: it does not modify packages, repositories, or configuration.
+
 Reports are written to the current directory by default. Use `--output` to
 choose a file path, or `--output -` to print the report to stdout.
 
