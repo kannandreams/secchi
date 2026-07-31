@@ -13,7 +13,7 @@ from textual.containers import Container, Horizontal
 from textual import on
 
 from secchi import derived as derive
-from secchi.export import export_package_json, save_export
+from secchi.export import save_report
 from secchi.models import (
     DerivedPackageData,
     FetchError,
@@ -26,6 +26,12 @@ from secchi.models import (
 )
 from secchi.spotlight import fetch_spotlight, spotlight_disabled
 from secchi.services.intelligence import PackageIntelligenceService
+from secchi.services.intelligence import IntelligenceResult
+from secchi.renderers.reports import (
+    build_project_report,
+    render_project_report,
+    render_report,
+)
 from secchi.trending import load_cached_trending, fetch_trending, save_cached_trending
 from secchi.ui.widgets.detail import DetailView
 from secchi.ui.widgets.header_bar import SecchiHeader
@@ -187,24 +193,46 @@ class Secchi(App[None]):
             self.notify("No package selected.", severity="warning")
             return
 
+        project_scope = bool(self._workspace or len(self._project.packages) > 1)
+
         def _on_export(format_id: str | None) -> None:
             if format_id is None:
                 return
             ref = self._selected_ref
             if ref is None:
                 return
-            info = self.get_package_info(ref)
-            derived = self.get_derived(ref)
-            if info is None:
-                self.notify("No data loaded yet.", severity="warning")
-                return
-            json_str = export_package_json(
-                info, derived, ref, self._project.name
-            )
-            path = save_export(json_str, self._project.name, ref.name)
+            format_name = format_id
+            if project_scope:
+                project = next(
+                    (item for item in self._workspace if item.name == ref.project_name),
+                    self._project,
+                )
+                results = {
+                    _package_key(source_ref): IntelligenceResult(
+                        ref=source_ref,
+                        info=self._package_data.get(_package_key(source_ref)),
+                        derived=self._derived_data.get(_package_key(source_ref)),
+                        error=self._package_errors.get(_package_key(source_ref)),
+                    )
+                    for source_ref in project.packages
+                }
+                report = build_project_report(project, results)
+                content = render_project_report(format_name, report)
+                subject = project.title or project.name
+                project_name = project.name
+            else:
+                info = self.get_package_info(ref)
+                derived = self.get_derived(ref)
+                if info is None or derived is None:
+                    self.notify("No data loaded yet.", severity="warning")
+                    return
+                content = render_report(format_name, info, derived, ref, self._project.name)
+                subject = ref.name
+                project_name = self._project.name
+            path = save_report(content, project_name, subject, format_name)
             self.notify(f"Exported to {path.name}", title="Export")
 
-        self.push_screen(ExportScreen(), _on_export)
+        self.push_screen(ExportScreen(project_scope=project_scope), _on_export)
 
     def _start_spotlight_fetch(self) -> None:
         if spotlight_disabled():

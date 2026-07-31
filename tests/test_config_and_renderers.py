@@ -3,9 +3,18 @@ from pathlib import Path
 
 from secchi.config import load_project
 from secchi.aggregate import package_key
-from secchi.models import DerivedPackageData, HealthScore, PackageInfo, PackageRef, Registry
+from secchi.models import (
+    DerivedPackageData,
+    HealthScore,
+    PackageInfo,
+    PackageRef,
+    Project,
+    Registry,
+)
 from secchi.policy import evaluate_default_policy
 from secchi.renderers.summary import render_summary
+from secchi.renderers.reports import build_project_report, render_project_report
+from secchi.services.intelligence import IntelligenceResult
 from secchi.services.search import PackageSearchService
 from secchi.services.resolver import parse_package_spec, resolve_package
 from secchi.models import SearchResult
@@ -70,6 +79,25 @@ def test_default_policy_reports_a_failed_health_threshold() -> None:
         info, DerivedPackageData(health_score=HealthScore(total=69)), min_health=70
     )
     assert results[0].passed is False
+
+
+def test_project_report_contains_sources_in_all_formats() -> None:
+    project = Project(
+        name="demo",
+        title="Demo Project",
+        description="A monitored project",
+        packages=[PackageRef("demo", Registry.PYPI, project_name="demo")],
+    )
+    info = PackageInfo(name="demo", registry=Registry.PYPI, latest_version="1.2.3")
+    derived = DerivedPackageData(health_score=HealthScore(total=88))
+    key = "demo:pypi:demo"
+    report = build_project_report(
+        project,
+        {key: IntelligenceResult(ref=project.packages[0], info=info, derived=derived)},
+    )
+    assert "Demo Project" in render_project_report("md", report)
+    assert "1.2.3" in render_project_report("html", report)
+    assert '"source_count": 1' in render_project_report("json", report)
 
 
 def test_search_service_prioritizes_exact_matches_and_survives_registry_errors(monkeypatch) -> None:

@@ -71,8 +71,12 @@ secchi show duckdb
 secchi dashboard duckdb
 secchi search duckdb
 secchi report duckdb --format html --output duckdb-report.html
+secchi report --config secchi.toml --project duckdb --format html
 secchi check duckdb --min-health 80 --require-ci
 ```
+
+Reports are written to the current directory by default. Use `--output` to
+choose a file path, or `--output -` to print the report to stdout.
 
 `search`, `show`, `dashboard`, and `report` use the same data collection and scoring
 pipeline. Add `--registry pypi`, `--registry crates.io`, or `--registry npm`

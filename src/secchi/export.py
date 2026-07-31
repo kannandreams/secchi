@@ -1,4 +1,4 @@
-"""JSON export — serialize selected package data to a file."""
+"""Report file helpers for package and project exports."""
 
 from __future__ import annotations
 
@@ -37,12 +37,25 @@ def export_package_json(
 
 
 def save_export(json_str: str, project_name: str, pkg_name: str) -> Path:
+    return save_report(json_str, project_name, pkg_name, "json")
+
+
+def save_report(
+    content: str,
+    project_name: str,
+    subject: str,
+    format_name: str,
+    directory: Path | None = None,
+) -> Path:
+    """Save a report in the target directory, creating it when necessary."""
     date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     safe_project = project_name.replace("/", "_").replace(" ", "_")
-    safe_pkg = pkg_name.replace("/", "_").replace(" ", "_")
-    filename = f"secchi-{safe_project}-{safe_pkg}-{date}.json"
-    path = Path.cwd() / filename
-    path.write_text(json_str)
+    safe_subject = subject.replace("/", "_").replace(" ", "_")
+    extension = "md" if format_name == "markdown" else format_name
+    filename = f"secchi-{safe_project}-{safe_subject}-{date}.{extension}"
+    path = (directory or Path.cwd()) / filename
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
     return path
 
 

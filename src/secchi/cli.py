@@ -12,7 +12,12 @@ from secchi import __version__
 from secchi.config import find_config, list_projects, load_project, load_projects
 from secchi.models import PackageRef, Project, Registry
 from secchi.policy import evaluate_default_policy
-from secchi.renderers.reports import render_report
+from secchi.renderers.reports import (
+    build_project_report,
+    default_report_path,
+    render_project_report,
+    render_report,
+)
 from secchi.renderers.summary import render_summary
 from secchi.services.intelligence import PackageIntelligenceService
 from secchi.services.resolver import parse_package_spec, resolve_package
@@ -49,11 +54,16 @@ def build_parser() -> argparse.ArgumentParser:
     search.add_argument("--registry", choices=[item.value for item in Registry])
     search.add_argument("--refresh", "-r", action="store_true")
 
-    report = sub.add_parser("report", help="Generate a package report")
-    report.add_argument("package", help="Package name or registry:name")
+    report = sub.add_parser("report", help="Generate a package or project report")
+    report.add_argument("package", nargs="?", help="Package name or registry:name")
+    report.add_argument("--project", dest="report_project", help="Configured project name")
+    report.add_argument("--config", dest="report_config", help="Workspace config path")
     report.add_argument("--registry", choices=[item.value for item in Registry])
     report.add_argument("--format", choices=["json", "html", "md", "markdown"], default="json")
-    report.add_argument("--output", "-o", type=Path, help="Write report to this file instead of stdout")
+    report.add_argument(
+        "--output", "-o", type=str,
+        help="Target file path; defaults to a dated file in the current directory, or '-' for stdout",
+    )
     report.add_argument("--refresh", "-r", action="store_true")
 
     check = sub.add_parser("check", help="Evaluate simple package health policies")
@@ -227,18 +237,48 @@ def main() -> None:
         _search(args)
         return
     if args.command == "report":
-        try:
-            ref = parse_package_spec(args.package, args.registry)
-            result = _require_result(ref, args.refresh)
-        except (RuntimeError, ValueError) as exc:
-            parser.error(str(exc))
         format_name = "md" if args.format == "markdown" else args.format
-        content = render_report(format_name, result.info, result.derived, ref, ref.name)
-        if args.output:
-            args.output.write_text(content)
-            print(f"Wrote {format_name} report to {args.output}")
+        if args.report_project:
+            try:
+                config_path = find_config(args.report_config or args.config)
+                if not config_path:
+                    raise RuntimeError("No config found for project report.")
+                project = load_project(config_path, args.report_project)
+                intelligence = asyncio.run(
+                    PackageIntelligenceService().fetch_project(
+                        project.packages, force_refresh=args.refresh
+                    )
+                )
+                project_report = build_project_report(project, intelligence.results)
+            except (RuntimeError, ValueError, FileNotFoundError) as exc:
+                parser.error(str(exc))
+            content = render_project_report(format_name, project_report)
+            subject = project.title or project.name
+            target = (
+                Path(args.output)
+                if args.output and args.output != "-"
+                else default_report_path(subject, format_name, project=True)
+            )
         else:
+            if not args.package:
+                parser.error("Provide a package name or --project PROJECT for a report.")
+            try:
+                ref = parse_package_spec(args.package, args.registry)
+                result = _require_result(ref, args.refresh)
+            except (RuntimeError, ValueError) as exc:
+                parser.error(str(exc))
+            content = render_report(format_name, result.info, result.derived, ref, ref.name)
+            target = (
+                Path(args.output)
+                if args.output and args.output != "-"
+                else default_report_path(ref.name, format_name)
+            )
+        if args.output == "-":
             print(content)
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content)
+            print(f"Wrote {format_name} report to {target}")
         return
     if args.command == "check":
         try:

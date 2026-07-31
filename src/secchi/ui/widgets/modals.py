@@ -17,7 +17,7 @@ _SHORTCUTS = [
     ("↑ / ↓", "Move the selection in the sidebar"),
     ("Enter", "Open the selected package"),
     ("/", "Search packages by name"),
-    ("r", "Refresh all package data"),
+    ("r", "Refresh the selected project"),
     ("f", "Toggle favorites-only filter"),
     ("?", "Show this help"),
     ("q / Ctrl+C", "Quit secchi"),
@@ -122,7 +122,7 @@ class HelpScreen(ModalScreen[None]):
 
 
 class ExportScreen(ModalScreen[str | None]):
-    """Export modal — JSON, PNG screenshot, or HTML."""
+    """Export modal for package or project reports."""
 
     BINDINGS = [
         Binding("escape", "dismiss_none", "Cancel", show=False),
@@ -130,19 +130,18 @@ class ExportScreen(ModalScreen[str | None]):
         Binding("right", "focus_right", "Right", show=False),
     ]
 
+    def __init__(self, project_scope: bool = False) -> None:
+        super().__init__()
+        self._project_scope = project_scope
+
     def compose(self) -> ComposeResult:
+        scope = "Project" if self._project_scope else "Package"
         with Vertical(id="export-box"):
-            yield Static("Export Package Data", classes="modal-title")
+            yield Static(f"Export {scope} Report", classes="modal-title")
             yield OptionList(
-                Option("JSON Output", id="json"),
-                Option(
-                    "Terminal Screenshot as Image in PNG Format [dim](coming soon)[/]",
-                    id="png",
-                ),
-                Option(
-                    "Single HTML file [dim](coming soon)[/]",
-                    id="html",
-                ),
+                Option(f"{scope} JSON", id="json"),
+                Option(f"{scope} Markdown", id="md"),
+                Option(f"{scope} HTML", id="html"),
                 id="export-options",
             )
             with Horizontal(id="export-buttons"):
@@ -170,10 +169,9 @@ class ExportScreen(ModalScreen[str | None]):
         options = self.query_one("#export-options", OptionList)
         if options.highlighted is not None:
             option = options.get_option_at_index(options.highlighted)
-            if option.id == "json":
+            if option.id in {"json", "md", "html"}:
                 self.dismiss(option.id)
                 return
-            self.notify("Coming soon", severity="warning")
             self.query_one("#export-options", OptionList).focus()
             return
         self.dismiss(None)
