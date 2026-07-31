@@ -13,25 +13,39 @@ adoption, dependencies, releases, and ecosystem signals from your terminal.
 
 ![secchi TUI dashboard](assets/secchi-v0.1.0-demo-1.gif)
 
+## Supported Ecosystems
+
+<table>
+  <tr>
+    <td align="center"><img src="https://cdn.simpleicons.org/python" alt="Python" width="28"><br><strong>PyPI</strong><br><small>Python</small></td>
+    <td align="center"><img src="https://cdn.simpleicons.org/javascript" alt="JavaScript" width="28"><br><strong>npm</strong><br><small>JavaScript</small></td>
+    <td align="center"><img src="https://cdn.simpleicons.org/rust" alt="Rust" width="28"><br><strong>crates.io</strong><br><small>Rust</small></td>
+    <td align="center"><img src="https://cdn.simpleicons.org/homebrew" alt="Homebrew" width="28"><br><strong>Homebrew</strong><br><small>Formulae</small></td>
+    <td align="center"><img src="https://cdn.simpleicons.org/go" alt="Go" width="28"><br><strong>Go Modules</strong><br><small>Go</small></td>
+    <td align="center"><img src="https://cdn.simpleicons.org/r" alt="R" width="28"><br><strong>CRAN</strong><br><small>R</small></td>
+  </tr>
+</table>
+
 ## Capabilities
 
-| Type | Capability | Status |
-| --- | --- | :---: |
-| Explore | CLI | ✅ |
-| Explore | Interactive TUI | ✅ |
-| Explore | Package discovery across registries | ✅ |
-| Explore | Compare packages | ✅ |
-| Report | HTML | ✅ |
-| Report | JSON | ✅ |
-| Report | Markdown | ✅ |
-| Report | CSV | ⏳ |
-| Automate | Repository configuration | ⏳ |
-| Automate | Policy checks | ⏳ |
-| Automate | GitHub Actions | ⏳ |
-| Automate | CI integration | ⏳ |
-| Integrate | MCP Server | ⏳ |
-| Integrate | REST API | ⏳ |
-| Integrate | Python SDK | ⏳ |
+| Type | Capability | What it helps with | Status |
+| --- | --- | --- | :---: |
+| Explore | Direct package lookup | Quickly inspect any package from the terminal | ✅ |
+| Explore | Interactive dashboard | Explore health, adoption, releases, and dependencies | ✅ |
+| Explore | Workspace monitoring | Monitor configured projects and registry sources | ✅ |
+| Explore | Cross-registry search | Find packages across supported ecosystems | ✅ |
+| Explore | Health and adoption signals | Understand project momentum and maintenance quality | ✅ |
+| Explore | Package comparison | Compare multiple packages side by side | ⏳ |
+| Report | JSON reports | Use package intelligence in scripts and automation | ✅ |
+| Report | Markdown reports | Share readable reports in GitHub, Notion, or documentation | ✅ |
+| Report | HTML reports | Generate standalone reports for teams and stakeholders | ✅ |
+| Report | Project-wide reports | Combine registry sources for one monitored project | ✅ |
+| Automate | Package health checks | Fail workflows when package standards are not met | 🚧 |
+| Automate | Workspace policy checks | Evaluate every configured project against policies | ⏳ |
+| Automate | GitHub Actions integration | Run Secchi automatically in CI | ⏳ |
+| Integrate | Python SDK | Use Secchi from Python applications and scripts | ⏳ |
+| Integrate | MCP Server | Let AI assistants query package intelligence | ⏳ |
+| Explore | Ecosystem adapters | Support PyPI, npm, crates.io, Homebrew, Go Modules, and CRAN | ✅ |
 
 ## Install
 
@@ -79,8 +93,8 @@ Reports are written to the current directory by default. Use `--output` to
 choose a file path, or `--output -` to print the report to stdout.
 
 `search`, `show`, `dashboard`, and `report` use the same data collection and scoring
-pipeline. Add `--registry pypi`, `--registry crates.io`, or `--registry npm`
-when a package name needs an explicit ecosystem.
+pipeline. Add `--registry` with `pypi`, `crates.io`, `npm`, `homebrew`, `go`, or
+`cran` when a package name needs an explicit ecosystem.
 
 List available projects:
 
