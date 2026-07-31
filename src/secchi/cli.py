@@ -75,6 +75,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     monitor = sub.add_parser("monitor", help="Alias for dashboard --project")
     monitor.add_argument("project_name", help="Project name to monitor")
+
+    sub.add_parser("mcp", help="Run the Model Context Protocol server over stdio")
     return parser
 
 
@@ -216,6 +218,11 @@ def main() -> None:
     args = parser.parse_args()
     if args.command == "init":
         cmd_init()
+        return
+    if args.command == "mcp":
+        from secchi.mcp_server import main as mcp_main
+
+        mcp_main()
         return
     if args.command == "monitor":
         args.command = "dashboard"

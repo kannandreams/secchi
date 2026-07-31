@@ -44,7 +44,7 @@ adoption, dependencies, releases, and ecosystem signals from your terminal.
 | Automate | Workspace policy checks | Evaluate every configured project against policies | ⏳ |
 | Automate | GitHub Actions integration | Run Secchi automatically in CI | ⏳ |
 | Integrate | Python SDK | Use Secchi from Python applications and scripts | ⏳ |
-| Integrate | MCP Server | Let AI assistants query package intelligence | ⏳ |
+| Integrate | MCP Server | Let AI assistants query package intelligence | ✅ |
 | Explore | Ecosystem adapters | Support PyPI, npm, crates.io, Homebrew, Go Modules, and CRAN | ✅ |
 
 ## Install
@@ -88,6 +88,19 @@ secchi report duckdb --format html --output duckdb-report.html
 secchi report --config secchi.toml --project duckdb --format html
 secchi check duckdb --min-health 80 --require-ci
 ```
+
+Run the MCP server for local AI-agent integrations:
+
+```bash
+secchi mcp
+# or
+secchi-mcp
+```
+
+The server communicates over standard input/output and exposes tools for
+package inspection, cross-registry search, configured project reports, and
+health policy checks. It reuses the same cached intelligence pipeline as the
+CLI, dashboard, and report commands.
 
 Reports are written to the current directory by default. Use `--output` to
 choose a file path, or `--output -` to print the report to stdout.

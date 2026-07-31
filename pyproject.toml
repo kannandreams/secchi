@@ -12,6 +12,7 @@ maintainers = [
     { name = "kannandreams" },
 ]
 dependencies = [
+    "mcp>=2.0",
     "textual>=8.0",
     "textual-plotext>=1.0",
     "httpx>=0.27",
@@ -21,6 +22,7 @@ dependencies = [
 
 [project.scripts]
 secchi = "secchi.cli:main"
+secchi-mcp = "secchi.mcp_server:main"
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
