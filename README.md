@@ -114,14 +114,14 @@ Secchi looks for config in this order:
 Example `secchi.toml`:
 
 ```toml
-[projects.tuffcli]
-title = "TuffCLI"
-description = "tuffcli — capability lifecycle manager for coding agents"
+[projects.duckdb]
+title = "DuckDB"
+description = "DuckDB — embeddable analytical database"
 favorite = true
-repository = "https://github.com/example/tuffcli"
+repository = "https://github.com/duckdb/duckdb"
 packages = [
-    { name = "tuffcli", registry = "crates.io" },
-    { name = "tuffcli", registry = "pypi" },
+    { name = "duckdb", registry = "pypi" },
+    { name = "duckdb", registry = "npm" },
 ]
 ```
 
@@ -141,17 +141,6 @@ SECCHI_DISABLE_SPOTLIGHT=1 secchi dashboard duckdb
 
 When this variable is set to `1`, `true`, `yes`, or `on`, Secchi does not read
 or fetch Spotlight data and removes the card from the dashboard.
-
-## Supported Registries
-
-| Registry   | Key           |
-|------------|---------------|
-| PyPI       | `pypi`        |
-| crates.io  | `crates.io`   |
-| npm        | `npm`         |
-| Homebrew   | `homebrew`    |
-| Go Modules | `go`          |
-| CRAN (R)   | `cran`        |
 
 ## CLI Options
 
