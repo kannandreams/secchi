@@ -165,4 +165,4 @@ Press `ctrl+r` to manually reload the dashboard without exiting.
 
 ## License
 
-MIT
+Apache 2.0

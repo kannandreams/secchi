@@ -1,4 +1,4 @@
-"""GitHub trending card — shows a highly-starred recent repo in the sidebar."""
+"""GitHub weekly trend card — shows a highly-starred new repo in the sidebar."""
 
 from __future__ import annotations
 

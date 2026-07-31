@@ -98,7 +98,7 @@ class Sidebar(Vertical):
         if self._trending is not None:
             self._last_trending_markup = self._trending_markup()
             trending = Static(self._last_trending_markup, classes="sidebar-trending")
-            trending.border_title = "TRENDING"
+            trending.border_title = "NEW & TRENDING THIS WEEK"
             yield trending
 
     def on_mount(self) -> None:
@@ -222,7 +222,7 @@ class Sidebar(Vertical):
             if self._trending is not None and self.is_mounted:
                 self._last_trending_markup = new_markup
                 card = Static(new_markup, classes="sidebar-trending")
-                card.border_title = "TRENDING"
+                card.border_title = "NEW & TRENDING THIS WEEK"
                 self.mount(card)
             return
         if self._trending is None:

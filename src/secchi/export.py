@@ -21,6 +21,7 @@ def export_package_json(
     project_name: str,
 ) -> str:
     data: dict[str, Any] = {
+        "generated_by": "Secchi",
         "project": project_name,
         "package": ref.name,
         "registry": ref.registry.value,
