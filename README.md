@@ -1,6 +1,6 @@
 <table>
   <tr>
-    <td><img src="assets/secchi-logo.png" alt="Secchi logo" width="110"></td>
+    <td><img src="https://raw.githubusercontent.com/kannandreams/secchi/main/assets/secchi-logo.png" alt="Secchi logo" width="110"></td>
     <td>
       <h1>secchi</h1>
       <p><strong>Open Source Package Intelligence</strong></p>
@@ -11,7 +11,7 @@
 Secchi lets you explore, compare, monitor, and report on package health,
 adoption, dependencies, releases, and ecosystem signals from your terminal.
 
-![secchi TUI dashboard](assets/secchi-v0.1.0-demo-1.gif)
+![secchi TUI dashboard](https://raw.githubusercontent.com/kannandreams/secchi/main/assets/secchi-v0.1.0-demo-1.gif)
 
 ## Supported Ecosystems
 
