@@ -14,6 +14,7 @@ from secchi.models import PackageRef, Registry
 from secchi.policy import evaluate_default_policy
 from secchi.renderers.reports import build_project_report, render_project_report
 from secchi.services.intelligence import IntelligenceResult, PackageIntelligenceService
+from secchi.services.comparison import compare_intelligence
 from secchi.services.resolver import parse_package_spec, resolve_package
 from secchi.services.search import PackageSearchService
 
@@ -33,6 +34,20 @@ async def _resolve_refs(package: str, registry: str | None) -> list[PackageRef]:
     if registry is not None:
         return [parse_package_spec(package, registry)]
     return await resolve_package(package)
+
+
+async def _resolve_compare_refs(packages: list[str], registry: str | None) -> list[PackageRef]:
+    refs: list[PackageRef] = []
+    preference = {item: index for index, item in enumerate(Registry)}
+    for package in packages:
+        if registry or ":" in package:
+            refs.append(parse_package_spec(package, None if ":" in package else registry))
+            continue
+        matches = await resolve_package(package)
+        if not matches:
+            continue
+        refs.append(sorted(matches, key=lambda ref: preference[ref.registry])[0])
+    return refs
 
 
 def _package_result(result: IntelligenceResult) -> dict[str, Any]:
@@ -176,6 +191,40 @@ async def check_package(
             ]
         matches.append(item)
     return {"query": package, "matches": matches}
+
+
+@server.tool(
+    name="compare_packages",
+    title="Compare package choices",
+    description=(
+        "Compare two or more package choices using health, adoption momentum, "
+        "community, release recency, and data completeness. Returns advisory "
+        "recommendations with evidence and confidence; it never installs packages."
+    ),
+    structured_output=True,
+)
+async def compare_packages(
+    packages: list[str],
+    registry: str | None = None,
+    refresh: bool = False,
+) -> dict[str, Any]:
+    """Return a ranked, evidence-backed package selection recommendation."""
+    if len(packages) < 2:
+        raise ValueError("packages must contain at least two package references")
+    if len(packages) > 20:
+        raise ValueError("packages must contain no more than 20 package references")
+    refs = await _resolve_compare_refs(packages, registry)
+    if len(refs) < 2:
+        return {
+            "query": packages,
+            "candidates": [],
+            "message": "Fewer than two exact package matches were found.",
+        }
+    intelligence = await PackageIntelligenceService().fetch_project(
+        refs, force_refresh=refresh
+    )
+    comparison = compare_intelligence(list(intelligence.results.values()))
+    return {"query": packages, **comparison.as_dict()}
 
 
 def main() -> None:

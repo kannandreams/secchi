@@ -1,0 +1,7 @@
+interface:
+  display_name: "Secchi Package Intelligence"
+  short_description: "Evaluate package choices with Secchi evidence"
+  default_prompt: "Use $secchi-package-intelligence to inspect or compare dependencies before recommending them."
+
+policy:
+  allow_implicit_invocation: true

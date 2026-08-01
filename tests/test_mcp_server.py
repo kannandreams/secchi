@@ -153,5 +153,34 @@ def test_check_package_returns_policy_results(monkeypatch: pytest.MonkeyPatch) -
     }
 
 
+def test_compare_packages_returns_ranked_recommendation(monkeypatch: pytest.MonkeyPatch) -> None:
+    refs = [PackageRef("one", Registry.PYPI), PackageRef("two", Registry.PYPI)]
+
+    class CompareService:
+        async def fetch_project(self, requested, *, force_refresh=False):
+            assert force_refresh is True
+            results = {
+                package_key(refs[0]): _result(refs[0], health=70),
+                package_key(refs[1]): _result(refs[1], health=92),
+            }
+            return ProjectIntelligence(results=results)
+
+    monkeypatch.setattr(mcp_server, "PackageIntelligenceService", lambda: CompareService())
+    monkeypatch.setattr(
+        mcp_server,
+        "_resolve_compare_refs",
+        lambda packages, registry: _async_refs(refs),
+    )
+
+    result = asyncio.run(mcp_server.compare_packages(["one", "two"], refresh=True))
+
+    assert result["winner"]["package"] == "two"
+    assert result["candidates"][0]["recommendation"] in {
+        "Recommended",
+        "Acceptable",
+        "Use with caution",
+    }
+
+
 async def _async_refs(refs: list[PackageRef]) -> list[PackageRef]:
     return refs

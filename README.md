@@ -41,7 +41,7 @@ adoption, dependencies, releases, and ecosystem signals from your terminal.
 | Explore | Workspace monitoring | Monitor configured projects and registry sources | ✅ |
 | Explore | Cross-registry search | Find packages across supported ecosystems | ✅ |
 | Explore | Health and adoption signals | Understand project momentum and maintenance quality | ✅ |
-| Explore | Package comparison | Compare multiple packages side by side | ⏳ |
+| Explore | Package comparison | Rank package choices with health, adoption, and confidence evidence | ✅ |
 | Report | JSON reports | Use package intelligence in scripts and automation | ✅ |
 | Report | Markdown reports | Share readable reports in GitHub, Notion, or documentation | ✅ |
 | Report | HTML reports | Generate standalone reports for teams and stakeholders | ✅ |
@@ -90,6 +90,8 @@ Explore a package directly, without a configuration file:
 secchi show duckdb
 secchi dashboard duckdb
 secchi search duckdb
+secchi compare pypi:duckdb pypi:polars
+secchi compare pypi:duckdb pypi:polars --format json
 secchi report duckdb --format html --output duckdb-report.html
 secchi report --config secchi.toml --project duckdb --format html
 secchi check duckdb --min-health 80 --require-ci
@@ -150,6 +152,7 @@ server is added, the agent can use these tools:
 | `search_packages` | Find matching packages across PyPI, npm, crates.io, Homebrew, Go Modules, and CRAN |
 | `inspect_project` | Read a configured project from `secchi.toml` and summarize all its package sources |
 | `check_package` | Evaluate minimum health and repository CI policies |
+| `compare_packages` | Rank two or more package choices with recommendations, confidence, and evidence |
 
 Package inspection uses Secchi's local cache by default. Ask the agent to
 refresh the data when current registry information is required. The MCP server
@@ -161,6 +164,12 @@ choose a file path, or `--output -` to print the report to stdout.
 `search`, `show`, `dashboard`, and `report` use the same data collection and scoring
 pipeline. Add `--registry` with `pypi`, `crates.io`, `npm`, `homebrew`, `go`, or
 `cran` when a package name needs an explicit ecosystem.
+
+`compare` is an advisory decision aid for agents and engineers choosing between
+dependencies. It reports `Recommended`, `Acceptable`, `Use with caution`, or
+`Avoid`, along with the evidence and unknown signals behind the result. Use
+explicit `registry:name` references when comparing packages across ecosystems.
+Secchi does not install, upgrade, remove, or approve a dependency automatically.
 
 List available projects:
 
@@ -215,6 +224,7 @@ secchi dashboard [package]              Launch the TUI (workspace when omitted)
 secchi show <package>                   Print a concise intelligence summary
 secchi search <package>                 Search packages across supported registries
 secchi report <package> --format <type> Generate json, html, or md output
+secchi compare <package> <package>      Rank package choices; add --format json for agents
 secchi check <package>                 Evaluate health and CI policies for automation
 secchi --project <name>                 Backwards-compatible project dashboard
 secchi --list                           List projects in config

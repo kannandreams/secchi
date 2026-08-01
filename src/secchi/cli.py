@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 from pathlib import Path
 
 from tomli_w import dumps as toml_dumps
@@ -20,6 +21,7 @@ from secchi.renderers.reports import (
 )
 from secchi.renderers.summary import render_summary
 from secchi.services.intelligence import PackageIntelligenceService
+from secchi.services.comparison import compare_intelligence, render_comparison
 from secchi.services.resolver import parse_package_spec, resolve_package
 from secchi.services.search import PackageSearchService
 
@@ -72,6 +74,14 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("--min-health", type=int, default=70)
     check.add_argument("--require-ci", action="store_true")
     check.add_argument("--refresh", "-r", action="store_true")
+
+    compare = sub.add_parser("compare", help="Compare package choices with agent-readable evidence")
+    compare.add_argument(
+        "packages", nargs="+", help="Two or more package names or registry:name references"
+    )
+    compare.add_argument("--registry", choices=[item.value for item in Registry])
+    compare.add_argument("--format", choices=["text", "json"], default="text")
+    compare.add_argument("--refresh", "-r", action="store_true")
 
     monitor = sub.add_parser("monitor", help="Alias for dashboard --project")
     monitor.add_argument("project_name", help="Project name to monitor")
@@ -213,6 +223,44 @@ def _search(args: argparse.Namespace) -> None:
         print(f"{result.registry.display_name:<10} {result.name:<24} {result.version or '—':<12} {marker:<6} {description}")
 
 
+async def _resolve_compare_refs(specs: list[str], registry: str | None) -> list[PackageRef]:
+    refs: list[PackageRef] = []
+    preference = {
+        Registry.PYPI: 0,
+        Registry.CRATES: 1,
+        Registry.NPM: 2,
+        Registry.HOMEBREW: 3,
+        Registry.GO: 4,
+        Registry.CRAN: 5,
+    }
+    for spec in specs:
+        if registry or ":" in spec:
+            refs.append(parse_package_spec(spec, None if ":" in spec else registry))
+            continue
+        matches = await resolve_package(spec)
+        if not matches:
+            raise ValueError(f"No exact package named '{spec}' was found across registries.")
+        refs.append(sorted(matches, key=lambda ref: preference[ref.registry])[0])
+    return refs
+
+
+def _compare(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+    if len(args.packages) < 2:
+        parser.error("Compare requires at least two packages.")
+    try:
+        refs = asyncio.run(_resolve_compare_refs(args.packages, args.registry))
+        intelligence = asyncio.run(
+            PackageIntelligenceService().fetch_project(refs, force_refresh=args.refresh)
+        )
+    except (RuntimeError, ValueError) as exc:
+        parser.error(str(exc))
+    comparison = compare_intelligence(list(intelligence.results.values()))
+    if args.format == "json":
+        print(json.dumps(comparison.as_dict(), indent=2))
+    else:
+        print(render_comparison(comparison))
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -304,6 +352,9 @@ def main() -> None:
             print(f"{'PASS' if check.passed else 'FAIL'}  {check.name}: {check.detail}")
         if not all(check.passed for check in checks):
             raise SystemExit(1)
+        return
+    if args.command == "compare":
+        _compare(args, parser)
         return
 
     # Backwards-compatible default: config-driven dashboard.
