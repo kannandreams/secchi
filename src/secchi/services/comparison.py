@@ -36,6 +36,7 @@ class ComparisonCandidate:
     strengths: list[str] = field(default_factory=list)
     concerns: list[str] = field(default_factory=list)
     evidence: list[str] = field(default_factory=list)
+    warnings: list[dict[str, str]] = field(default_factory=list)
     error: str | None = None
 
 
@@ -136,6 +137,13 @@ def evaluate_candidate(result: IntelligenceResult) -> ComparisonCandidate:
     if info.versions and info.versions[0].is_yanked:
         concerns.append("Latest release is yanked")
 
+    warnings = [
+        {"source": warning.source, "message": warning.message}
+        for warning in result.warnings
+    ]
+    if warnings:
+        concerns.append(f"{len(warnings)} enrichment signal(s) unavailable")
+
     recommendation = _recommendation(score, confidence, info)
     return ComparisonCandidate(
         ref=ref,
@@ -149,6 +157,7 @@ def evaluate_candidate(result: IntelligenceResult) -> ComparisonCandidate:
         strengths=strengths,
         concerns=concerns,
         evidence=evidence,
+        warnings=warnings,
     )
 
 
@@ -224,6 +233,7 @@ def _candidate_dict(candidate: ComparisonCandidate | None) -> dict | None:
         "strengths": candidate.strengths,
         "concerns": candidate.concerns,
         "evidence": candidate.evidence,
+        "warnings": candidate.warnings,
         "error": candidate.error,
     }
 

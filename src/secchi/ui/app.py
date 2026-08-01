@@ -26,7 +26,7 @@ from secchi.models import (
 )
 from secchi.spotlight import fetch_spotlight, spotlight_disabled
 from secchi.services.intelligence import PackageIntelligenceService
-from secchi.services.intelligence import IntelligenceResult
+from secchi.services.intelligence import IntelligenceResult, SignalWarning
 from secchi.renderers.reports import (
     build_project_report,
     render_project_report,
@@ -70,6 +70,7 @@ class Secchi(App[None]):
         self._force_refresh = force_refresh
         self._package_data: dict[str, PackageInfo] = {}
         self._package_errors: dict[str, FetchError] = {}
+        self._package_warnings: dict[str, list[SignalWarning]] = {}
         self._derived_data: dict[str, DerivedPackageData] = {}
         self._refreshed_at: datetime | None = None
         self._selected_ref: PackageRef | None = None
@@ -118,6 +119,12 @@ class Secchi(App[None]):
             if error:
                 return error
         return None
+
+    def get_package_warnings(self, ref: PackageRef) -> list[SignalWarning]:
+        warnings: list[SignalWarning] = []
+        for item in self._matching_refs(ref):
+            warnings.extend(self._package_warnings.get(_package_key(item), []))
+        return warnings
 
     def get_derived(self, ref: PackageRef) -> DerivedPackageData | None:
         refs = self._matching_refs(ref)
@@ -212,6 +219,7 @@ class Secchi(App[None]):
                         ref=source_ref,
                         info=self._package_data.get(_package_key(source_ref)),
                         derived=self._derived_data.get(_package_key(source_ref)),
+                        warnings=self._package_warnings.get(_package_key(source_ref), []),
                         error=self._package_errors.get(_package_key(source_ref)),
                     )
                     for source_ref in project.packages
@@ -345,10 +353,11 @@ class Secchi(App[None]):
             info = self.get_package_info(ref)
             error = self.get_package_error(ref)
             derived = self.get_derived(ref)
+            warnings = self.get_package_warnings(ref)
             await main.remove_children()
             if ref != self._selected_ref:
                 return
-            await main.mount(DetailView(ref, info, error, derived, parent_app=self))
+            await main.mount(DetailView(ref, info, error, derived, warnings, parent_app=self))
         except asyncio.CancelledError:
             return
 
@@ -403,6 +412,7 @@ class Secchi(App[None]):
                 self._package_errors.pop(key, None)
             if package_result.derived is not None:
                 self._derived_data[key] = package_result.derived
+            self._package_warnings[key] = package_result.warnings
             if package_result.error is not None:
                 self._package_errors[key] = package_result.error
         self._refreshed_at = result.refreshed_at or datetime.now(timezone.utc)
@@ -420,6 +430,7 @@ class Secchi(App[None]):
             self._package_data[key] = result.info
         if result.derived is not None:
             self._derived_data[key] = result.derived
+        self._package_warnings[key] = result.warnings
         if result.error is not None:
             self._package_errors[key] = result.error
         self._notify_ui_update(changed_ref=ref)

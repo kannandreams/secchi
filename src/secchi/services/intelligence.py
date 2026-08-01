@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Any, Awaitable, Callable
 
 from secchi import derived as derive
 from secchi.aggregate import package_key
@@ -14,6 +15,8 @@ from secchi.history import append_snapshot, compute_delta, find_baseline, load_s
 from secchi.models import (
     DerivedPackageData,
     FetchError,
+    DownloadCounts,
+    GitHubStats,
     HistorySnapshot,
     MetricTimelinePoint,
     PackageInfo,
@@ -32,6 +35,7 @@ class IntelligenceResult:
     ref: PackageRef
     info: PackageInfo | None = None
     derived: DerivedPackageData | None = None
+    warnings: list["SignalWarning"] = field(default_factory=list)
     error: FetchError | None = None
     fetched_at: datetime | None = None
 
@@ -42,6 +46,14 @@ class ProjectIntelligence:
 
     results: dict[str, IntelligenceResult] = field(default_factory=dict)
     refreshed_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class SignalWarning:
+    """A non-fatal failure while enriching an otherwise valid package."""
+
+    source: str
+    message: str
 
 
 class PackageIntelligenceService:
@@ -75,21 +87,59 @@ class PackageIntelligenceService:
                         fetched_at=fetched_at,
                     )
 
-            info = await self._fetch_fresh(ref)
+            info, warnings = await self._fetch_fresh(ref)
             self._apply_history_deltas(key, info)
             derived = derive.compute_all(info)
             fetched_at = datetime.now(timezone.utc)
             save_package_cache(key, info, fetched_at)
-            return IntelligenceResult(ref=ref, info=info, derived=derived, fetched_at=fetched_at)
+            return IntelligenceResult(
+                ref=ref,
+                info=info,
+                derived=derived,
+                warnings=warnings,
+                fetched_at=fetched_at,
+            )
         except Exception as exc:
             return IntelligenceResult(
                 ref=ref,
                 error=FetchError(package_name=ref.name, registry=ref.registry, message=str(exc)),
             )
 
-    async def _fetch_fresh(self, ref: PackageRef) -> PackageInfo:
+    async def _fetch_fresh(self, ref: PackageRef) -> tuple[PackageInfo, list[SignalWarning]]:
         adapter = create_adapter(ref.registry)
         info = await adapter.fetch_package(ref.name)
+        optional: list[tuple[Any, SignalWarning | None]]
+        optional = await asyncio.gather(
+            self._optional_signal("versions", lambda: adapter.fetch_versions(ref.name), []),
+            self._optional_signal(
+                "download trend", lambda: adapter.fetch_download_trend(ref.name, days=730), []
+            ),
+            self._optional_signal(
+                "download counts", lambda: adapter.fetch_download_counts(ref.name), DownloadCounts()
+            ),
+            self._optional_signal(
+                "GitHub extended stats",
+                lambda: fetch_github_extended_stats_for_package(info.homepage, info.repository_url),
+                (GitHubStats(), []),
+            ),
+            self._optional_signal(
+                "version download breakdown",
+                lambda: adapter.fetch_version_download_breakdown(ref.name),
+                {},
+            ),
+            self._optional_signal(
+                "reverse dependencies",
+                lambda: adapter.fetch_reverse_dependencies(ref.name),
+                [],
+            ),
+            self._optional_signal(
+                "reverse dependency count",
+                lambda: adapter.fetch_reverse_dependency_count(ref.name),
+                None,
+            ),
+        )
+        values = [item[0] for item in optional]
+        warnings = [item[1] for item in optional if item[1] is not None]
         (
             versions,
             trend,
@@ -98,15 +148,7 @@ class PackageIntelligenceService:
             version_downloads,
             reverse_dependencies,
             reverse_dependency_count,
-        ) = await asyncio.gather(
-            adapter.fetch_versions(ref.name),
-            adapter.fetch_download_trend(ref.name, days=730),
-            adapter.fetch_download_counts(ref.name),
-            fetch_github_extended_stats_for_package(info.homepage, info.repository_url),
-            adapter.fetch_version_download_breakdown(ref.name),
-            adapter.fetch_reverse_dependencies(ref.name),
-            adapter.fetch_reverse_dependency_count(ref.name),
-        )
+        ) = values
         info.versions = versions
         info.download_trend = trend
         info.download_counts = counts
@@ -116,14 +158,44 @@ class PackageIntelligenceService:
         info.reverse_dependency_count = reverse_dependency_count
 
         if info.latest_version:
-            info.dependencies = await adapter.fetch_dependencies(ref.name, info.latest_version)
-            notes = await adapter.fetch_release_notes(ref.name, info.latest_version)
+            dependencies, warning = await self._optional_signal(
+                "dependencies",
+                lambda: adapter.fetch_dependencies(ref.name, info.latest_version),
+                [],
+            )
+            info.dependencies = dependencies
+            if warning:
+                warnings.append(warning)
+            notes, warning = await self._optional_signal(
+                "release notes", lambda: adapter.fetch_release_notes(ref.name, info.latest_version), ""
+            )
+            if warning:
+                warnings.append(warning)
             if not notes and (info.homepage or info.repository_url):
-                notes = await fetch_release_notes_for_package(
-                    info.homepage, info.repository_url, info.latest_version
+                github_notes, warning = await self._optional_signal(
+                    "GitHub release notes",
+                    lambda: fetch_release_notes_for_package(
+                        info.homepage, info.repository_url, info.latest_version
+                    ),
+                    "",
                 )
+                notes = github_notes
+                if warning:
+                    warnings.append(warning)
             info.release_notes = notes
-        return info
+        return info, warnings
+
+    async def _optional_signal(
+        self,
+        source: str,
+        operation: Callable[[], Awaitable[Any]],
+        default: Any,
+    ) -> tuple[Any, SignalWarning | None]:
+        """Run one enrichment without making the package fetch fail."""
+        try:
+            return await operation(), None
+        except Exception as exc:
+            return default, SignalWarning(source=source, message=str(exc))
 
     def _apply_history_deltas(self, key: str, info: PackageInfo) -> None:
         snapshots = load_snapshots(key)

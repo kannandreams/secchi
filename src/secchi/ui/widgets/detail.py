@@ -8,6 +8,7 @@ from textual.containers import Container, Grid, Horizontal, VerticalScroll
 from textual.widgets import DataTable, Markdown, Static, TabbedContent, TabPane
 
 from secchi.models import DerivedPackageData, FetchError, PackageInfo, PackageRef
+from secchi.services.intelligence import SignalWarning
 from secchi.ui import palette
 from secchi.ui.widgets.bar import render_bar
 from secchi.ui.widgets.overview import OverviewTab
@@ -47,6 +48,7 @@ class DetailView(Container):
         info: PackageInfo | None,
         error: FetchError | None,
         derived: DerivedPackageData | None,
+        warnings: list[SignalWarning],
         parent_app: object,
     ) -> None:
         super().__init__(id="detail-view")
@@ -54,6 +56,7 @@ class DetailView(Container):
         self._info = info
         self._error = error
         self._derived = derived
+        self._warnings = warnings
         self._app = parent_app
 
     # ── layout ──
@@ -61,6 +64,15 @@ class DetailView(Container):
     def compose(self) -> ComposeResult:
         with VerticalScroll(id="detail-content"):
             yield from self._compose_summary_row()
+
+            if self._warnings:
+                warning_lines = "\n".join(
+                    f"• {warning.source}: {warning.message}" for warning in self._warnings
+                )
+                yield Static(
+                    f"[b yellow]Signal warnings[/]\n{warning_lines}",
+                    id="signal-warnings",
+                )
 
             if self._info and self._info.latest_version:
                 yield from self._compose_tabs()

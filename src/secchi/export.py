@@ -19,6 +19,7 @@ def export_package_json(
     derived: DerivedPackageData | None,
     ref: PackageRef,
     project_name: str,
+    warnings: list[object] | None = None,
 ) -> str:
     data: dict[str, Any] = {
         "generated_by": "Secchi",
@@ -33,6 +34,12 @@ def export_package_json(
 
     if derived:
         data["derived"] = _serialize_derived(derived)
+
+    if warnings:
+        data["warnings"] = [
+            {"source": warning.source, "message": warning.message}
+            for warning in warnings
+        ]
 
     return json.dumps(data, indent=2, sort_keys=False, default=_json_default)
 

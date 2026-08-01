@@ -162,6 +162,9 @@ server is added, the agent can use these tools:
 Package inspection uses Secchi's local cache by default. Ask the agent to
 refresh the data when current registry information is required. The MCP server
 is read-only: it does not modify packages, repositories, or configuration.
+Successful package results may include signal warnings when an optional source
+is unavailable; those warnings are preserved instead of turning the package
+into a failed result.
 
 Reports are written to the current directory by default. Use `--output` to
 choose a file path, or `--output -` to print the report to stdout.

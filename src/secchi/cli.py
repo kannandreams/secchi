@@ -289,6 +289,8 @@ def main() -> None:
         except (RuntimeError, ValueError) as exc:
             parser.error(str(exc))
         print(render_summary(result.info, result.derived))
+        for warning in result.warnings:
+            print(f"Warning [{warning.source}]: {warning.message}")
         return
     if args.command == "search":
         _search(args)
@@ -324,7 +326,14 @@ def main() -> None:
                 result = _require_result(ref, args.refresh)
             except (RuntimeError, ValueError) as exc:
                 parser.error(str(exc))
-            content = render_report(format_name, result.info, result.derived, ref, ref.name)
+            content = render_report(
+                format_name,
+                result.info,
+                result.derived,
+                ref,
+                ref.name,
+                result.warnings,
+            )
             target = (
                 Path(args.output)
                 if args.output and args.output != "-"

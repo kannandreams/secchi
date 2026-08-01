@@ -58,7 +58,13 @@ def _package_result(result: IntelligenceResult) -> dict[str, Any]:
             "error": result.error.message if result.error else "No package data returned.",
         }
     return json.loads(
-        export_package_json(result.info, result.derived, result.ref, result.ref.project_name)
+        export_package_json(
+            result.info,
+            result.derived,
+            result.ref,
+            result.ref.project_name,
+            result.warnings,
+        )
     )
 
 
@@ -188,6 +194,10 @@ async def check_package(
             item["checks"] = [
                 {"name": check.name, "passed": check.passed, "detail": check.detail}
                 for check in checks
+            ]
+            item["warnings"] = [
+                {"source": warning.source, "message": warning.message}
+                for warning in result.warnings
             ]
         matches.append(item)
     return {"query": package, "matches": matches}
