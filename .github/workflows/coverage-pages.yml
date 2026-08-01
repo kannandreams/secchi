@@ -1,0 +1,67 @@
+name: Publish coverage report
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: Build coverage site
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Run tests with coverage
+        run: uv run pytest --cov=secchi --cov-report=html
+
+      - name: Prepare Pages site
+        run: |
+          mkdir -p site/coverage
+          cp -R htmlcov/. site/coverage/
+          printf '%s\n' '<!doctype html><meta charset="utf-8"><title>Secchi coverage</title><h1>Secchi coverage</h1><p><a href="coverage/">Open the latest HTML coverage report</a></p>' > site/index.html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Deploy coverage site
+    needs: coverage
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
