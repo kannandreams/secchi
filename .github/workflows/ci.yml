@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  code-quality: write
 
 jobs:
   checks:
@@ -40,15 +41,13 @@ jobs:
       - name: Test
         run: uv run pytest --cov=secchi --cov-report=xml --cov-report=term-missing
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v5
+      - name: Upload coverage to GitHub
+        if: ${{ matrix.python-version == '3.12' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/upload-code-coverage@v1
         with:
-          files: ./coverage.xml
-          fail_ci_if_error: true
-          flags: unittests
+          file: coverage.xml
+          language: Python
+          label: code-coverage/pytest
 
       - name: Build verification
-        run: uv build
-
-      - name: Build distributions
         run: uv build

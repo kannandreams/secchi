@@ -12,7 +12,6 @@
 [![PyPI license](https://img.shields.io/pypi/l/secchi.svg)](https://pypi.org/project/secchi/)
 [![Latest release](https://img.shields.io/github/v/release/kannandreams/secchi?display_name=tag)](https://github.com/kannandreams/secchi/releases)
 [![CI](https://github.com/kannandreams/secchi/actions/workflows/ci.yml/badge.svg)](https://github.com/kannandreams/secchi/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/kannandreams/secchi/branch/main/graph/badge.svg)](https://codecov.io/gh/kannandreams/secchi)
 
 Secchi lets you explore, compare, monitor, and report on package health,
 adoption, dependencies, releases, and ecosystem signals from your terminal.
