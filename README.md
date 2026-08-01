@@ -169,6 +169,11 @@ into a failed result.
 Reports are written to the current directory by default. Use `--output` to
 choose a file path, or `--output -` to print the report to stdout.
 
+JSON reports declare a `schema` and `schema_version` so automation can reject
+or migrate incompatible output deliberately. Secchi's local package cache uses
+the same versioned-envelope approach and continues to read legacy unversioned
+cache entries while writing the current schema for new data.
+
 `search`, `show`, `dashboard`, and `report` use the same data collection and scoring
 pipeline. Add `--registry` with `pypi`, `crates.io`, `npm`, `homebrew`, `go`, or
 `cran` when a package name needs an explicit ecosystem.

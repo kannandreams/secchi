@@ -12,6 +12,7 @@ from secchi.models import (
     PackageInfo,
     PackageRef,
 )
+from secchi.schema import PACKAGE_EXPORT_SCHEMA_VERSION
 
 
 def export_package_json(
@@ -22,6 +23,8 @@ def export_package_json(
     warnings: list[object] | None = None,
 ) -> str:
     data: dict[str, Any] = {
+        "schema_version": PACKAGE_EXPORT_SCHEMA_VERSION,
+        "schema": "secchi.package-intelligence",
         "generated_by": "Secchi",
         "project": project_name,
         "package": ref.name,

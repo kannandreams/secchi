@@ -22,6 +22,7 @@ from secchi.models import (
     ReverseDependency,
     Version,
 )
+from secchi.schema import CACHE_SCHEMA_VERSION
 
 
 def cache_root() -> Path:
@@ -42,6 +43,11 @@ def load_package_cache(key: str) -> tuple[PackageInfo, datetime] | None:
         return None
     try:
         raw = json.loads(path.read_text())
+        if not isinstance(raw, dict):
+            return None
+        schema_version = raw.get("schema_version", 0)
+        if not isinstance(schema_version, int) or schema_version > CACHE_SCHEMA_VERSION:
+            return None
         fetched_at = _parse_datetime(raw.get("fetched_at"))
         today = datetime.now().astimezone().date()
         if fetched_at is None or fetched_at.astimezone().date() != today:
@@ -54,6 +60,7 @@ def load_package_cache(key: str) -> tuple[PackageInfo, datetime] | None:
 def save_package_cache(key: str, info: PackageInfo, fetched_at: datetime) -> None:
     path = package_cache_path(key)
     payload = {
+        "schema_version": CACHE_SCHEMA_VERSION,
         "fetched_at": fetched_at.astimezone().isoformat(),
         "package": _encode(asdict(info)),
     }

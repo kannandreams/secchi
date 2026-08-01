@@ -11,6 +11,7 @@ from pathlib import Path
 from secchi.export import export_package_json
 from secchi.models import DerivedPackageData, PackageInfo, PackageRef, Project
 from secchi.renderers.summary import render_summary
+from secchi.schema import PROJECT_EXPORT_SCHEMA_VERSION
 
 
 @dataclass
@@ -170,6 +171,8 @@ def _project_report_data(report: ProjectReport) -> dict:
     health_scores = [source.derived.health_score.total for source in available if source.derived]
     downloads = sum(source.derived.downloads_30d_total for source in available if source.derived)
     return {
+        "schema_version": PROJECT_EXPORT_SCHEMA_VERSION,
+        "schema": "secchi.project-intelligence",
         "generated_by": "Secchi",
         "project": {
             "name": report.project.name,
