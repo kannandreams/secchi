@@ -1,5 +1,7 @@
 import asyncio
+import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -23,6 +25,10 @@ def _result(ref: PackageRef, health: int = 88, *, has_ci: bool = True) -> Intell
     return IntelligenceResult(ref=ref, info=info, derived=derived)
 
 
+def service_project(ref: PackageRef, result: IntelligenceResult) -> ProjectIntelligence:
+    return ProjectIntelligence(results={package_key(ref): result})
+
+
 class FakeIntelligenceService:
     result: IntelligenceResult | None = None
 
@@ -40,7 +46,10 @@ def test_inspect_package_returns_structured_package_data(monkeypatch: pytest.Mon
     ref = PackageRef("duckdb", Registry.PYPI)
     service = FakeIntelligenceService()
     service.result = _result(ref)
-    monkeypatch.setattr(mcp_server, "PackageIntelligenceService", lambda: service)
+    async def fake_inspect(refs, *, refresh=False):
+        return service_project(ref, service.result)
+
+    monkeypatch.setattr(mcp_server.inspect_workflow, "run", fake_inspect)
     monkeypatch.setattr(
         mcp_server,
         "_resolve_refs",
@@ -86,7 +95,15 @@ def test_search_packages_normalizes_ranked_results(monkeypatch: pytest.MonkeyPat
                 )
             ]
 
-    monkeypatch.setattr(mcp_server, "PackageSearchService", lambda: FakeSearch())
+    async def fake_search(query, *, registry=None, limit=10):
+        assert query == "duckdb"
+        assert registry == "pypi"
+        assert limit == 5
+        return await FakeSearch().search(
+            query, registries=[Registry.PYPI], limit=limit
+        )
+
+    monkeypatch.setattr(mcp_server.search_workflow, "run", fake_search)
 
     result = asyncio.run(mcp_server.search_packages("duckdb", registry="pypi", limit=5))
 
@@ -120,7 +137,18 @@ packages = [{ name = "demo", registry = "pypi" }]
     ref = PackageRef("demo", Registry.PYPI, project_name="demo")
     service = FakeIntelligenceService()
     service.result = _result(ref)
-    monkeypatch.setattr(mcp_server, "PackageIntelligenceService", lambda: service)
+    async def fake_report(**kwargs):
+        return SimpleNamespace(
+            content=json.dumps(
+                {
+                    "generated_by": "Secchi",
+                    "project": {"title": "Demo Project"},
+                    "summary": {"source_count": 1},
+                }
+            )
+        )
+
+    monkeypatch.setattr(mcp_server.report_workflow, "run", fake_report)
 
     result = asyncio.run(mcp_server.inspect_project("demo", config=str(config), refresh=True))
 
@@ -133,7 +161,14 @@ def test_check_package_returns_policy_results(monkeypatch: pytest.MonkeyPatch) -
     ref = PackageRef("demo", Registry.PYPI)
     service = FakeIntelligenceService()
     service.result = _result(ref, health=65, has_ci=False)
-    monkeypatch.setattr(mcp_server, "PackageIntelligenceService", lambda: service)
+    async def fake_check(ref, **kwargs):
+        checks = [
+            SimpleNamespace(name="minimum health score", passed=False, detail="65 / 100"),
+            SimpleNamespace(name="continuous integration", passed=False, detail="No workflow"),
+        ]
+        return SimpleNamespace(passed=False, checks=checks, warnings=[])
+
+    monkeypatch.setattr(mcp_server.check_workflow, "run", fake_check)
     monkeypatch.setattr(
         mcp_server,
         "_resolve_refs",
@@ -156,22 +191,17 @@ def test_check_package_returns_policy_results(monkeypatch: pytest.MonkeyPatch) -
 def test_compare_packages_returns_ranked_recommendation(monkeypatch: pytest.MonkeyPatch) -> None:
     refs = [PackageRef("one", Registry.PYPI), PackageRef("two", Registry.PYPI)]
 
-    class CompareService:
-        async def fetch_project(self, requested, *, force_refresh=False):
-            assert force_refresh is True
-            results = {
-                package_key(refs[0]): _result(refs[0], health=70),
-                package_key(refs[1]): _result(refs[1], health=92),
-            }
-            return ProjectIntelligence(results=results)
+    async def fake_compare(packages, *, registry=None, refresh=False):
+        assert packages == ["one", "two"]
+        assert refresh is True
+        from secchi.services.comparison import compare_intelligence
 
-    monkeypatch.setattr(mcp_server, "PackageIntelligenceService", lambda: CompareService())
-    monkeypatch.setattr(
-        mcp_server,
-        "_resolve_compare_refs",
-        lambda packages, registry: _async_refs(refs),
-    )
+        return compare_intelligence([
+            _result(refs[0], health=70),
+            _result(refs[1], health=92),
+        ])
 
+    monkeypatch.setattr(mcp_server.compare_workflow, "run", fake_compare)
     result = asyncio.run(mcp_server.compare_packages(["one", "two"], refresh=True))
 
     assert result["winner"]["package"] == "two"
