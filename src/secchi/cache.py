@@ -23,6 +23,7 @@ from secchi.models import (
     Version,
 )
 from secchi.schema import CACHE_SCHEMA_VERSION
+from secchi.schemas import CacheEnvelope
 
 
 def cache_root() -> Path:
@@ -48,22 +49,23 @@ def load_package_cache(key: str) -> tuple[PackageInfo, datetime] | None:
         schema_version = raw.get("schema_version", 0)
         if not isinstance(schema_version, int) or schema_version > CACHE_SCHEMA_VERSION:
             return None
-        fetched_at = _parse_datetime(raw.get("fetched_at"))
+        envelope = CacheEnvelope.model_validate({**raw, "schema_version": schema_version})
+        fetched_at = envelope.fetched_at
         today = datetime.now().astimezone().date()
-        if fetched_at is None or fetched_at.astimezone().date() != today:
+        if fetched_at.astimezone().date() != today:
             return None
-        return _decode_package_info(raw["package"]), fetched_at
+        return _decode_package_info(envelope.package), fetched_at
     except (KeyError, TypeError, ValueError, json.JSONDecodeError, OSError):
         return None
 
 
 def save_package_cache(key: str, info: PackageInfo, fetched_at: datetime) -> None:
     path = package_cache_path(key)
-    payload = {
-        "schema_version": CACHE_SCHEMA_VERSION,
-        "fetched_at": fetched_at.astimezone().isoformat(),
-        "package": _encode(asdict(info)),
-    }
+    payload = CacheEnvelope(
+        schema_version=CACHE_SCHEMA_VERSION,
+        fetched_at=fetched_at,
+        package=_encode(asdict(info)),
+    ).model_dump(mode="json")
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(payload, indent=2, sort_keys=True))

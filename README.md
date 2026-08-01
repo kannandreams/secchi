@@ -174,6 +174,12 @@ or migrate incompatible output deliberately. Secchi's local package cache uses
 the same versioned-envelope approach and continues to read legacy unversioned
 cache entries while writing the current schema for new data.
 
+The serialized boundaries are validated with Pydantic models while the internal
+application remains dataclass-based. This keeps the service and TUI lightweight
+while giving cache files, reports, and MCP responses explicit contracts. Future
+schema changes can be introduced as migrations instead of relying on every
+renderer and consumer to handle new fields independently.
+
 `search`, `show`, `dashboard`, and `report` use the same data collection and scoring
 pipeline. Add `--registry` with `pypi`, `crates.io`, `npm`, `homebrew`, `go`, or
 `cran` when a package name needs an explicit ecosystem.

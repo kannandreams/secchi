@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -12,7 +11,7 @@ from secchi.models import (
     PackageInfo,
     PackageRef,
 )
-from secchi.schema import PACKAGE_EXPORT_SCHEMA_VERSION
+from secchi.schemas import PackageExport, SignalWarningSchema
 
 
 def export_package_json(
@@ -22,29 +21,19 @@ def export_package_json(
     project_name: str,
     warnings: list[object] | None = None,
 ) -> str:
-    data: dict[str, Any] = {
-        "schema_version": PACKAGE_EXPORT_SCHEMA_VERSION,
-        "schema": "secchi.package-intelligence",
-        "generated_by": "Secchi",
-        "project": project_name,
-        "package": ref.name,
-        "registry": ref.registry.value,
-        "exported_at": datetime.now(timezone.utc).isoformat(),
-    }
-
-    if info:
-        data["package_info"] = _serialize_package_info(info)
-
-    if derived:
-        data["derived"] = _serialize_derived(derived)
-
-    if warnings:
-        data["warnings"] = [
-            {"source": warning.source, "message": warning.message}
-            for warning in warnings
-        ]
-
-    return json.dumps(data, indent=2, sort_keys=False, default=_json_default)
+    document = PackageExport(
+        project=project_name,
+        package=ref.name,
+        registry=ref.registry.value,
+        exported_at=datetime.now(timezone.utc),
+        package_info=_serialize_package_info(info) if info else None,
+        derived=_serialize_derived(derived) if derived else None,
+        warnings=[
+            SignalWarningSchema(source=warning.source, message=warning.message)
+            for warning in (warnings or [])
+        ],
+    )
+    return document.model_dump_json(indent=2, by_alias=True)
 
 
 def save_export(json_str: str, project_name: str, pkg_name: str) -> Path:

@@ -1,10 +1,13 @@
 import json
 from datetime import datetime, timezone
 
+import pytest
 from secchi import cache
 from secchi.models import PackageInfo, Registry
 from secchi.schema import CACHE_SCHEMA_VERSION, PACKAGE_EXPORT_SCHEMA_VERSION
 from secchi.export import export_package_json
+from secchi.schemas import CacheEnvelope, PackageExport
+from pydantic import ValidationError
 
 
 def test_cache_writes_and_reads_versioned_envelope(tmp_path, monkeypatch) -> None:
@@ -53,3 +56,23 @@ def test_package_export_declares_stable_schema() -> None:
 
     assert document["schema_version"] == PACKAGE_EXPORT_SCHEMA_VERSION
     assert document["schema"] == "secchi.package-intelligence"
+
+
+def test_cache_envelope_rejects_unsupported_schema_version() -> None:
+    with pytest.raises(ValidationError):
+        CacheEnvelope(
+            schema_version=CACHE_SCHEMA_VERSION + 1,
+            fetched_at=datetime.now(timezone.utc),
+            package={},
+        )
+
+
+def test_package_export_contract_rejects_wrong_schema() -> None:
+    with pytest.raises(ValidationError):
+        PackageExport(
+            schema_version=PACKAGE_EXPORT_SCHEMA_VERSION + 1,
+            project="demo",
+            package="demo",
+            registry="pypi",
+            exported_at=datetime.now(timezone.utc),
+        )

@@ -14,6 +14,7 @@ from enum import Enum
 
 from secchi.models import PackageInfo, PackageRef
 from secchi.schema import COMPARISON_SCHEMA_VERSION
+from secchi.schemas import ComparisonExport
 from secchi.services.intelligence import IntelligenceResult
 
 
@@ -55,7 +56,7 @@ class ComparisonResult:
         return usable[0] if usable else None
 
     def as_dict(self) -> dict:
-        return {
+        payload = {
             "schema_version": COMPARISON_SCHEMA_VERSION,
             "schema": "secchi.package-comparison",
             "generated_by": "Secchi",
@@ -63,6 +64,9 @@ class ComparisonResult:
             "winner": _candidate_dict(self.winner) if self.winner else None,
             "candidates": [_candidate_dict(candidate) for candidate in self.candidates],
         }
+        return ComparisonExport.model_validate(payload).model_dump(
+            mode="json", by_alias=True
+        )
 
 
 def compare_intelligence(results: list[IntelligenceResult]) -> ComparisonResult:

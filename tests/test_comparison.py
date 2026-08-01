@@ -46,6 +46,8 @@ def test_comparison_ranks_candidates_and_explains_decision() -> None:
     assert result.winner.confidence == 0.75
     assert any("Health score" in evidence for evidence in result.winner.evidence)
     assert result.as_dict()["candidates"][0]["package"] == "popular"
+    assert result.as_dict()["schema"] == "secchi.package-comparison"
+    assert result.as_dict()["schema_version"] == 1
 
 
 def test_comparison_marks_failed_fetch_as_avoid() -> None:

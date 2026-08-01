@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from html import escape
@@ -12,6 +11,7 @@ from secchi.export import export_package_json
 from secchi.models import DerivedPackageData, PackageInfo, PackageRef, Project
 from secchi.renderers.summary import render_summary
 from secchi.schema import PROJECT_EXPORT_SCHEMA_VERSION
+from secchi.schemas import ProjectExport
 
 
 @dataclass
@@ -148,7 +148,9 @@ def render_terminal_report(info: PackageInfo, derived: DerivedPackageData) -> st
 
 def render_project_report(format_name: str, report: ProjectReport) -> str:
     if format_name == "json":
-        return json.dumps(_project_report_data(report), indent=2, default=str)
+        return ProjectExport.model_validate(_project_report_data(report)).model_dump_json(
+            indent=2, by_alias=True
+        )
     if format_name == "md":
         return _project_markdown(report)
     if format_name == "html":
