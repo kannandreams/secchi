@@ -6,6 +6,7 @@ import asyncio
 import math
 
 from secchi.api.base import create_adapter
+from secchi.http import HttpClientFactory
 from secchi.models import Registry, SearchResult
 
 
@@ -21,14 +22,21 @@ class PackageSearchService:
     ) -> list[SearchResult]:
         selected = registries or list(Registry)
 
-        async def search_registry(registry: Registry) -> list[SearchResult]:
-            try:
-                return await create_adapter(registry).search(query, limit=limit)
-            except Exception:
-                # One unavailable registry should not hide results from the others.
-                return []
+        async with HttpClientFactory().create() as client:
+            async def search_registry(registry: Registry) -> list[SearchResult]:
+                try:
+                    try:
+                        adapter = create_adapter(registry, client=client)
+                    except TypeError:
+                        adapter = create_adapter(registry)
+                    return await adapter.search(query, limit=limit)
+                except Exception:
+                    # One unavailable registry should not hide results from the others.
+                    return []
 
-        batches = await asyncio.gather(*(search_registry(registry) for registry in selected))
+            batches = await asyncio.gather(
+                *(search_registry(registry) for registry in selected)
+            )
         results = [result for batch in batches for result in batch]
         results.sort(key=lambda result: self._sort_key(result, query))
         return results[:limit * len(selected)]

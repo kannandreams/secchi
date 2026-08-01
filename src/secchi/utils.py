@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 import httpx
 
 from secchi.config import get_env_token
+from secchi.http import HttpClientFactory
 from secchi.models import GitHubIssueEvent, GitHubStats
 
 
@@ -125,7 +126,12 @@ def _parse_gh_time(raw: str | None) -> datetime | None:
         return None
 
 
-async def fetch_github_release_notes(owner: str, repo: str, tag: str | None = None) -> str:
+async def fetch_github_release_notes(
+    owner: str,
+    repo: str,
+    tag: str | None = None,
+    client: httpx.AsyncClient | None = None,
+) -> str:
     """Fetch the latest release notes from GitHub.
 
     Uses SECCHI_GITHUB_TOKEN env var for higher rate limits.
@@ -133,24 +139,26 @@ async def fetch_github_release_notes(owner: str, repo: str, tag: str | None = No
     url = f"https://api.github.com/repos/{owner}/{repo}/releases"
     params: dict[str, str] = {"per_page": "5"}
 
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.get(url, headers=_gh_headers(), params=params)
-            resp.raise_for_status()
-            releases = resp.json()
-        except httpx.HTTPError:
-            return ""
+    if client is None:
+        async with HttpClientFactory().create() as owned_client:
+            return await fetch_github_release_notes(owner, repo, tag, owned_client)
+    try:
+        resp = await client.get(url, headers=_gh_headers(), params=params)
+        resp.raise_for_status()
+        releases = resp.json()
+    except httpx.HTTPError:
+        return ""
 
-        if not releases:
-            return ""
+    if not releases:
+        return ""
 
-        release = releases[0]
-        if tag and tag in [r.get("tag_name", "") for r in releases]:
-            release = next(r for r in releases if r.get("tag_name") == tag)
+    release = releases[0]
+    if tag and tag in [r.get("tag_name", "") for r in releases]:
+        release = next(r for r in releases if r.get("tag_name") == tag)
 
-        body = release.get("body", "")
-        max_chars = 3000
-        return body[:max_chars] + ("..." if len(body) > max_chars else "")
+    body = release.get("body", "")
+    max_chars = 3000
+    return body[:max_chars] + ("..." if len(body) > max_chars else "")
 
 
 async def fetch_github_stats(
@@ -159,7 +167,8 @@ async def fetch_github_stats(
     """Fetch GitHub stars, forks, issues, and timestamps for a repo."""
     url = f"https://api.github.com/repos/{owner}/{repo}"
     own_client = client is None
-    client = client or httpx.AsyncClient()
+    own_client = client is None
+    client = client or HttpClientFactory().create()
     try:
         resp = await client.get(url, headers=_gh_headers())
         resp.raise_for_status()
@@ -273,17 +282,21 @@ async def fetch_github_issue_events(
 
 
 async def fetch_github_stats_for_package(
-    homepage: str, repository_url: str
+    homepage: str,
+    repository_url: str,
+    client: httpx.AsyncClient | None = None,
 ) -> GitHubStats:
     """Fetch GitHub stats by deriving repo from package URLs."""
     repo = derive_github_repo([repository_url, homepage])
     if repo:
-        return await fetch_github_stats(repo[0], repo[1])
+        return await fetch_github_stats(repo[0], repo[1], client=client)
     return GitHubStats()
 
 
 async def fetch_github_extended_stats_for_package(
-    homepage: str, repository_url: str
+    homepage: str,
+    repository_url: str,
+    client: httpx.AsyncClient | None = None,
 ) -> tuple[GitHubStats, list[GitHubIssueEvent]]:
     """Derive the repo once, then fetch stats + signals + issue events in parallel."""
     repo = derive_github_repo([repository_url, homepage])
@@ -291,12 +304,16 @@ async def fetch_github_extended_stats_for_package(
         return GitHubStats(), []
 
     owner, name = repo
-    async with httpx.AsyncClient() as client:
-        stats, signals, events = await asyncio.gather(
-            fetch_github_stats(owner, name, client=client),
-            fetch_github_repo_signals(owner, name, client),
-            fetch_github_issue_events(owner, name, client),
-        )
+    if client is None:
+        async with HttpClientFactory().create() as owned_client:
+            return await fetch_github_extended_stats_for_package(
+                homepage, repository_url, client=owned_client
+            )
+    stats, signals, events = await asyncio.gather(
+        fetch_github_stats(owner, name, client=client),
+        fetch_github_repo_signals(owner, name, client),
+        fetch_github_issue_events(owner, name, client),
+    )
     has_ci, has_readme = signals
     stats.has_ci = has_ci
     stats.has_readme = has_readme
@@ -304,15 +321,18 @@ async def fetch_github_extended_stats_for_package(
 
 
 async def fetch_release_notes_for_package(
-    homepage: str, repository_url: str, version: str
+    homepage: str,
+    repository_url: str,
+    version: str,
+    client: httpx.AsyncClient | None = None,
 ) -> str:
     """Fetch release notes by deriving GitHub repo from package URLs."""
     repo = derive_github_repo([repository_url, homepage])
     if repo:
         owner, name = repo
         tag = f"v{version}" if not version.startswith("v") else version
-        notes = await fetch_github_release_notes(owner, name, tag)
+        notes = await fetch_github_release_notes(owner, name, tag, client=client)
         if notes:
             return notes
-        return await fetch_github_release_notes(owner, name)
+        return await fetch_github_release_notes(owner, name, client=client)
     return ""

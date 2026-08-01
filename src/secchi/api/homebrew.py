@@ -17,7 +17,7 @@ class HomebrewAdapter(SparseAdapter):
         return Registry.HOMEBREW
 
     async def fetch_package(self, name: str) -> PackageInfo:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             response = await client.get(f"{FORMULA_API}/{name}.json")
             response.raise_for_status()
             data = response.json()
@@ -38,7 +38,7 @@ class HomebrewAdapter(SparseAdapter):
         )
 
     async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             try:
                 response = await client.get(f"{FORMULA_API}/{query}.json")
                 response.raise_for_status()

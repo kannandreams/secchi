@@ -75,5 +75,7 @@ def test_optional_enrichment_failure_keeps_package_usable(
     ]
 
 
-async def _github_result(homepage: str, repository: str) -> tuple[GitHubStats, list]:
+async def _github_result(
+    homepage: str, repository: str, client=None
+) -> tuple[GitHubStats, list]:
     return GitHubStats(), []

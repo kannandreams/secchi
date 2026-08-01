@@ -12,6 +12,7 @@ from secchi.aggregate import package_key
 from secchi.api.base import create_adapter
 from secchi.cache import load_package_cache, save_package_cache
 from secchi.history import append_snapshot, compute_delta, find_baseline, load_snapshots
+from secchi.http import HttpClientFactory
 from secchi.models import (
     DerivedPackageData,
     FetchError,
@@ -87,7 +88,8 @@ class PackageIntelligenceService:
                         fetched_at=fetched_at,
                     )
 
-            info, warnings = await self._fetch_fresh(ref)
+            async with HttpClientFactory().create() as client:
+                info, warnings = await self._fetch_fresh(ref, client)
             self._apply_history_deltas(key, info)
             derived = derive.compute_all(info)
             fetched_at = datetime.now(timezone.utc)
@@ -105,8 +107,14 @@ class PackageIntelligenceService:
                 error=FetchError(package_name=ref.name, registry=ref.registry, message=str(exc)),
             )
 
-    async def _fetch_fresh(self, ref: PackageRef) -> tuple[PackageInfo, list[SignalWarning]]:
-        adapter = create_adapter(ref.registry)
+    async def _fetch_fresh(
+        self, ref: PackageRef, client
+    ) -> tuple[PackageInfo, list[SignalWarning]]:
+        try:
+            adapter = create_adapter(ref.registry, client=client)
+        except TypeError:
+            # Keeps lightweight adapter test doubles compatible with the factory.
+            adapter = create_adapter(ref.registry)
         info = await adapter.fetch_package(ref.name)
         optional: list[tuple[Any, SignalWarning | None]]
         optional = await asyncio.gather(
@@ -119,7 +127,9 @@ class PackageIntelligenceService:
             ),
             self._optional_signal(
                 "GitHub extended stats",
-                lambda: fetch_github_extended_stats_for_package(info.homepage, info.repository_url),
+                lambda: fetch_github_extended_stats_for_package(
+                    info.homepage, info.repository_url, client=client
+                ),
                 (GitHubStats(), []),
             ),
             self._optional_signal(
@@ -175,7 +185,7 @@ class PackageIntelligenceService:
                 github_notes, warning = await self._optional_signal(
                     "GitHub release notes",
                     lambda: fetch_release_notes_for_package(
-                        info.homepage, info.repository_url, info.latest_version
+                        info.homepage, info.repository_url, info.latest_version, client=client
                     ),
                     "",
                 )

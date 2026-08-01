@@ -9,7 +9,7 @@ from typing import Any
 
 import httpx
 
-from secchi.api.base import RegistryAdapter
+from secchi.api.base import AdapterBase, RegistryAdapter
 from secchi.models import (
     Dependency,
     DownloadCounts,
@@ -33,7 +33,7 @@ def _derive_kind(classifiers: list[str]) -> str:
     return "Library"
 
 
-class PyPIAdapter(RegistryAdapter):
+class PyPIAdapter(AdapterBase, RegistryAdapter):
     @property
     def registry(self) -> Registry:
         return Registry.PYPI
@@ -44,7 +44,7 @@ class PyPIAdapter(RegistryAdapter):
         return resp.json()
 
     async def fetch_package(self, name: str) -> PackageInfo:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             data = await self._get_json(name, client)
             info = data["info"]
 
@@ -98,7 +98,7 @@ class PyPIAdapter(RegistryAdapter):
             )
 
     async def fetch_versions(self, name: str) -> list[Version]:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             data = await self._get_json(name, client)
             versions_data = data.get("releases", {})
 
@@ -132,7 +132,7 @@ class PyPIAdapter(RegistryAdapter):
             return versions
 
     async def fetch_dependencies(self, name: str, version: str) -> list[Dependency]:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             data = await self._get_json(name, client)
             info = data["info"]
             requires_dist = info.get("requires_dist") or []
@@ -156,7 +156,7 @@ class PyPIAdapter(RegistryAdapter):
     async def fetch_download_trend(
         self, name: str, days: int = 30
     ) -> list[DownloadTrendPoint]:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             try:
                 resp = await client.get(
                     f"{PYPI_STATS}/packages/{name}/overall",
@@ -179,7 +179,7 @@ class PyPIAdapter(RegistryAdapter):
             return points[-days:] if len(points) > days else points
 
     async def fetch_download_counts(self, name: str) -> DownloadCounts:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             try:
                 resp = await client.get(
                     f"{PYPI_STATS}/packages/{name}/recent",
@@ -211,7 +211,7 @@ class PyPIAdapter(RegistryAdapter):
 
     async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
         """Search PyPI's public search page (the JSON API has no search route)."""
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             # PyPI's JSON API is dependable for exact package resolution even
             # when its HTML search page changes markup or is unavailable.
             try:

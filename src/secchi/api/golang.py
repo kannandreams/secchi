@@ -25,7 +25,7 @@ class GoModuleAdapter(SparseAdapter):
 
     async def fetch_package(self, name: str) -> PackageInfo:
         module = _module_path(name)
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             response = await client.get(f"{GO_PROXY}/{module}/@latest")
             response.raise_for_status()
             data = response.json()
@@ -49,7 +49,7 @@ class GoModuleAdapter(SparseAdapter):
 
     async def fetch_versions(self, name: str) -> list[Version]:
         module = _module_path(name)
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             response = await client.get(f"{GO_PROXY}/{module}/@v/list")
             response.raise_for_status()
         versions = [Version(version=line) for line in response.text.splitlines() if line]

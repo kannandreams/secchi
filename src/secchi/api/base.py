@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
+import httpx
+
 from secchi.models import (
     Dependency,
     DownloadCounts,
@@ -62,7 +64,39 @@ class RegistryAdapter(Protocol):
         return []
 
 
-def create_adapter(registry: Registry) -> RegistryAdapter:
+class AdapterBase:
+    """Shared client binding for concrete registry adapters."""
+
+    default_headers: dict[str, str] = {}
+
+    def __init__(self, client: httpx.AsyncClient) -> None:
+        self.client = client
+
+    def _client_scope(self):
+        return _ClientLease(self.client, self.default_headers)
+
+
+class _ClientLease:
+    """Context-manager view that never closes the shared client."""
+
+    def __init__(self, client: httpx.AsyncClient, headers: dict[str, str] | None = None) -> None:
+        self.client = client
+        self.headers = headers or {}
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, traceback) -> None:
+        return None
+
+    async def get(self, url: str, *args, **kwargs):
+        headers = dict(self.client.headers)
+        headers.update(self.headers)
+        headers.update(kwargs.pop("headers", {}) or {})
+        return await self.client.get(url, *args, headers=headers, **kwargs)
+
+
+def create_adapter(registry: Registry, *, client: httpx.AsyncClient) -> RegistryAdapter:
     """Factory: return the correct adapter for a given registry."""
     from secchi.api.crates import CratesAdapter
     from secchi.api.cran import CranAdapter
@@ -80,4 +114,4 @@ def create_adapter(registry: Registry) -> RegistryAdapter:
         Registry.CRAN: CranAdapter,
     }
     cls = adapters[registry]
-    return cls()
+    return cls(client)

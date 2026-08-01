@@ -12,6 +12,7 @@ from typing import Any
 import httpx
 
 from secchi.cache import cache_root
+from secchi.http import HttpClientFactory
 
 
 SPOTLIGHT_URL = "https://kannandreams.github.io/secchi-spotlight/spotlight.json"
@@ -104,7 +105,7 @@ async def fetch_spotlight() -> Spotlight | None:
         return cached
 
     try:
-        async with httpx.AsyncClient(timeout=2.0, follow_redirects=True) as client:
+        async with HttpClientFactory().create(timeout=2.0) as client:
             response = await client.get(SPOTLIGHT_URL)
             response.raise_for_status()
             body = response.content

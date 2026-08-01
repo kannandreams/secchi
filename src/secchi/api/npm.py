@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 
-from secchi.api.base import RegistryAdapter
+from secchi.api.base import AdapterBase, RegistryAdapter
 from secchi.models import (
     Dependency,
     DownloadCounts,
@@ -30,13 +30,13 @@ def _npm_name(name: str) -> str:
     return name
 
 
-class NpmAdapter(RegistryAdapter):
+class NpmAdapter(AdapterBase, RegistryAdapter):
     @property
     def registry(self) -> Registry:
         return Registry.NPM
 
     async def fetch_package(self, name: str) -> PackageInfo:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             safe_name = _npm_name(name)
             resp = await client.get(f"{NPM_REGISTRY}/{safe_name}")
             resp.raise_for_status()
@@ -94,7 +94,7 @@ class NpmAdapter(RegistryAdapter):
             )
 
     async def fetch_versions(self, name: str) -> list[Version]:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             safe_name = _npm_name(name)
             resp = await client.get(f"{NPM_REGISTRY}/{safe_name}")
             resp.raise_for_status()
@@ -117,7 +117,7 @@ class NpmAdapter(RegistryAdapter):
             return versions
 
     async def fetch_dependencies(self, name: str, version: str) -> list[Dependency]:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             safe_name = _npm_name(name)
             resp = await client.get(f"{NPM_REGISTRY}/{safe_name}")
             resp.raise_for_status()
@@ -147,7 +147,7 @@ class NpmAdapter(RegistryAdapter):
     async def fetch_download_trend(
         self, name: str, days: int = 30
     ) -> list[DownloadTrendPoint]:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             try:
                 if days <= 31:
                     url = f"{NPM_DOWNLOADS}/range/last-month/{name}"
@@ -168,7 +168,7 @@ class NpmAdapter(RegistryAdapter):
             return points[-days:] if len(points) > days else points
 
     async def fetch_download_counts(self, name: str) -> DownloadCounts:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             today = week = month = 0
             for period, store in [
                 ("last-day", "today"),
@@ -192,7 +192,7 @@ class NpmAdapter(RegistryAdapter):
             return DownloadCounts(today=today, week=week, month=month)
 
     async def fetch_release_notes(self, name: str, version: str) -> str:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             safe_name = _npm_name(name)
             resp = await client.get(f"{NPM_REGISTRY}/{safe_name}")
             resp.raise_for_status()
@@ -206,7 +206,7 @@ class NpmAdapter(RegistryAdapter):
             return ""
 
     async def _fetch_total_downloads(self, name: str) -> int:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             try:
                 resp = await client.get(
                     f"{NPM_DOWNLOADS}/point/last-year/{name}"
@@ -217,7 +217,7 @@ class NpmAdapter(RegistryAdapter):
                 return 0
 
     async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             try:
                 response = await client.get(
                     f"{NPM_REGISTRY}/-/v1/search",

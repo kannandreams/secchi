@@ -7,7 +7,7 @@ from datetime import datetime
 
 import httpx
 
-from secchi.api.base import RegistryAdapter
+from secchi.api.base import AdapterBase, RegistryAdapter
 from secchi.models import (
     Dependency,
     DownloadCounts,
@@ -35,13 +35,14 @@ _CLI_CATEGORIES = {
 }
 
 
-class CratesAdapter(RegistryAdapter):
+class CratesAdapter(AdapterBase, RegistryAdapter):
+    default_headers = _HEADERS
     @property
     def registry(self) -> Registry:
         return Registry.CRATES
 
     async def fetch_package(self, name: str) -> PackageInfo:
-        async with httpx.AsyncClient(headers=_HEADERS) as client:
+        async with self._client_scope() as client:
             resp = await client.get(f"{CRATES_API}/crates/{name}")
             resp.raise_for_status()
             payload = resp.json()
@@ -98,7 +99,7 @@ class CratesAdapter(RegistryAdapter):
             )
 
     async def fetch_versions(self, name: str) -> list[Version]:
-        async with httpx.AsyncClient(headers=_HEADERS) as client:
+        async with self._client_scope() as client:
             resp = await client.get(f"{CRATES_API}/crates/{name}")
             resp.raise_for_status()
             data = resp.json()
@@ -120,7 +121,7 @@ class CratesAdapter(RegistryAdapter):
             return versions
 
     async def fetch_dependencies(self, name: str, version: str) -> list[Dependency]:
-        async with httpx.AsyncClient(headers=_HEADERS) as client:
+        async with self._client_scope() as client:
             resp = await client.get(
                 f"{CRATES_API}/crates/{name}/{version}/dependencies"
             )
@@ -141,7 +142,7 @@ class CratesAdapter(RegistryAdapter):
     async def fetch_download_trend(
         self, name: str, days: int = 30
     ) -> list[DownloadTrendPoint]:
-        async with httpx.AsyncClient(headers=_HEADERS) as client:
+        async with self._client_scope() as client:
             resp = await client.get(f"{CRATES_API}/crates/{name}/downloads")
             resp.raise_for_status()
             data = resp.json()
@@ -178,7 +179,7 @@ class CratesAdapter(RegistryAdapter):
 
         Real per-version signal — the numeric id joins to Version.external_id.
         """
-        async with httpx.AsyncClient(headers=_HEADERS) as client:
+        async with self._client_scope() as client:
             try:
                 resp = await client.get(f"{CRATES_API}/crates/{name}/downloads")
                 resp.raise_for_status()
@@ -197,7 +198,7 @@ class CratesAdapter(RegistryAdapter):
         self, name: str, limit: int = 5
     ) -> list[ReverseDependency]:
         """Reverse dependencies ranked by each dependent's real total downloads."""
-        async with httpx.AsyncClient(headers=_HEADERS) as client:
+        async with self._client_scope() as client:
             try:
                 resp = await client.get(
                     f"{CRATES_API}/crates/{name}/reverse_dependencies",
@@ -234,7 +235,7 @@ class CratesAdapter(RegistryAdapter):
             return results[:limit]
 
     async def fetch_reverse_dependency_count(self, name: str) -> int | None:
-        async with httpx.AsyncClient(headers=_HEADERS) as client:
+        async with self._client_scope() as client:
             try:
                 resp = await client.get(
                     f"{CRATES_API}/crates/{name}/reverse_dependencies",
@@ -251,7 +252,7 @@ class CratesAdapter(RegistryAdapter):
         return ""  # fetched via GitHub in utils
 
     async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
-        async with httpx.AsyncClient(headers=_HEADERS) as client:
+        async with self._client_scope() as client:
             try:
                 response = await client.get(
                     f"{CRATES_API}/crates",

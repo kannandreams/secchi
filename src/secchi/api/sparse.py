@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from secchi.api.base import AdapterBase
+
 from secchi.models import (
     Dependency,
     DownloadCounts,
@@ -11,7 +13,7 @@ from secchi.models import (
 )
 
 
-class SparseAdapter:
+class SparseAdapter(AdapterBase):
     """Honest empty implementations for optional registry capabilities."""
 
     async def fetch_versions(self, name: str) -> list[Version]:

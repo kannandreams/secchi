@@ -17,7 +17,7 @@ class CranAdapter(SparseAdapter):
         return Registry.CRAN
 
     async def fetch_package(self, name: str) -> PackageInfo:
-        async with httpx.AsyncClient() as client:
+        async with self._client_scope() as client:
             response = await client.get(f"{CRAN_DB}/{name}")
             response.raise_for_status()
             data = response.json()

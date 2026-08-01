@@ -10,6 +10,7 @@ from typing import Any
 import httpx
 
 from secchi.cache import cache_root
+from secchi.http import HttpClientFactory
 
 TRENDING_CACHE = cache_root() / "trending.json"
 MAX_RESPONSE_BYTES = 8_192
@@ -39,7 +40,7 @@ def _trending_date() -> str:
 
 async def fetch_trending() -> TrendingRepo | None:
     try:
-        async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
+        async with HttpClientFactory().create(timeout=3.0) as client:
             response = await client.get(
                 "https://api.github.com/search/repositories",
                 params={
