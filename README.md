@@ -169,6 +169,9 @@ into a failed result.
 Reports are written to the current directory by default. Use `--output` to
 choose a file path, or `--output -` to print the report to stdout.
 
+See [DuckDB report examples](examples/reports/README.md) for package and
+project exports in JSON, Markdown, and HTML.
+
 JSON reports declare a `schema` and `schema_version` so automation can reject
 or migrate incompatible output deliberately. Secchi's local package cache uses
 the same versioned-envelope approach and continues to read legacy unversioned

@@ -1,0 +1,1812 @@
+{
+  "schema_version": 1,
+  "schema": "secchi.package-intelligence",
+  "generated_by": "Secchi",
+  "project": "duckdb",
+  "package": "duckdb",
+  "registry": "pypi",
+  "exported_at": "2026-08-02T10:30:41.352095Z",
+  "package_info": {
+    "name": "duckdb",
+    "registry": "pypi",
+    "source_registries": [],
+    "description": "DuckDB in-process database",
+    "author": "DuckDB Foundation",
+    "license": null,
+    "homepage": null,
+    "repository_url": "https://github.com/duckdb/duckdb-python",
+    "documentation_url": "https://duckdb.org/docs/stable/clients/python/overview",
+    "latest_version": "1.5.5",
+    "latest_release_date": "2026-07-22T10:53:19",
+    "total_downloads": 0,
+    "download_counts": {
+      "today": 1394942,
+      "week": 13604705,
+      "month": 54469976
+    },
+    "github_stats": {
+      "stars": 174,
+      "forks": 102,
+      "open_issues": 53,
+      "has_ci": true,
+      "has_readme": true,
+      "stars_delta_7d": null,
+      "open_issues_delta_7d": null,
+      "created_at": "2025-07-04T07:06:15+00:00",
+      "pushed_at": "2026-07-30T10:22:42+00:00"
+    },
+    "versions": [
+      {
+        "version": "1.5.6.dev11",
+        "release_date": "2026-07-29T05:01:10",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673382212
+      },
+      {
+        "version": "1.5.6.dev9",
+        "release_date": "2026-07-28T20:33:18",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673380122
+      },
+      {
+        "version": "1.6.0.dev343",
+        "release_date": "2026-07-28T06:56:32",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 633885365
+      },
+      {
+        "version": "1.5.6.dev7",
+        "release_date": "2026-07-26T14:47:02",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673248695
+      },
+      {
+        "version": "1.6.0.dev341",
+        "release_date": "2026-07-26T06:18:11",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 633716752
+      },
+      {
+        "version": "1.6.0.dev339",
+        "release_date": "2026-07-25T07:44:02",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 633716797
+      },
+      {
+        "version": "1.5.6.dev5",
+        "release_date": "2026-07-25T07:01:10",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673248685
+      },
+      {
+        "version": "1.6.0.dev337",
+        "release_date": "2026-07-24T16:51:58",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 633749048
+      },
+      {
+        "version": "1.5.5",
+        "release_date": "2026-07-22T10:53:19",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673265516
+      },
+      {
+        "version": "1.6.0.dev291",
+        "release_date": "2026-07-19T11:08:50",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 627533149
+      },
+      {
+        "version": "1.5.5.dev31",
+        "release_date": "2026-07-19T06:56:23",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673260239
+      },
+      {
+        "version": "1.5.5.dev29",
+        "release_date": "2026-07-18T08:14:53",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673264453
+      },
+      {
+        "version": "1.6.0.dev289",
+        "release_date": "2026-07-18T07:01:33",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 627531310
+      },
+      {
+        "version": "1.6.0.dev287",
+        "release_date": "2026-07-17T08:10:31",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 627013441
+      },
+      {
+        "version": "1.5.5.dev27",
+        "release_date": "2026-07-17T08:03:07",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673154948
+      },
+      {
+        "version": "1.5.5.dev25",
+        "release_date": "2026-07-16T08:53:20",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673107661
+      },
+      {
+        "version": "1.6.0.dev285",
+        "release_date": "2026-07-16T06:42:46",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 626219597
+      },
+      {
+        "version": "1.6.0.dev284",
+        "release_date": "2026-07-15T14:05:25",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 626162092
+      },
+      {
+        "version": "1.5.5.dev23",
+        "release_date": "2026-07-15T07:47:00",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673027563
+      },
+      {
+        "version": "1.5.5.dev21",
+        "release_date": "2026-07-10T17:27:38",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 673004810
+      },
+      {
+        "version": "1.6.0.dev280",
+        "release_date": "2026-07-05T07:16:57",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 612030616
+      },
+      {
+        "version": "1.6.0.dev278",
+        "release_date": "2026-07-04T08:11:56",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 612030459
+      },
+      {
+        "version": "1.5.5.dev19",
+        "release_date": "2026-07-04T07:45:28",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 672636708
+      },
+      {
+        "version": "1.6.0.dev276",
+        "release_date": "2026-07-02T16:42:17",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 611955205
+      },
+      {
+        "version": "1.6.0.dev265",
+        "release_date": "2026-07-02T14:02:16",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 611730560
+      },
+      {
+        "version": "1.5.5.dev17",
+        "release_date": "2026-07-02T09:12:31",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 672613821
+      },
+      {
+        "version": "1.6.0.dev214",
+        "release_date": "2026-07-01T07:51:26",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 758209245
+      },
+      {
+        "version": "1.5.5.dev13",
+        "release_date": "2026-06-28T07:28:06",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 672469228
+      },
+      {
+        "version": "1.6.0.dev211",
+        "release_date": "2026-06-27T08:52:00",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 745345733
+      },
+      {
+        "version": "1.5.5.dev11",
+        "release_date": "2026-06-27T08:31:06",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 672468001
+      },
+      {
+        "version": "1.6.0.dev203",
+        "release_date": "2026-06-26T18:33:15",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 743209643
+      },
+      {
+        "version": "1.6.0.dev68",
+        "release_date": "2026-06-26T12:37:37",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 741851515
+      },
+      {
+        "version": "1.5.5.dev9",
+        "release_date": "2026-06-26T08:21:46",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 672456649
+      },
+      {
+        "version": "1.6.0.dev72",
+        "release_date": "2026-06-22T20:49:40",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 738130937
+      },
+      {
+        "version": "1.5.5.dev3",
+        "release_date": "2026-06-19T16:47:39",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 672391144
+      },
+      {
+        "version": "1.6.0.dev66",
+        "release_date": "2026-06-19T16:02:40",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 737745047
+      },
+      {
+        "version": "1.6.0.dev64",
+        "release_date": "2026-06-18T17:35:27",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 737161184
+      },
+      {
+        "version": "1.5.4",
+        "release_date": "2026-06-17T10:47:31",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 672343419
+      },
+      {
+        "version": "1.4.5",
+        "release_date": "2026-06-17T10:44:32",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 726809540
+      },
+      {
+        "version": "1.5.4.dev25",
+        "release_date": "2026-06-16T18:05:04",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 672362376
+      },
+      {
+        "version": "1.4.5.dev46",
+        "release_date": "2026-06-13T10:46:48",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 726843935
+      },
+      {
+        "version": "1.5.4.dev18",
+        "release_date": "2026-06-11T10:15:48",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 671693593
+      },
+      {
+        "version": "1.4.5.dev39",
+        "release_date": "2026-06-10T10:22:06",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 726625702
+      },
+      {
+        "version": "1.4.5.dev37",
+        "release_date": "2026-06-09T09:46:50",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 726626900
+      },
+      {
+        "version": "1.5.4.dev8",
+        "release_date": "2026-06-06T06:33:42",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 671485497
+      },
+      {
+        "version": "1.4.5.dev35",
+        "release_date": "2026-05-30T09:37:51",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 726427996
+      },
+      {
+        "version": "1.5.4.dev6",
+        "release_date": "2026-05-30T09:03:37",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 671256100
+      },
+      {
+        "version": "1.4.5.dev33",
+        "release_date": "2026-05-29T10:19:35",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 726431149
+      },
+      {
+        "version": "1.5.4.dev2",
+        "release_date": "2026-05-27T08:26:28",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 671173919
+      },
+      {
+        "version": "1.5.3",
+        "release_date": "2026-05-20T11:53:56",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 670851629
+      },
+      {
+        "version": "1.5.3.dev26",
+        "release_date": "2026-05-16T07:00:14",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 670830431
+      },
+      {
+        "version": "1.4.5.dev31",
+        "release_date": "2026-05-14T21:19:12",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 726430088
+      },
+      {
+        "version": "1.5.3.dev24",
+        "release_date": "2026-05-14T10:13:06",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 668452515
+      },
+      {
+        "version": "1.5.3.dev22",
+        "release_date": "2026-05-13T20:43:46",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 668393745
+      },
+      {
+        "version": "1.5.3.dev19",
+        "release_date": "2026-05-11T09:02:28",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 670695774
+      },
+      {
+        "version": "1.5.3.dev17",
+        "release_date": "2026-05-09T08:02:33",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 670670885
+      },
+      {
+        "version": "1.5.3.dev13",
+        "release_date": "2026-05-06T07:27:30",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 645615313
+      },
+      {
+        "version": "1.5.3.dev7",
+        "release_date": "2026-04-23T08:59:42",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 612947687
+      },
+      {
+        "version": "1.4.5.dev27",
+        "release_date": "2026-04-22T10:02:43",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 726425608
+      },
+      {
+        "version": "1.5.2",
+        "release_date": "2026-04-13T11:28:36",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 644987706
+      },
+      {
+        "version": "1.5.1",
+        "release_date": "2026-03-23T12:10:15",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 644723068
+      },
+      {
+        "version": "1.6.0.dev12",
+        "release_date": "2026-03-20T12:04:51",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 629415549
+      },
+      {
+        "version": "1.5.0",
+        "release_date": "2026-03-09T12:48:39",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 643584743
+      },
+      {
+        "version": "1.4.4",
+        "release_date": "2026-01-26T11:48:41",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 725422258
+      },
+      {
+        "version": "1.4.3",
+        "release_date": "2025-12-09T10:57:46",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 728502217
+      },
+      {
+        "version": "1.4.2",
+        "release_date": "2025-11-12T13:16:29",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 675354706
+      },
+      {
+        "version": "1.4.1",
+        "release_date": "2025-10-07T10:36:14",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 569989055
+      },
+      {
+        "version": "1.4.0",
+        "release_date": "2025-09-16T10:21:28",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 591030335
+      },
+      {
+        "version": "1.3.2",
+        "release_date": "2025-07-08T10:39:58",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 709369230
+      },
+      {
+        "version": "1.3.1",
+        "release_date": "2025-06-16T13:55:45",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 708696580
+      },
+      {
+        "version": "1.3.0",
+        "release_date": "2025-05-21T16:05:09",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 708648256
+      },
+      {
+        "version": "1.2.2",
+        "release_date": "2025-04-08T08:45:14",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 978910990
+      },
+      {
+        "version": "1.2.1",
+        "release_date": "2025-03-05T18:23:12",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 978627138
+      },
+      {
+        "version": "1.2.0",
+        "release_date": "2025-02-05T13:57:57",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 972444089
+      },
+      {
+        "version": "1.1.3",
+        "release_date": "2024-11-04T14:01:05",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 984148123
+      },
+      {
+        "version": "1.1.2",
+        "release_date": "2024-10-14T11:42:23",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 983711421
+      },
+      {
+        "version": "1.1.1",
+        "release_date": "2024-09-24T08:39:02",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 983470956
+      },
+      {
+        "version": "1.1.0",
+        "release_date": "2024-09-09T12:32:34",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 871074393
+      },
+      {
+        "version": "1.0.0",
+        "release_date": "2024-06-03T13:09:04",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 796652959
+      },
+      {
+        "version": "0.10.3",
+        "release_date": "2024-05-22T13:41:26",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 815665322
+      },
+      {
+        "version": "0.10.2",
+        "release_date": "2024-04-17T14:10:57",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 818916693
+      },
+      {
+        "version": "0.10.1",
+        "release_date": "2024-03-18T16:06:18",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 812307114
+      },
+      {
+        "version": "0.10.0",
+        "release_date": "2024-02-13T14:32:38",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 803569963
+      },
+      {
+        "version": "0.0.0",
+        "release_date": "2023-12-16T01:50:25",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 1023578255
+      },
+      {
+        "version": "0.9.2",
+        "release_date": "2023-11-14T09:30:33",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 596437139
+      },
+      {
+        "version": "0.9.1",
+        "release_date": "2023-10-11T12:13:04",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 595512156
+      },
+      {
+        "version": "0.9.0",
+        "release_date": "2023-09-26T11:16:07",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 594698799
+      },
+      {
+        "version": "0.8.1",
+        "release_date": "2023-06-13T10:35:42",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 785417937
+      },
+      {
+        "version": "0.8.0",
+        "release_date": "2023-05-17T10:15:56",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 709194386
+      },
+      {
+        "version": "0.7.1",
+        "release_date": "2023-02-27T14:43:42",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 690805589
+      },
+      {
+        "version": "0.7.0",
+        "release_date": "2023-02-13T08:57:03",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 688296067
+      },
+      {
+        "version": "0.6.1",
+        "release_date": "2022-12-06T13:10:02",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 654037887
+      },
+      {
+        "version": "0.6.0",
+        "release_date": "2022-11-14T14:14:47",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 652743971
+      },
+      {
+        "version": "0.5.1",
+        "release_date": "2022-09-19T15:03:40",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 617597341
+      },
+      {
+        "version": "0.5.0",
+        "release_date": "2022-09-05T09:01:16",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 616055225
+      },
+      {
+        "version": "0.4.0",
+        "release_date": "2022-06-20T09:49:57",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 592074623
+      },
+      {
+        "version": "0.3.4",
+        "release_date": "2022-04-25T12:35:50",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 517022874
+      },
+      {
+        "version": "0.3.3",
+        "release_date": "2022-04-11T17:21:45",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 164739230
+      },
+      {
+        "version": "0.3.2",
+        "release_date": "2022-02-07T16:25:30",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 470231619
+      },
+      {
+        "version": "0.3.1",
+        "release_date": "2021-11-16T08:12:13",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 333662934
+      },
+      {
+        "version": "0.3.0",
+        "release_date": "2021-10-06T18:13:45",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 274274877
+      },
+      {
+        "version": "0.2.9",
+        "release_date": "2021-09-06T13:19:37",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 272445074
+      },
+      {
+        "version": "0.2.8",
+        "release_date": "2021-08-02T10:26:55",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 255129612
+      },
+      {
+        "version": "0.2.7",
+        "release_date": "2021-06-14T09:59:28",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 190932099
+      },
+      {
+        "version": "0.2.6",
+        "release_date": "2021-05-08T13:08:25",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 160332368
+      },
+      {
+        "version": "0.2.5",
+        "release_date": "2021-03-10T14:06:31",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 149275564
+      },
+      {
+        "version": "0.2.4",
+        "release_date": "2021-02-02T07:56:32",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 137142176
+      },
+      {
+        "version": "0.2.3",
+        "release_date": "2020-12-03T15:05:24",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 67118922
+      },
+      {
+        "version": "0.2.2",
+        "release_date": "2020-11-01T10:00:24",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 42260231
+      },
+      {
+        "version": "0.2.1",
+        "release_date": "2020-08-29T09:17:14",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 39623180
+      },
+      {
+        "version": "0.2.0",
+        "release_date": "2020-07-23T12:02:09",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 159659388
+      },
+      {
+        "version": "0.1.9",
+        "release_date": "2020-06-19T17:39:37",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 50845625
+      },
+      {
+        "version": "0.1.8",
+        "release_date": "2020-06-05T09:30:09",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 47595697
+      },
+      {
+        "version": "0.1.7",
+        "release_date": "2020-05-04T11:45:46",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 47262221
+      },
+      {
+        "version": "0.1.6",
+        "release_date": "2020-04-08T10:22:31",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 98843140
+      },
+      {
+        "version": "0.1.5",
+        "release_date": "2020-03-03T14:05:04",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 85047459
+      },
+      {
+        "version": "0.1.3",
+        "release_date": "2020-02-03T14:36:27",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 76768427
+      },
+      {
+        "version": "0.1.2",
+        "release_date": "2020-01-06T10:30:20",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 76225418
+      },
+      {
+        "version": "0.1.1",
+        "release_date": "2019-09-24T16:48:20",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 18206976
+      },
+      {
+        "version": "0.1.0",
+        "release_date": "2019-06-27T11:18:58",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 7457112
+      },
+      {
+        "version": "0.0.3",
+        "release_date": "2019-05-08T12:55:45",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 3270246
+      },
+      {
+        "version": "0.0.2",
+        "release_date": "2019-05-08T11:11:29",
+        "downloads": 0,
+        "is_yanked": false,
+        "size_bytes": 1234081
+      }
+    ],
+    "dependencies": [],
+    "download_trend": [
+      {
+        "date": "2026-02-02",
+        "count": 845845
+      },
+      {
+        "date": "2026-02-03",
+        "count": 1035738
+      },
+      {
+        "date": "2026-02-04",
+        "count": 1016413
+      },
+      {
+        "date": "2026-02-05",
+        "count": 1052844
+      },
+      {
+        "date": "2026-02-06",
+        "count": 1017495
+      },
+      {
+        "date": "2026-02-07",
+        "count": 674878
+      },
+      {
+        "date": "2026-02-08",
+        "count": 653860
+      },
+      {
+        "date": "2026-02-09",
+        "count": 985162
+      },
+      {
+        "date": "2026-02-10",
+        "count": 1150930
+      },
+      {
+        "date": "2026-02-11",
+        "count": 1047676
+      },
+      {
+        "date": "2026-02-12",
+        "count": 1041739
+      },
+      {
+        "date": "2026-02-13",
+        "count": 1009072
+      },
+      {
+        "date": "2026-02-14",
+        "count": 637403
+      },
+      {
+        "date": "2026-02-15",
+        "count": 598394
+      },
+      {
+        "date": "2026-02-16",
+        "count": 885040
+      },
+      {
+        "date": "2026-02-17",
+        "count": 1053809
+      },
+      {
+        "date": "2026-02-18",
+        "count": 1116913
+      },
+      {
+        "date": "2026-02-19",
+        "count": 1097019
+      },
+      {
+        "date": "2026-02-20",
+        "count": 1019751
+      },
+      {
+        "date": "2026-02-21",
+        "count": 699161
+      },
+      {
+        "date": "2026-02-22",
+        "count": 678192
+      },
+      {
+        "date": "2026-02-23",
+        "count": 1097972
+      },
+      {
+        "date": "2026-02-24",
+        "count": 1173432
+      },
+      {
+        "date": "2026-02-25",
+        "count": 1167567
+      },
+      {
+        "date": "2026-02-26",
+        "count": 1085493
+      },
+      {
+        "date": "2026-02-27",
+        "count": 1118304
+      },
+      {
+        "date": "2026-02-28",
+        "count": 723219
+      },
+      {
+        "date": "2026-03-01",
+        "count": 663712
+      },
+      {
+        "date": "2026-03-02",
+        "count": 1088533
+      },
+      {
+        "date": "2026-03-03",
+        "count": 1250476
+      },
+      {
+        "date": "2026-03-04",
+        "count": 1230344
+      },
+      {
+        "date": "2026-03-05",
+        "count": 1223592
+      },
+      {
+        "date": "2026-03-06",
+        "count": 1237703
+      },
+      {
+        "date": "2026-03-07",
+        "count": 778244
+      },
+      {
+        "date": "2026-03-08",
+        "count": 709871
+      },
+      {
+        "date": "2026-03-09",
+        "count": 1218859
+      },
+      {
+        "date": "2026-03-10",
+        "count": 1411528
+      },
+      {
+        "date": "2026-03-11",
+        "count": 1381139
+      },
+      {
+        "date": "2026-03-12",
+        "count": 1405597
+      },
+      {
+        "date": "2026-03-13",
+        "count": 1367373
+      },
+      {
+        "date": "2026-03-14",
+        "count": 801126
+      },
+      {
+        "date": "2026-03-15",
+        "count": 735992
+      },
+      {
+        "date": "2026-03-16",
+        "count": 1199720
+      },
+      {
+        "date": "2026-03-17",
+        "count": 1159799
+      },
+      {
+        "date": "2026-03-18",
+        "count": 1166156
+      },
+      {
+        "date": "2026-03-19",
+        "count": 1230713
+      },
+      {
+        "date": "2026-03-20",
+        "count": 1111010
+      },
+      {
+        "date": "2026-03-21",
+        "count": 670863
+      },
+      {
+        "date": "2026-03-22",
+        "count": 694297
+      },
+      {
+        "date": "2026-03-23",
+        "count": 1188083
+      },
+      {
+        "date": "2026-03-24",
+        "count": 1302021
+      },
+      {
+        "date": "2026-03-25",
+        "count": 1385817
+      },
+      {
+        "date": "2026-03-26",
+        "count": 1340468
+      },
+      {
+        "date": "2026-03-27",
+        "count": 1259559
+      },
+      {
+        "date": "2026-03-28",
+        "count": 814671
+      },
+      {
+        "date": "2026-03-29",
+        "count": 802644
+      },
+      {
+        "date": "2026-03-30",
+        "count": 1320618
+      },
+      {
+        "date": "2026-03-31",
+        "count": 1461471
+      },
+      {
+        "date": "2026-04-01",
+        "count": 1845975
+      },
+      {
+        "date": "2026-04-02",
+        "count": 1575673
+      },
+      {
+        "date": "2026-04-03",
+        "count": 1312753
+      },
+      {
+        "date": "2026-04-04",
+        "count": 1101682
+      },
+      {
+        "date": "2026-04-05",
+        "count": 1184008
+      },
+      {
+        "date": "2026-04-06",
+        "count": 1493986
+      },
+      {
+        "date": "2026-04-07",
+        "count": 1547755
+      },
+      {
+        "date": "2026-04-08",
+        "count": 1510459
+      },
+      {
+        "date": "2026-04-09",
+        "count": 1586287
+      },
+      {
+        "date": "2026-04-10",
+        "count": 1458734
+      },
+      {
+        "date": "2026-04-11",
+        "count": 883140
+      },
+      {
+        "date": "2026-04-12",
+        "count": 1175527
+      },
+      {
+        "date": "2026-04-13",
+        "count": 1444066
+      },
+      {
+        "date": "2026-04-14",
+        "count": 1931566
+      },
+      {
+        "date": "2026-04-15",
+        "count": 1842948
+      },
+      {
+        "date": "2026-04-16",
+        "count": 1697081
+      },
+      {
+        "date": "2026-04-17",
+        "count": 1324150
+      },
+      {
+        "date": "2026-04-18",
+        "count": 762722
+      },
+      {
+        "date": "2026-04-19",
+        "count": 762905
+      },
+      {
+        "date": "2026-04-20",
+        "count": 1318695
+      },
+      {
+        "date": "2026-04-21",
+        "count": 1597376
+      },
+      {
+        "date": "2026-04-22",
+        "count": 1540085
+      },
+      {
+        "date": "2026-04-23",
+        "count": 1635330
+      },
+      {
+        "date": "2026-04-24",
+        "count": 1527567
+      },
+      {
+        "date": "2026-04-25",
+        "count": 920728
+      },
+      {
+        "date": "2026-04-26",
+        "count": 848213
+      },
+      {
+        "date": "2026-04-27",
+        "count": 1353250
+      },
+      {
+        "date": "2026-04-28",
+        "count": 1443891
+      },
+      {
+        "date": "2026-04-29",
+        "count": 1456396
+      },
+      {
+        "date": "2026-04-30",
+        "count": 1504533
+      },
+      {
+        "date": "2026-05-01",
+        "count": 1259294
+      },
+      {
+        "date": "2026-05-02",
+        "count": 924452
+      },
+      {
+        "date": "2026-05-03",
+        "count": 844216
+      },
+      {
+        "date": "2026-05-04",
+        "count": 1379444
+      },
+      {
+        "date": "2026-05-05",
+        "count": 1623025
+      },
+      {
+        "date": "2026-05-06",
+        "count": 1544654
+      },
+      {
+        "date": "2026-05-07",
+        "count": 1696653
+      },
+      {
+        "date": "2026-05-08",
+        "count": 1493210
+      },
+      {
+        "date": "2026-05-09",
+        "count": 1028049
+      },
+      {
+        "date": "2026-05-10",
+        "count": 923415
+      },
+      {
+        "date": "2026-05-11",
+        "count": 1500665
+      },
+      {
+        "date": "2026-05-12",
+        "count": 1574924
+      },
+      {
+        "date": "2026-05-13",
+        "count": 1557914
+      },
+      {
+        "date": "2026-05-14",
+        "count": 1614825
+      },
+      {
+        "date": "2026-05-15",
+        "count": 1492439
+      },
+      {
+        "date": "2026-05-16",
+        "count": 932968
+      },
+      {
+        "date": "2026-05-17",
+        "count": 994581
+      },
+      {
+        "date": "2026-05-18",
+        "count": 1625118
+      },
+      {
+        "date": "2026-05-19",
+        "count": 1727329
+      },
+      {
+        "date": "2026-05-20",
+        "count": 1723798
+      },
+      {
+        "date": "2026-05-21",
+        "count": 1845026
+      },
+      {
+        "date": "2026-05-22",
+        "count": 1614882
+      },
+      {
+        "date": "2026-05-23",
+        "count": 1010652
+      },
+      {
+        "date": "2026-05-24",
+        "count": 958501
+      },
+      {
+        "date": "2026-05-25",
+        "count": 1251597
+      },
+      {
+        "date": "2026-05-26",
+        "count": 1638847
+      },
+      {
+        "date": "2026-05-27",
+        "count": 1629272
+      },
+      {
+        "date": "2026-05-28",
+        "count": 1724621
+      },
+      {
+        "date": "2026-05-29",
+        "count": 1665025
+      },
+      {
+        "date": "2026-05-30",
+        "count": 1069163
+      },
+      {
+        "date": "2026-05-31",
+        "count": 969361
+      },
+      {
+        "date": "2026-06-01",
+        "count": 1569313
+      },
+      {
+        "date": "2026-06-02",
+        "count": 1733571
+      },
+      {
+        "date": "2026-06-03",
+        "count": 1662373
+      },
+      {
+        "date": "2026-06-04",
+        "count": 1745564
+      },
+      {
+        "date": "2026-06-05",
+        "count": 1579496
+      },
+      {
+        "date": "2026-06-06",
+        "count": 1053251
+      },
+      {
+        "date": "2026-06-07",
+        "count": 970932
+      },
+      {
+        "date": "2026-06-08",
+        "count": 1896609
+      },
+      {
+        "date": "2026-06-09",
+        "count": 2184822
+      },
+      {
+        "date": "2026-06-10",
+        "count": 2238844
+      },
+      {
+        "date": "2026-06-11",
+        "count": 2064786
+      },
+      {
+        "date": "2026-06-12",
+        "count": 1618240
+      },
+      {
+        "date": "2026-06-13",
+        "count": 1089686
+      },
+      {
+        "date": "2026-06-14",
+        "count": 1039571
+      },
+      {
+        "date": "2026-06-15",
+        "count": 1666381
+      },
+      {
+        "date": "2026-06-16",
+        "count": 1815351
+      },
+      {
+        "date": "2026-06-17",
+        "count": 1846092
+      },
+      {
+        "date": "2026-06-18",
+        "count": 1787424
+      },
+      {
+        "date": "2026-06-19",
+        "count": 1532192
+      },
+      {
+        "date": "2026-06-20",
+        "count": 1192670
+      },
+      {
+        "date": "2026-06-21",
+        "count": 1250133
+      },
+      {
+        "date": "2026-06-22",
+        "count": 1944767
+      },
+      {
+        "date": "2026-06-23",
+        "count": 1933314
+      },
+      {
+        "date": "2026-06-24",
+        "count": 1841160
+      },
+      {
+        "date": "2026-06-25",
+        "count": 1829440
+      },
+      {
+        "date": "2026-06-26",
+        "count": 1697453
+      },
+      {
+        "date": "2026-06-27",
+        "count": 1347283
+      },
+      {
+        "date": "2026-06-28",
+        "count": 1201933
+      },
+      {
+        "date": "2026-06-29",
+        "count": 2040789
+      },
+      {
+        "date": "2026-06-30",
+        "count": 2267681
+      },
+      {
+        "date": "2026-07-01",
+        "count": 2054782
+      },
+      {
+        "date": "2026-07-02",
+        "count": 1887938
+      },
+      {
+        "date": "2026-07-03",
+        "count": 1559569
+      },
+      {
+        "date": "2026-07-04",
+        "count": 1063091
+      },
+      {
+        "date": "2026-07-05",
+        "count": 1084020
+      },
+      {
+        "date": "2026-07-06",
+        "count": 1791168
+      },
+      {
+        "date": "2026-07-07",
+        "count": 1984916
+      },
+      {
+        "date": "2026-07-08",
+        "count": 2049524
+      },
+      {
+        "date": "2026-07-09",
+        "count": 2078759
+      },
+      {
+        "date": "2026-07-10",
+        "count": 2005428
+      },
+      {
+        "date": "2026-07-11",
+        "count": 1164843
+      },
+      {
+        "date": "2026-07-12",
+        "count": 1234608
+      },
+      {
+        "date": "2026-07-13",
+        "count": 2006278
+      },
+      {
+        "date": "2026-07-14",
+        "count": 2081752
+      },
+      {
+        "date": "2026-07-15",
+        "count": 2165146
+      },
+      {
+        "date": "2026-07-16",
+        "count": 2150420
+      },
+      {
+        "date": "2026-07-17",
+        "count": 2088145
+      },
+      {
+        "date": "2026-07-18",
+        "count": 1326088
+      },
+      {
+        "date": "2026-07-19",
+        "count": 1295441
+      },
+      {
+        "date": "2026-07-20",
+        "count": 1977014
+      },
+      {
+        "date": "2026-07-21",
+        "count": 2230484
+      },
+      {
+        "date": "2026-07-22",
+        "count": 2202626
+      },
+      {
+        "date": "2026-07-23",
+        "count": 2100473
+      },
+      {
+        "date": "2026-07-24",
+        "count": 1972009
+      },
+      {
+        "date": "2026-07-25",
+        "count": 1253469
+      },
+      {
+        "date": "2026-07-26",
+        "count": 1281357
+      },
+      {
+        "date": "2026-07-27",
+        "count": 2130197
+      },
+      {
+        "date": "2026-07-28",
+        "count": 2183204
+      },
+      {
+        "date": "2026-07-29",
+        "count": 2288751
+      },
+      {
+        "date": "2026-07-30",
+        "count": 2225292
+      },
+      {
+        "date": "2026-07-31",
+        "count": 2100962
+      },
+      {
+        "date": "2026-08-01",
+        "count": 1394942
+      }
+    ],
+    "reverse_dependency_count": null,
+    "reverse_dependency_monthly_growth": null,
+    "health_history": [
+      {
+        "label": "Jul",
+        "value": 89
+      },
+      {
+        "label": "Aug",
+        "value": 89
+      }
+    ]
+  },
+  "derived": {
+    "health_score": {
+      "total": 89,
+      "grade": "B",
+      "sub_scores": [
+        {
+          "label": "Maintenance",
+          "score": 20,
+          "max_score": 20
+        },
+        {
+          "label": "Community",
+          "score": 8,
+          "max_score": 15
+        },
+        {
+          "label": "Documentation",
+          "score": 11,
+          "max_score": 15
+        },
+        {
+          "label": "Releases",
+          "score": 15,
+          "max_score": 15
+        },
+        {
+          "label": "Security",
+          "score": 20,
+          "max_score": 20
+        },
+        {
+          "label": "Testing",
+          "score": 15,
+          "max_score": 15
+        }
+      ]
+    },
+    "downloads_30d": {
+      "total": 54469976,
+      "pct_change": 8.331223687727343
+    },
+    "install_breakdown": [
+      {
+        "label": "PyPI",
+        "count": 54469976,
+        "percent": 100.0
+      }
+    ],
+    "reverse_dependencies": {
+      "count": null,
+      "monthly_growth": null
+    },
+    "health_timeline": [
+      {
+        "label": "Jul",
+        "value": 89
+      },
+      {
+        "label": "Aug",
+        "value": 89
+      }
+    ],
+    "activity": [
+      {
+        "kind": "issue_opened",
+        "timestamp": "2026-07-31T17:24:39+00:00",
+        "title": "`read_json` accepts a list of paths at runtime but the type stub only allows a single path.",
+        "ref": "#576",
+        "url": "https://github.com/duckdb/duckdb-python/issues/576"
+      },
+      {
+        "kind": "pr_closed",
+        "timestamp": "2026-07-30T10:22:42+00:00",
+        "title": "Use QueryLocation and GetParameterCount",
+        "ref": "#575",
+        "url": "https://github.com/duckdb/duckdb-python/pull/575"
+      },
+      {
+        "kind": "pr_closed",
+        "timestamp": "2026-07-30T09:19:07+00:00",
+        "title": "Use offset with length for statement query",
+        "ref": "#573",
+        "url": "https://github.com/duckdb/duckdb-python/pull/573"
+      },
+      {
+        "kind": "pr_opened",
+        "timestamp": "2026-07-30T09:17:09+00:00",
+        "title": "Use QueryLocation and GetParameterCount",
+        "ref": "#575",
+        "url": "https://github.com/duckdb/duckdb-python/pull/575"
+      },
+      {
+        "kind": "pr_closed",
+        "timestamp": "2026-07-30T08:57:31+00:00",
+        "title": "[duckdb-labs bot] Bump DuckDB submodule",
+        "ref": "#574",
+        "url": "https://github.com/duckdb/duckdb-python/pull/574"
+      },
+      {
+        "kind": "pr_opened",
+        "timestamp": "2026-07-30T04:03:38+00:00",
+        "title": "[duckdb-labs bot] Bump DuckDB submodule",
+        "ref": "#574",
+        "url": "https://github.com/duckdb/duckdb-python/pull/574"
+      },
+      {
+        "kind": "pr_opened",
+        "timestamp": "2026-07-29T11:16:01+00:00",
+        "title": "Use offset with length for statement query",
+        "ref": "#573",
+        "url": "https://github.com/duckdb/duckdb-python/pull/573"
+      },
+      {
+        "kind": "pr_closed",
+        "timestamp": "2026-07-29T09:24:00+00:00",
+        "title": "Replace stmt_length with query",
+        "ref": "#572",
+        "url": "https://github.com/duckdb/duckdb-python/pull/572"
+      },
+      {
+        "kind": "pr_opened",
+        "timestamp": "2026-07-29T09:21:39+00:00",
+        "title": "Replace stmt_length with query",
+        "ref": "#572",
+        "url": "https://github.com/duckdb/duckdb-python/pull/572"
+      },
+      {
+        "kind": "release",
+        "timestamp": "2026-07-29T05:01:10+00:00",
+        "title": "v1.5.6.dev11 published",
+        "ref": "1.5.6.dev11",
+        "url": ""
+      },
+      {
+        "kind": "pr_closed",
+        "timestamp": "2026-07-28T21:47:52+00:00",
+        "title": "[duckdb-labs bot] Bump DuckDB submodule",
+        "ref": "#571",
+        "url": "https://github.com/duckdb/duckdb-python/pull/571"
+      },
+      {
+        "kind": "release",
+        "timestamp": "2026-07-28T20:33:18+00:00",
+        "title": "v1.5.6.dev9 published",
+        "ref": "1.5.6.dev9",
+        "url": ""
+      },
+      {
+        "kind": "pr_opened",
+        "timestamp": "2026-07-28T17:45:09+00:00",
+        "title": "[duckdb-labs bot] Bump DuckDB submodule",
+        "ref": "#571",
+        "url": "https://github.com/duckdb/duckdb-python/pull/571"
+      },
+      {
+        "kind": "pr_closed",
+        "timestamp": "2026-07-28T08:30:33+00:00",
+        "title": "[duckdb-labs bot] Bump DuckDB submodule",
+        "ref": "#570",
+        "url": "https://github.com/duckdb/duckdb-python/pull/570"
+      },
+      {
+        "kind": "release",
+        "timestamp": "2026-07-28T06:56:32+00:00",
+        "title": "v1.6.0.dev343 published",
+        "ref": "1.6.0.dev343",
+        "url": ""
+      }
+    ],
+    "release_adoption": {
+      "1.5.6.dev11": 46.42566289615452,
+      "1.5.6.dev9": 18.572477219664655,
+      "1.6.0.dev343": 0.0,
+      "1.5.6.dev7": 35.001859884180824,
+      "1.6.0.dev341": 0.0
+    }
+  },
+  "warnings": []
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "schema": "secchi.project-intelligence",
+  "generated_by": "Secchi",
+  "project": {
+    "name": "duckdb",
+    "title": "DuckDB",
+    "description": "DuckDB — embeddable analytical database",
+    "favorite": true,
+    "repository": "https://github.com/duckdb/duckdb"
+  },
+  "generated_at": "2026-08-02T10:30:58.105792Z",
+  "summary": {
+    "health_score": 80,
+    "downloads_30d": 55338545,
+    "source_count": 2,
+    "healthy_source_count": 2
+  },
+  "sources": [
+    {
+      "package": "duckdb",
+      "registry": "pypi",
+      "latest_version": "1.5.5",
+      "health_score": 89,
+      "downloads_30d": 54469976,
+      "error": null,
+      "warnings": []
+    },
+    {
+      "package": "duckdb",
+      "registry": "npm",
+      "latest_version": "1.4.4",
+      "health_score": 70,
+      "downloads_30d": 868569,
+      "error": null,
+      "warnings": []
+    }
+  ]
+}
