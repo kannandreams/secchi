@@ -1,11 +1,16 @@
+from pathlib import Path
+
+from secchi.config import load_project
 from secchi.models import (
     DownloadCounts,
     DownloadTrendPoint,
     GitHubStats,
     PackageInfo,
     PackageRef,
+    Project,
     Registry,
 )
+from secchi.ui.app import Secchi
 from secchi.workspace import (
     WorkspaceState,
     combine_install_breakdown,
@@ -110,3 +115,100 @@ def test_workspace_package_keys_include_project_scope() -> None:
     second = PackageRef("shared", Registry.PYPI, project_name="second")
 
     assert package_key(first) != package_key(second)
+
+
+def test_same_package_name_in_different_projects_keeps_distinct_identity() -> None:
+    first = PackageRef("shared", Registry.PYPI, project_name="first")
+    second = PackageRef("shared", Registry.PYPI, project_name="second")
+
+    assert package_key(first) == "first:pypi:shared"
+    assert package_key(second) == "second:pypi:shared"
+    assert package_key(first) != package_key(second)
+
+
+def test_same_package_across_registries_is_one_navigable_package() -> None:
+    refs = logical_package_refs(
+        [
+            PackageRef("demo", Registry.NPM, project_name="demo"),
+            PackageRef("demo", Registry.PYPI, project_name="demo"),
+        ]
+    )
+
+    assert len(refs) == 1
+    assert refs[0].name == "demo"
+    assert refs[0].registry is Registry.NPM
+
+
+def test_favorite_project_is_selected_by_workspace_dashboard(tmp_path: Path) -> None:
+    favorite = Project(
+        name="favorite",
+        favorite=True,
+        packages=[PackageRef("polars", Registry.PYPI, project_name="favorite")],
+    )
+    other = Project(
+        name="other",
+        packages=[PackageRef("duckdb", Registry.PYPI, project_name="other")],
+    )
+    app = Secchi(other, tmp_path / "secchi.toml", workspace=[other, favorite])
+
+    app._select_default_package(render=False)
+
+    assert app._workspace_state.selected_ref == favorite.packages[0]
+
+
+def test_favorite_package_compatibility_is_preserved_when_loading_config(
+    tmp_path: Path,
+) -> None:
+    config = tmp_path / "secchi.toml"
+    config.write_text(
+        """[projects.demo]
+packages = [
+    { name = "duckdb", registry = "pypi", favorite = true },
+]
+"""
+    )
+
+    project = load_project(config, "demo")
+
+    assert project.favorite is False
+    assert project.packages[0].favorite is True
+
+
+def test_project_favorite_compatibly_marks_packages_favorite(tmp_path: Path) -> None:
+    config = tmp_path / "secchi.toml"
+    config.write_text(
+        """[projects.demo]
+favorite = true
+packages = [{ name = "duckdb", registry = "pypi" }]
+"""
+    )
+
+    project = load_project(config, "demo")
+
+    assert project.favorite is True
+    assert project.packages[0].favorite is True
+
+
+def test_primary_registry_selection_prefers_crates_then_pypi_then_npm() -> None:
+    npm = PackageInfo(name="demo", registry=Registry.NPM, latest_version="3.0.0")
+    pypi = PackageInfo(name="demo", registry=Registry.PYPI, latest_version="2.0.0")
+    crates = PackageInfo(name="demo", registry=Registry.CRATES, latest_version="1.0.0")
+
+    combined = combine_package_infos(
+        PackageRef("demo", Registry.NPM), [npm, pypi, crates]
+    )
+
+    assert combined.latest_version == "1.0.0"
+    assert combined.registry is Registry.CRATES
+
+
+def test_project_refresh_isolation_keeps_other_projects_loadable() -> None:
+    state = WorkspaceState()
+
+    assert state.begin_load("first") is True
+    state.finish_load("first")
+
+    assert state.should_load("first") is False
+    assert state.should_load("second") is True
+    assert state.begin_load("first", force=True) is True
+    assert state.should_load("second") is True
