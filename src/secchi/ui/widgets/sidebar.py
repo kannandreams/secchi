@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import ClassVar
 
 from textual.app import ComposeResult
@@ -14,6 +15,8 @@ from secchi.models import PackageRef, Project
 from secchi.spotlight import FALLBACK_SPOTLIGHT, Spotlight, spotlight_disabled
 from secchi.trending import FALLBACK_TRENDING, TrendingRepo
 from secchi.ui import palette
+
+logger = logging.getLogger(__name__)
 
 
 class SidebarItem(Static):
@@ -206,6 +209,8 @@ class Sidebar(Vertical):
         try:
             promo = self.query_one(".sidebar-promo", Static)
         except Exception:
+            # Dynamic sidebar cards may be updated before they are mounted.
+            logger.debug("Unable to find spotlight card", exc_info=True)
             if self._spotlight is not None and self.is_mounted:
                 self._last_spotlight_markup = new_markup
                 promo = Static(new_markup, classes="sidebar-promo")
@@ -225,6 +230,8 @@ class Sidebar(Vertical):
         try:
             card = self.query_one(".sidebar-trending", Static)
         except Exception:
+            # Dynamic sidebar cards may be updated before they are mounted.
+            logger.debug("Unable to find trending card", exc_info=True)
             if self._trending is not None and self.is_mounted:
                 self._last_trending_markup = new_markup
                 card = Static(new_markup, classes="sidebar-trending")

@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
+
+import httpx
 
 from secchi.api.base import create_adapter
 from secchi.http import HttpClientFactory
 from secchi.models import Registry, SearchResult
+
+logger = logging.getLogger(__name__)
 
 
 class PackageSearchService:
@@ -31,8 +36,20 @@ class PackageSearchService:
                     except TypeError:
                         adapter = create_adapter(registry)
                     return await adapter.search(query, limit=limit)
-                except Exception:
+                except (
+                    httpx.HTTPError,
+                    OSError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                ) as exc:
                     # One unavailable registry should not hide results from the others.
+                    logger.debug(
+                        "Registry search failed for %s: %s",
+                        registry.value,
+                        exc,
+                        exc_info=True,
+                    )
                     return []
 
             batches = await asyncio.gather(

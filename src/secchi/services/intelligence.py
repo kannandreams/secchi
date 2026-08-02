@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import httpx
+
 from secchi import derived as derive
 from secchi.aggregate import package_key
 from secchi.api.base import create_adapter
@@ -114,7 +116,7 @@ class PackageIntelligenceService:
                 warnings=warnings,
                 fetched_at=fetched_at,
             )
-        except Exception as exc:
+        except (httpx.HTTPError, OSError, ValueError, KeyError, TypeError) as exc:
             return IntelligenceResult(
                 ref=ref,
                 error=FetchError(
@@ -230,7 +232,7 @@ class PackageIntelligenceService:
         """Run one enrichment without making the package fetch fail."""
         try:
             return await operation(), None
-        except Exception as exc:
+        except (httpx.HTTPError, OSError, ValueError, KeyError, TypeError) as exc:
             return default, SignalWarning(source=source, message=str(exc))
 
     def _apply_history_deltas(self, key: str, info: PackageInfo) -> None:

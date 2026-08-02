@@ -2,6 +2,9 @@ import asyncio
 import json
 from pathlib import Path
 
+import httpx
+import pytest
+
 from secchi.aggregate import package_key
 from secchi.config import load_project
 from secchi.models import (
@@ -154,7 +157,7 @@ def test_search_service_prioritizes_exact_matches_and_survives_registry_errors(
 
         async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
             if self.registry is Registry.NPM:
-                raise RuntimeError("registry unavailable")
+                raise httpx.HTTPError("registry unavailable")
             return [
                 SearchResult(
                     name="duckdb-tools", registry=self.registry, score=100_000
@@ -173,3 +176,19 @@ def test_search_service_prioritizes_exact_matches_and_survives_registry_errors(
     )
     assert results[0].name == "duckdb"
     assert all(result.registry is Registry.PYPI for result in results)
+
+
+def test_search_service_does_not_hide_unexpected_adapter_errors(
+    monkeypatch,
+) -> None:
+    class BuggyAdapter:
+        async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
+            raise RuntimeError("unexpected search bug")
+
+    monkeypatch.setattr(
+        "secchi.services.search.create_adapter",
+        lambda registry: BuggyAdapter(),
+    )
+
+    with pytest.raises(RuntimeError, match="unexpected search bug"):
+        asyncio.run(PackageSearchService().search("duckdb", registries=[Registry.PYPI]))

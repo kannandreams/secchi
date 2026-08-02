@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
+import httpx
 from mcp.server.mcpserver import MCPServer
 
 from secchi import __version__
 from secchi.config import find_config
+from secchi.errors import SecchiError
 from secchi.export import export_package_json
 from secchi.models import PackageRef
 from secchi.services.intelligence import IntelligenceResult, PackageIntelligenceService
@@ -29,6 +32,7 @@ server = MCPServer(
     version=__version__,
 )
 _intelligence_service = PackageIntelligenceService()
+logger = logging.getLogger(__name__)
 
 
 async def _resolve_refs(package: str, registry: str | None) -> list[PackageRef]:
@@ -197,9 +201,23 @@ async def check_package(
                 {"source": warning.source, "message": warning.message}
                 for warning in check_result.warnings
             ]
-        except Exception as exc:
+        except (
+            SecchiError,
+            httpx.HTTPError,
+            OSError,
+            ValueError,
+            KeyError,
+            TypeError,
+        ) as exc:
             item["passed"] = False
             item["error"] = str(exc)
+            logger.debug(
+                "MCP policy check failed for %s (%s): %s",
+                ref.name,
+                ref.registry.value,
+                exc,
+                exc_info=True,
+            )
         matches.append(item)
     return {"query": package, "matches": matches}
 

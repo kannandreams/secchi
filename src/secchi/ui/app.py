@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import ClassVar
@@ -46,6 +46,8 @@ from secchi.workspace import (
     logical_package_refs,
     package_key,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class Secchi(App[None]):
@@ -256,15 +258,21 @@ class Secchi(App[None]):
 
     def _start_spotlight_fetch(self) -> None:
         if spotlight_disabled():
-            with suppress(Exception):
+            try:
                 self.query_one(Sidebar).set_spotlight(None)
+            except Exception:
+                # The sidebar may not be mounted during app startup/shutdown.
+                logger.debug("Unable to clear the spotlight card", exc_info=True)
             return
         self.run_worker(self._fetch_spotlight(), exclusive=False, group="spotlight")
 
     async def _fetch_spotlight(self) -> None:
         spotlight = await fetch_spotlight()
-        with suppress(Exception):
+        try:
             self.query_one(Sidebar).set_spotlight(spotlight)
+        except Exception:
+            # A best-effort remote card must not interrupt dashboard rendering.
+            logger.debug("Unable to update the spotlight card", exc_info=True)
 
     def _start_trending_fetch(self) -> None:
         try:
@@ -273,15 +281,19 @@ class Secchi(App[None]):
             if cached is not None:
                 sidebar.set_trending(cached)
         except Exception:
-            pass
+            # Cached sidebar content is optional while the app is mounting.
+            logger.debug("Unable to load cached trending content", exc_info=True)
         self.run_worker(self._fetch_trending(), exclusive=False, group="trending")
 
     async def _fetch_trending(self) -> None:
         trending = await fetch_trending()
         if trending is not None:
             save_cached_trending(trending)
-        with suppress(Exception):
+        try:
             self.query_one(Sidebar).set_trending(trending)
+        except Exception:
+            # Trending is an optional sidebar enhancement.
+            logger.debug("Unable to update the trending card", exc_info=True)
 
     # ── navigation ──
 
@@ -306,8 +318,11 @@ class Secchi(App[None]):
             self._start_data_fetch(project_name=ref.project_name)
         if render:
             self._render_selected()
-        with suppress(Exception):
+        try:
             self.query_one(Sidebar).select_package(ref)
+        except Exception:
+            # Navigation can race with sidebar mount/unmount transitions.
+            logger.debug("Unable to select package in the sidebar", exc_info=True)
 
     @on(Sidebar.PackageSelected)
     def _on_package_selected(self, event: Sidebar.PackageSelected) -> None:
@@ -351,6 +366,8 @@ class Secchi(App[None]):
             try:
                 main = self.query_one("#main-content", Container)
             except Exception:
+                # A worker can finish while the screen is being replaced.
+                logger.debug("Main content container is not mounted", exc_info=True)
                 return
             info = self.get_package_info(ref)
             error = self.get_package_error(ref)
@@ -440,7 +457,8 @@ class Secchi(App[None]):
             sidebar = self.query_one(Sidebar)
             sidebar.refresh_versions()
         except Exception:
-            pass
+            # Data workers may finish during app teardown; the refresh is optional.
+            logger.debug("Unable to refresh sidebar versions", exc_info=True)
 
         # Re-render the detail view when its package's data lands.
         if self._workspace_state.selected_ref is not None and (

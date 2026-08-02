@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -12,6 +12,8 @@ from textual.widgets import Static
 
 from secchi import __version__
 from secchi.ui import palette
+
+logger = logging.getLogger(__name__)
 
 
 def _format_key(key: str) -> str:
@@ -70,7 +72,10 @@ class SecchiFooter(Horizontal):
     def _tick(self) -> None:
         refreshed_at = getattr(self.app, "refreshed_at", None)
         age = _age_text(refreshed_at)
-        with suppress(Exception):
+        try:
             self.query_one("#footer-left", Static).update(
                 f"[{palette.GREEN}]secchi[/] {__version__}  [dim]│[/]  Data: {age}"
             )
+        except Exception:
+            # The interval may tick while the footer is being unmounted.
+            logger.debug("Unable to update status bar", exc_info=True)

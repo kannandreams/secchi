@@ -1,5 +1,6 @@
 import asyncio
 
+import httpx
 import pytest
 
 import secchi.services.intelligence as intelligence
@@ -19,7 +20,7 @@ class PartialAdapter:
         return PackageInfo(name=name, registry=Registry.PYPI, latest_version="1.0.0")
 
     async def fetch_versions(self, name: str) -> list[Version]:
-        raise RuntimeError("registry versions endpoint unavailable")
+        raise httpx.HTTPError("registry versions endpoint unavailable")
 
     async def fetch_download_trend(
         self, name: str, days: int = 30
@@ -79,6 +80,25 @@ def test_optional_enrichment_failure_keeps_package_usable(
     assert [(warning.source, warning.message) for warning in result.warnings] == [
         ("versions", "registry versions endpoint unavailable")
     ]
+
+
+def test_unexpected_enrichment_error_is_not_hidden(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class BuggyAdapter(PartialAdapter):
+        async def fetch_download_trend(
+            self, name: str, days: int = 30
+        ) -> list[DownloadTrendPoint]:
+            raise RuntimeError("unexpected adapter bug")
+
+    monkeypatch.setattr(intelligence, "create_adapter", lambda registry: BuggyAdapter())
+
+    with pytest.raises(RuntimeError, match="unexpected adapter bug"):
+        asyncio.run(
+            intelligence.PackageIntelligenceService().fetch_package(
+                PackageRef("demo", Registry.PYPI), force_refresh=True
+            )
+        )
 
 
 async def _github_result(

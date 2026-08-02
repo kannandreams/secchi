@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
+import logging
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widget import Widget
 from textual.widgets import Static
+
+logger = logging.getLogger(__name__)
 
 
 class Panel(Vertical):
@@ -46,8 +48,11 @@ class Panel(Vertical):
 
     def set_caption(self, caption: str) -> None:
         self._caption = caption
-        with suppress(Exception):
+        try:
             self.query_one(".panel-caption", Static).update(caption)
+        except Exception:
+            # Captions may be updated before the lazily-built body is mounted.
+            logger.debug("Unable to update panel caption", exc_info=True)
 
 
 class PanelBody(Vertical):
