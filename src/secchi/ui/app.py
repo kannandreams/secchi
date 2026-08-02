@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -17,12 +16,9 @@ from secchi.export import save_report
 from secchi.models import (
     DerivedPackageData,
     FetchError,
-    InstallBreakdown,
-    InstallMethod,
     PackageInfo,
     PackageRef,
     Project,
-    Registry,
 )
 from secchi.spotlight import fetch_spotlight, spotlight_disabled
 from secchi.services.intelligence import PackageIntelligenceService
@@ -38,6 +34,13 @@ from secchi.ui.widgets.header_bar import SecchiHeader
 from secchi.ui.widgets.modals import ExportScreen, HelpScreen, SearchScreen
 from secchi.ui.widgets.sidebar import Sidebar
 from secchi.ui.widgets.status_bar import SecchiFooter
+from secchi.workspace import (
+    WorkspaceState,
+    combine_install_breakdown,
+    combine_package_infos,
+    logical_package_refs,
+    package_key,
+)
 
 
 class Secchi(App[None]):
@@ -73,9 +76,7 @@ class Secchi(App[None]):
         self._package_warnings: dict[str, list[SignalWarning]] = {}
         self._derived_data: dict[str, DerivedPackageData] = {}
         self._refreshed_at: datetime | None = None
-        self._selected_ref: PackageRef | None = None
-        self._loaded_projects: set[str] = set()
-        self._loading_projects: set[str] = set()
+        self._workspace_state = WorkspaceState()
         self._render_in_progress = False
         self._render_again = False
         self._intelligence = PackageIntelligenceService()
@@ -88,7 +89,7 @@ class Secchi(App[None]):
     def visible_packages(self) -> list[PackageRef]:
         if self._workspace:
             return list(self._project.packages)
-        return _logical_package_refs(self._project.packages)
+        return logical_package_refs(self._project.packages)
 
     @property
     def workspace_projects(self) -> list[Project]:
@@ -105,17 +106,17 @@ class Secchi(App[None]):
     def get_package_info(self, ref: PackageRef) -> PackageInfo | None:
         refs = self._matching_refs(ref)
         infos = [
-            self._package_data[_package_key(r)]
+            self._package_data[package_key(r)]
             for r in refs
-            if _package_key(r) in self._package_data
+            if package_key(r) in self._package_data
         ]
         if len(infos) <= 1:
             return infos[0] if infos else None
-        return _combine_package_infos(ref, infos)
+        return combine_package_infos(ref, infos)
 
     def get_package_error(self, ref: PackageRef) -> FetchError | None:
         for r in self._matching_refs(ref):
-            error = self._package_errors.get(_package_key(r))
+            error = self._package_errors.get(package_key(r))
             if error:
                 return error
         return None
@@ -123,15 +124,15 @@ class Secchi(App[None]):
     def get_package_warnings(self, ref: PackageRef) -> list[SignalWarning]:
         warnings: list[SignalWarning] = []
         for item in self._matching_refs(ref):
-            warnings.extend(self._package_warnings.get(_package_key(item), []))
+            warnings.extend(self._package_warnings.get(package_key(item), []))
         return warnings
 
     def get_derived(self, ref: PackageRef) -> DerivedPackageData | None:
         refs = self._matching_refs(ref)
         derived_items = [
-            self._derived_data[_package_key(r)]
+            self._derived_data[package_key(r)]
             for r in refs
-            if _package_key(r) in self._derived_data
+            if package_key(r) in self._derived_data
         ]
         if not derived_items:
             return None
@@ -142,11 +143,11 @@ class Secchi(App[None]):
         if info is None:
             return None
         combined = derive.compute_all(info)
-        combined.install_breakdown = _combine_install_breakdown(
+        combined.install_breakdown = combine_install_breakdown(
             [
-                self._package_data[_package_key(r)]
+                self._package_data[package_key(r)]
                 for r in refs
-                if _package_key(r) in self._package_data
+                if package_key(r) in self._package_data
             ]
         )
         return combined
@@ -179,7 +180,8 @@ class Secchi(App[None]):
     # ── actions ──
 
     def action_refresh(self) -> None:
-        project_name = self._selected_ref.project_name if self._selected_ref else None
+        selected_ref = self._workspace_state.selected_ref
+        project_name = selected_ref.project_name if selected_ref else None
         self._start_data_fetch(force=True, project_name=project_name)
 
     def action_toggle_filter(self) -> None:
@@ -196,7 +198,7 @@ class Secchi(App[None]):
         self.push_screen(HelpScreen())
 
     def action_export(self) -> None:
-        if self._selected_ref is None:
+        if self._workspace_state.selected_ref is None:
             self.notify("No package selected.", severity="warning")
             return
 
@@ -205,7 +207,7 @@ class Secchi(App[None]):
         def _on_export(format_id: str | None) -> None:
             if format_id is None:
                 return
-            ref = self._selected_ref
+            ref = self._workspace_state.selected_ref
             if ref is None:
                 return
             format_name = format_id
@@ -215,12 +217,12 @@ class Secchi(App[None]):
                     self._project,
                 )
                 results = {
-                    _package_key(source_ref): IntelligenceResult(
+                    package_key(source_ref): IntelligenceResult(
                         ref=source_ref,
-                        info=self._package_data.get(_package_key(source_ref)),
-                        derived=self._derived_data.get(_package_key(source_ref)),
-                        warnings=self._package_warnings.get(_package_key(source_ref), []),
-                        error=self._package_errors.get(_package_key(source_ref)),
+                        info=self._package_data.get(package_key(source_ref)),
+                        derived=self._derived_data.get(package_key(source_ref)),
+                        warnings=self._package_warnings.get(package_key(source_ref), []),
+                        error=self._package_errors.get(package_key(source_ref)),
                     )
                     for source_ref in project.packages
                 }
@@ -295,7 +297,7 @@ class Secchi(App[None]):
     def navigate_to_package(
         self, ref: PackageRef, *, render: bool = True, load: bool = True
     ) -> None:
-        self._selected_ref = ref
+        self._workspace_state.select(ref)
         if load and self._workspace and ref.project_name:
             self._start_data_fetch(project_name=ref.project_name)
         if render:
@@ -317,7 +319,7 @@ class Secchi(App[None]):
         self.navigate_to_package(event.project.packages[0])
 
     def _render_selected(self) -> None:
-        if self._selected_ref is None:
+        if self._workspace_state.selected_ref is None:
             return
         if self._render_in_progress:
             self._render_again = True
@@ -343,7 +345,7 @@ class Secchi(App[None]):
 
     async def _render_selected_once(self) -> None:
         try:
-            ref = self._selected_ref
+            ref = self._workspace_state.selected_ref
             if ref is None:
                 return
             try:
@@ -355,7 +357,7 @@ class Secchi(App[None]):
             derived = self.get_derived(ref)
             warnings = self.get_package_warnings(ref)
             await main.remove_children()
-            if ref != self._selected_ref:
+            if ref != self._workspace_state.selected_ref:
                 return
             await main.mount(DetailView(ref, info, error, derived, warnings, parent_app=self))
         except asyncio.CancelledError:
@@ -371,20 +373,19 @@ class Secchi(App[None]):
         effective_project = project_name
         if self._workspace:
             target = project_name or (
-                self._selected_ref.project_name if self._selected_ref else ""
+                self._workspace_state.selected_ref.project_name
+                if self._workspace_state.selected_ref
+                else ""
             )
             if not target:
                 return
-            if not force and target in self._loaded_projects:
-                return
-            if target in self._loading_projects:
+            if not self._workspace_state.begin_load(target, force=force):
                 return
             refs = [ref for ref in self._project.packages if ref.project_name == target]
-            self._loading_projects.add(target)
             effective_project = target
 
         for ref in refs:
-            key = _package_key(ref)
+            key = package_key(ref)
             if key not in self._package_data:
                 self._package_data[key] = PackageInfo(
                     name=ref.name, registry=ref.registry
@@ -417,14 +418,13 @@ class Secchi(App[None]):
                 self._package_errors[key] = package_result.error
         self._refreshed_at = result.refreshed_at or datetime.now(timezone.utc)
         if project_name:
-            self._loading_projects.discard(project_name)
-            self._loaded_projects.add(project_name)
+            self._workspace_state.finish_load(project_name)
         self._notify_ui_update()
 
     async def _fetch_single_package(
         self, ref: PackageRef, *, force: bool = False
     ) -> None:
-        key = _package_key(ref)
+        key = package_key(ref)
         result = await self._intelligence.fetch_package(ref, force_refresh=force)
         if result.info is not None:
             self._package_data[key] = result.info
@@ -443,114 +443,9 @@ class Secchi(App[None]):
             pass
 
         # Re-render the detail view when its package's data lands.
-        if self._selected_ref is not None and (
+        if self._workspace_state.selected_ref is not None and (
             changed_ref is None
-            or changed_ref.name.lower() == self._selected_ref.name.lower()
+            or changed_ref.name.lower()
+            == self._workspace_state.selected_ref.name.lower()
         ):
             self._render_selected()
-
-
-def _package_key(ref: PackageRef) -> str:
-    project = f"{ref.project_name}:" if ref.project_name else ""
-    return f"{project}{ref.registry.value}:{ref.name}"
-
-
-def _oldest_time(current: datetime | None, candidate: datetime) -> datetime:
-    if current is None:
-        return candidate
-    return current if current <= candidate else candidate
-
-
-def _logical_package_refs(refs: list[PackageRef]) -> list[PackageRef]:
-    grouped: dict[str, PackageRef] = {}
-    for ref in refs:
-        key = ref.name.lower()
-        current = grouped.get(key)
-        if current is None:
-            grouped[key] = replace(ref)
-        elif ref.favorite and not current.favorite:
-            current.favorite = True
-    return list(grouped.values())
-
-
-def _combine_package_infos(ref: PackageRef, infos: list[PackageInfo]) -> PackageInfo:
-    primary = _pick_primary_info(infos)
-    combined = replace(primary)
-    combined.name = ref.name
-    combined.source_registries = _unique_registries(info.registry for info in infos)
-    combined.total_downloads = sum(info.total_downloads for info in infos)
-    combined.download_counts = replace(primary.download_counts)
-    combined.download_counts.today = sum(info.download_counts.today for info in infos)
-    combined.download_counts.week = sum(info.download_counts.week for info in infos)
-    combined.download_counts.month = sum(info.download_counts.month for info in infos)
-    combined.download_trend = _combine_download_trends(infos)
-
-    best_github = next((info.github_stats for info in infos if info.github_stats.resolved), None)
-    if best_github is not None:
-        combined.github_stats = best_github
-
-    crates_info = next((info for info in infos if info.registry is Registry.CRATES), None)
-    if crates_info is not None:
-        combined.reverse_dependencies = crates_info.reverse_dependencies
-        combined.reverse_dependency_count = crates_info.reverse_dependency_count
-        combined.reverse_dependency_monthly_growth = (
-            crates_info.reverse_dependency_monthly_growth
-        )
-
-    combined.health_history = primary.health_history
-
-    return combined
-
-
-def _pick_primary_info(infos: list[PackageInfo]) -> PackageInfo:
-    for registry in (Registry.CRATES, Registry.PYPI, Registry.NPM):
-        for info in infos:
-            if info.registry is registry and info.latest_version:
-                return info
-    return infos[0]
-
-
-def _unique_registries(registries) -> list[Registry]:
-    seen: set[Registry] = set()
-    out: list[Registry] = []
-    for registry in registries:
-        if registry not in seen:
-            seen.add(registry)
-            out.append(registry)
-    return out
-
-
-def _combine_download_trends(infos: list[PackageInfo]):
-    from secchi.models import DownloadTrendPoint
-
-    counts: dict[str, int] = {}
-    for info in infos:
-        for point in info.download_trend:
-            counts[point.date] = counts.get(point.date, 0) + point.count
-    return [DownloadTrendPoint(date=date, count=counts[date]) for date in sorted(counts)]
-
-
-def _combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
-    totals: dict[str, int] = {}
-    for info in infos:
-        label = info.registry.display_name
-        count = info.download_counts.month or sum(p.count for p in info.download_trend[-30:])
-        if count == 0:
-            count = info.total_downloads
-        totals[label] = totals.get(label, 0) + count
-
-    total = sum(totals.values())
-    if total <= 0:
-        return InstallBreakdown(
-            methods=[],
-            caption="No 30-day download data available across ecosystems.",
-        )
-
-    methods = [
-        InstallMethod(label=label, count=count, percent=count / total * 100)
-        for label, count in sorted(totals.items(), key=lambda item: item[1], reverse=True)
-    ]
-    return InstallBreakdown(
-        methods=methods,
-        caption="Combined from registry 30-day download totals.",
-    )
