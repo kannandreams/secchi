@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from secchi.config import find_config, load_project
+from secchi.errors import ConfigError, ReportError
 from secchi.renderers.reports import (
     build_project_report,
     default_report_path,
@@ -12,7 +13,7 @@ from secchi.renderers.reports import (
 )
 from secchi.services.intelligence import PackageIntelligenceService
 from secchi.services.resolver import parse_package_spec
-from secchi.workflows.common import WorkflowError, require_package
+from secchi.workflows.common import require_package
 
 
 @dataclass(frozen=True)
@@ -37,7 +38,7 @@ async def run(
     if project_name:
         config_path = find_config(config)
         if not config_path:
-            raise WorkflowError("No config found for project report.")
+            raise ConfigError("No config found for project report.")
         project = load_project(config_path, project_name)
         pipeline = service or PackageIntelligenceService()
         intelligence = await pipeline.fetch_project(
@@ -53,7 +54,7 @@ async def run(
         )
     else:
         if not package:
-            raise WorkflowError(
+            raise ReportError(
                 "Provide a package name or --project PROJECT for a report."
             )
         ref = parse_package_spec(package, registry)

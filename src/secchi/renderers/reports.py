@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from html import escape
 from pathlib import Path
 
+from secchi.errors import ReportError
 from secchi.export import export_package_json
 from secchi.models import DerivedPackageData, PackageInfo, PackageRef, Project
 from secchi.renderers.summary import render_summary
@@ -75,7 +76,7 @@ def render_report(
         return render_markdown(info, derived, ref, warnings)
     if format_name == "html":
         return render_html(info, derived, ref, warnings)
-    raise ValueError(f"Unsupported report format: {format_name}")
+    raise ReportError(f"Unsupported report format: {format_name}")
 
 
 def render_markdown(
@@ -163,7 +164,7 @@ def render_project_report(format_name: str, report: ProjectReport) -> str:
         return _project_markdown(report)
     if format_name == "html":
         return _project_html(report)
-    raise ValueError(f"Unsupported report format: {format_name}")
+    raise ReportError(f"Unsupported report format: {format_name}")
 
 
 def default_report_path(

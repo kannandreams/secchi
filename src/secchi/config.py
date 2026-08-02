@@ -6,6 +6,7 @@ import os
 import sys
 from pathlib import Path
 
+from secchi.errors import ConfigError
 from secchi.models import PackageRef, Project, Registry
 
 if sys.version_info >= (3, 11):
@@ -36,7 +37,7 @@ def find_config(explicit: str | None = None) -> Path | None:
         path = Path(explicit).expanduser()
         if path.exists():
             return path
-        raise FileNotFoundError(f"Config file not found: {explicit}")
+        raise ConfigError(f"Config file not found: {explicit}")
 
     for candidate in _config_locations():
         if candidate.exists():
@@ -46,13 +47,16 @@ def find_config(explicit: str | None = None) -> Path | None:
 
 def load_project(config_path: Path, project_name: str) -> Project:
     """Load a single project from the config file."""
-    data = tomllib.loads(config_path.read_text())
+    try:
+        data = tomllib.loads(config_path.read_text())
+    except (OSError, ValueError) as exc:
+        raise ConfigError(f"Could not read config file: {config_path}") from exc
     projects = data.get("projects", {})
 
     if project_name not in projects:
         available = list(projects.keys())
         hint = f" Available projects: {', '.join(available)}" if available else ""
-        raise ValueError(f"Project '{project_name}' not found in {config_path}.{hint}")
+        raise ConfigError(f"Project '{project_name}' not found in {config_path}.{hint}")
 
     raw = projects[project_name]
     project = Project(
@@ -73,7 +77,7 @@ def load_project(config_path: Path, project_name: str) -> Project:
         try:
             registry = Registry(registry_raw)
         except ValueError:
-            raise ValueError(
+            raise ConfigError(
                 f"Unknown registry '{registry_raw}' for package '{name}'. "
                 f"Must be one of: {', '.join(r.value for r in Registry)}"
             ) from None
@@ -91,7 +95,10 @@ def load_project(config_path: Path, project_name: str) -> Project:
 
 def list_projects(config_path: Path) -> list[str]:
     """List all project names in the config file."""
-    data = tomllib.loads(config_path.read_text())
+    try:
+        data = tomllib.loads(config_path.read_text())
+    except (OSError, ValueError) as exc:
+        raise ConfigError(f"Could not read config file: {config_path}") from exc
     return list(data.get("projects", {}).keys())
 
 

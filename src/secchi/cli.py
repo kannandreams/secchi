@@ -10,12 +10,12 @@ from tomli_w import dumps as toml_dumps
 
 from secchi import __version__
 from secchi.config import find_config, list_projects
+from secchi.errors import SecchiError
 from secchi.models import Registry
 from secchi.renderers.summary import render_summary
 from secchi.services.comparison import render_comparison
 from secchi.services.intelligence import PackageIntelligenceService
 from secchi.workflows import check, compare, dashboard, report, search, show
-from secchi.workflows.common import WorkflowError
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -169,7 +169,7 @@ def _run_dashboard(
                 refresh=getattr(args, "dashboard_refresh", False) or args.refresh,
             )
         )
-    except (WorkflowError, ValueError) as exc:
+    except (SecchiError, ValueError) as exc:
         parser.error(str(exc))
     from secchi.ui.app import Secchi
 
@@ -236,7 +236,7 @@ def main() -> None:
                     service=service,
                 )
             )
-        except (WorkflowError, ValueError) as exc:
+        except (SecchiError, ValueError) as exc:
             parser.error(str(exc))
         print(render_summary(result.info, result.derived))
         for warning in result.warnings:
@@ -259,7 +259,7 @@ def main() -> None:
                     service=service,
                 )
             )
-        except (WorkflowError, ValueError, FileNotFoundError) as exc:
+        except (SecchiError, ValueError, FileNotFoundError) as exc:
             parser.error(str(exc))
         if args.output == "-":
             print(output.content)
@@ -280,7 +280,7 @@ def main() -> None:
                     service=service,
                 )
             )
-        except (WorkflowError, ValueError) as exc:
+        except (SecchiError, ValueError) as exc:
             parser.error(str(exc))
         for item in result.checks:
             print(f"{'PASS' if item.passed else 'FAIL'}  {item.name}: {item.detail}")
@@ -299,7 +299,7 @@ def main() -> None:
                     service=service,
                 )
             )
-        except (WorkflowError, ValueError) as exc:
+        except (SecchiError, ValueError) as exc:
             parser.error(str(exc))
         if args.format == "json":
             import json

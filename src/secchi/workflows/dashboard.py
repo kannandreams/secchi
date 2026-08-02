@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from secchi.config import find_config, load_project, load_projects
+from secchi.errors import ConfigError, PackageNotFoundError
 from secchi.models import PackageRef, Project
 from secchi.services.resolver import parse_package_spec, resolve_package
-from secchi.workflows.common import WorkflowError
 
 
 @dataclass(frozen=True)
@@ -60,7 +60,7 @@ async def run(
         elif registry is None:
             refs = await resolve_package(package)
             if not refs:
-                raise WorkflowError(
+                raise PackageNotFoundError(
                     f"No exact package named '{package}' was found across registries."
                 )
             project = Project(name=ref.name, packages=refs)
@@ -69,7 +69,7 @@ async def run(
         config_path = config_path or (Path.cwd() / "secchi.toml")
     else:
         if not config_path:
-            raise WorkflowError(
+            raise ConfigError(
                 "No config found. Use 'secchi dashboard PACKAGE' or create secchi.toml."
             )
         if project_name:
@@ -78,7 +78,7 @@ async def run(
             workspace = load_projects(config_path)
             project = _workspace_project(config_path)
     if not project.packages:
-        raise WorkflowError("The selected workspace has no packages.")
+        raise ConfigError("The selected workspace has no packages.")
     return DashboardRequest(
         project, config_path, workspace if not package else None, refresh
     )

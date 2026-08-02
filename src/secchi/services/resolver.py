@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from secchi.errors import ConfigError
 from secchi.models import PackageRef, Registry
 from secchi.services.search import PackageSearchService
 
@@ -18,7 +19,7 @@ def parse_package_spec(spec: str, registry: str | None = None) -> PackageRef:
         selected = Registry(registry) if registry else Registry.PYPI
     except ValueError as exc:
         supported = ", ".join(item.value for item in Registry)
-        raise ValueError(
+        raise ConfigError(
             f"Unknown registry '{registry}'. Supported: {supported}"
         ) from exc
     return PackageRef(name=spec, registry=selected)

@@ -1,5 +1,6 @@
 """Package comparison workflow."""
 
+from secchi.errors import PackageNotFoundError, SecchiError
 from secchi.models import PackageRef, Registry
 from secchi.services.comparison import ComparisonResult, compare_intelligence
 from secchi.services.intelligence import PackageIntelligenceService
@@ -15,7 +16,7 @@ async def _resolve_refs(specs: list[str], registry: str | None) -> list[PackageR
             continue
         matches = await resolve_package(spec)
         if not matches:
-            raise ValueError(
+            raise PackageNotFoundError(
                 f"No exact package named '{spec}' was found across registries."
             )
         refs.append(sorted(matches, key=lambda ref: preference[ref.registry])[0])
@@ -30,7 +31,7 @@ async def run(
     service: PackageIntelligenceService | None = None,
 ) -> ComparisonResult:
     if len(specs) < 2:
-        raise ValueError("Compare requires at least two packages.")
+        raise SecchiError("Compare requires at least two packages.")
     refs = await _resolve_refs(specs, registry)
     pipeline = service or PackageIntelligenceService()
     intelligence = await pipeline.fetch_project(refs, force_refresh=refresh)
