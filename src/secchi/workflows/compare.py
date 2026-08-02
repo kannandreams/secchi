@@ -2,6 +2,7 @@
 
 from secchi.models import PackageRef, Registry
 from secchi.services.comparison import ComparisonResult, compare_intelligence
+from secchi.services.intelligence import PackageIntelligenceService
 from secchi.services.resolver import parse_package_spec, resolve_package
 
 
@@ -22,14 +23,15 @@ async def _resolve_refs(specs: list[str], registry: str | None) -> list[PackageR
 
 
 async def run(
-    specs: list[str], *, registry: str | None = None, refresh: bool = False
+    specs: list[str],
+    *,
+    registry: str | None = None,
+    refresh: bool = False,
+    service: PackageIntelligenceService | None = None,
 ) -> ComparisonResult:
     if len(specs) < 2:
         raise ValueError("Compare requires at least two packages.")
     refs = await _resolve_refs(specs, registry)
-    from secchi.services.intelligence import PackageIntelligenceService
-
-    intelligence = await PackageIntelligenceService().fetch_project(
-        refs, force_refresh=refresh
-    )
+    pipeline = service or PackageIntelligenceService()
+    intelligence = await pipeline.fetch_project(refs, force_refresh=refresh)
     return compare_intelligence(list(intelligence.results.values()))

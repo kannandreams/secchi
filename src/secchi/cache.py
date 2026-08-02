@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Callable
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
@@ -33,13 +34,18 @@ def cache_root() -> Path:
     return Path.home() / ".cache" / "secchi"
 
 
-def package_cache_path(key: str) -> Path:
+def package_cache_path(key: str, *, root: Path | None = None) -> Path:
     safe = key.replace("/", "_").replace(":", "__")
-    return cache_root() / "packages" / f"{safe}.json"
+    return (root or cache_root()) / "packages" / f"{safe}.json"
 
 
-def load_package_cache(key: str) -> tuple[PackageInfo, datetime] | None:
-    path = package_cache_path(key)
+def load_package_cache(
+    key: str,
+    *,
+    root: Path | None = None,
+    now: Callable[[], datetime] | None = None,
+) -> tuple[PackageInfo, datetime] | None:
+    path = package_cache_path(key, root=root)
     if not path.exists():
         return None
     try:
@@ -53,7 +59,7 @@ def load_package_cache(key: str) -> tuple[PackageInfo, datetime] | None:
             {**raw, "schema_version": schema_version}
         )
         fetched_at = envelope.fetched_at
-        today = datetime.now().astimezone().date()
+        today = (now or (lambda: datetime.now().astimezone()))().date()
         if fetched_at.astimezone().date() != today:
             return None
         return _decode_package_info(envelope.package), fetched_at
@@ -61,8 +67,14 @@ def load_package_cache(key: str) -> tuple[PackageInfo, datetime] | None:
         return None
 
 
-def save_package_cache(key: str, info: PackageInfo, fetched_at: datetime) -> None:
-    path = package_cache_path(key)
+def save_package_cache(
+    key: str,
+    info: PackageInfo,
+    fetched_at: datetime,
+    *,
+    root: Path | None = None,
+) -> None:
+    path = package_cache_path(key, root=root)
     payload = CacheEnvelope(
         schema_version=CACHE_SCHEMA_VERSION,
         fetched_at=fetched_at,

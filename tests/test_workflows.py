@@ -45,3 +45,24 @@ def test_check_workflow_returns_structured_policy_result(monkeypatch) -> None:
 
     assert result.passed is True
     assert result.checks[0].name == "minimum health score"
+
+
+def test_check_workflow_uses_injected_intelligence_service() -> None:
+    ref = PackageRef("demo", Registry.PYPI)
+    intelligence = IntelligenceResult(
+        ref=ref,
+        info=PackageInfo(name="demo", registry=Registry.PYPI, latest_version="1.0.0"),
+        derived=DerivedPackageData(health_score=HealthScore(total=85)),
+    )
+
+    class FakeService:
+        async def fetch_package(self, requested_ref, *, force_refresh=False):
+            assert requested_ref == ref
+            assert force_refresh is True
+            return intelligence
+
+    result = asyncio.run(
+        check.run(ref, min_health=80, refresh=True, service=FakeService())
+    )
+
+    assert result.passed is True

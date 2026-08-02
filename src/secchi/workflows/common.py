@@ -10,12 +10,23 @@ class WorkflowError(RuntimeError):
     """A user-actionable workflow failure suitable for CLI/MCP mapping."""
 
 
-async def fetch_package(ref: PackageRef, refresh: bool = False) -> IntelligenceResult:
-    return await PackageIntelligenceService().fetch_package(ref, force_refresh=refresh)
+async def fetch_package(
+    ref: PackageRef,
+    refresh: bool = False,
+    *,
+    service: PackageIntelligenceService | None = None,
+) -> IntelligenceResult:
+    pipeline = service or PackageIntelligenceService()
+    return await pipeline.fetch_package(ref, force_refresh=refresh)
 
 
-async def require_package(ref: PackageRef, refresh: bool = False) -> IntelligenceResult:
-    result = await fetch_package(ref, refresh)
+async def require_package(
+    ref: PackageRef,
+    refresh: bool = False,
+    *,
+    service: PackageIntelligenceService | None = None,
+) -> IntelligenceResult:
+    result = await fetch_package(ref, refresh, service=service)
     if result.error or result.info is None or result.derived is None:
         message = result.error.message if result.error else "No package data returned."
         raise WorkflowError(

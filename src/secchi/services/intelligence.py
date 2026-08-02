@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from secchi import derived as derive
@@ -61,6 +62,17 @@ class SignalWarning:
 class PackageIntelligenceService:
     """The single application pipeline used by show, dashboard, and reports."""
 
+    def __init__(
+        self,
+        *,
+        cache_dir: Path | None = None,
+        clock: Callable[[], datetime] | None = None,
+        http_factory: HttpClientFactory | None = None,
+    ) -> None:
+        self.cache_dir = cache_dir
+        self.clock = clock or (lambda: datetime.now(timezone.utc))
+        self.http_factory = http_factory or HttpClientFactory()
+
     async def fetch_project(
         self, refs: list[PackageRef], *, force_refresh: bool = False
     ) -> ProjectIntelligence:
@@ -79,7 +91,7 @@ class PackageIntelligenceService:
         key = package_key(ref)
         try:
             if not force_refresh:
-                cached = load_package_cache(key)
+                cached = self._load_cache(key)
                 if cached is not None:
                     info, fetched_at = cached
                     return IntelligenceResult(
@@ -89,12 +101,12 @@ class PackageIntelligenceService:
                         fetched_at=fetched_at,
                     )
 
-            async with HttpClientFactory().create() as client:
+            async with self.http_factory.create() as client:
                 info, warnings = await self._fetch_fresh(ref, client)
             self._apply_history_deltas(key, info)
             derived = derive.compute_all(info)
-            fetched_at = datetime.now(timezone.utc)
-            save_package_cache(key, info, fetched_at)
+            fetched_at = self.clock()
+            self._save_cache(key, info, fetched_at)
             return IntelligenceResult(
                 ref=ref,
                 info=info,
@@ -222,10 +234,12 @@ class PackageIntelligenceService:
             return default, SignalWarning(source=source, message=str(exc))
 
     def _apply_history_deltas(self, key: str, info: PackageInfo) -> None:
-        snapshots = load_snapshots(key)
+        snapshots = load_snapshots(
+            key, path=self._history_path() if self.cache_dir is not None else None
+        )
         github = info.github_stats
         if github.resolved:
-            baseline = find_baseline(snapshots)
+            baseline = find_baseline(snapshots, now=self.clock)
             github.stars_delta_7d = compute_delta(
                 github.stars, baseline.stars if baseline else None
             )
@@ -234,27 +248,50 @@ class PackageIntelligenceService:
             )
 
         health_total = derive.compute_health_score(info).total
-        monthly = find_baseline(snapshots, min_age_days=28, max_age_days=35)
+        monthly = find_baseline(
+            snapshots, min_age_days=28, max_age_days=35, now=self.clock
+        )
         if info.reverse_dependency_count is not None:
             info.reverse_dependency_monthly_growth = compute_delta(
                 info.reverse_dependency_count,
                 monthly.reverse_dependency_count if monthly else None,
             )
-        info.health_history = health_history_points(snapshots, health_total)
+        info.health_history = health_history_points(
+            snapshots, health_total, now=self.clock
+        )
         append_snapshot(
             key,
             HistorySnapshot(
-                timestamp=datetime.now(timezone.utc),
+                timestamp=self.clock(),
                 stars=github.stars,
                 open_issues=github.open_issues,
                 health_score=health_total,
                 reverse_dependency_count=info.reverse_dependency_count,
             ),
+            path=self._history_path() if self.cache_dir is not None else None,
         )
+
+    def _load_cache(self, key: str):
+        if self.cache_dir is None:
+            return load_package_cache(key)
+        return load_package_cache(key, root=self.cache_dir, now=self.clock)
+
+    def _save_cache(self, key: str, info: PackageInfo, fetched_at: datetime) -> None:
+        if self.cache_dir is None:
+            save_package_cache(key, info, fetched_at)
+        else:
+            save_package_cache(key, info, fetched_at, root=self.cache_dir)
+
+    def _history_path(self) -> Path:
+        assert self.cache_dir is not None
+        return self.cache_dir / "history.json"
 
 
 def health_history_points(
-    snapshots: list[HistorySnapshot], current_health: int
+    snapshots: list[HistorySnapshot],
+    current_health: int,
+    *,
+    now: Callable[[], datetime] | None = None,
 ) -> list[MetricTimelinePoint]:
     latest_by_month: dict[str, tuple[datetime, int]] = {}
     for snapshot in snapshots:
@@ -267,8 +304,8 @@ def health_history_points(
         current = latest_by_month.get(key)
         if current is None or timestamp > current[0]:
             latest_by_month[key] = (timestamp, snapshot.health_score)
-    now = datetime.now(timezone.utc)
-    latest_by_month[now.strftime("%Y-%m")] = (now, current_health)
+    current_time = (now or (lambda: datetime.now(timezone.utc)))()
+    latest_by_month[current_time.strftime("%Y-%m")] = (current_time, current_health)
     return [
         MetricTimelinePoint(label=timestamp.strftime("%b"), value=value)
         for _, (timestamp, value) in sorted(latest_by_month.items())

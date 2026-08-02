@@ -82,3 +82,23 @@ def test_package_export_contract_rejects_wrong_schema() -> None:
             registry="pypi",
             exported_at=datetime.now(timezone.utc),
         )
+
+
+def test_cache_supports_injected_root_and_clock(tmp_path) -> None:
+    fetched_at = datetime(2026, 8, 2, 12, tzinfo=timezone.utc)
+    info = PackageInfo(name="demo", registry=Registry.PYPI, latest_version="1.0.0")
+
+    cache.save_package_cache("pypi:demo", info, fetched_at, root=tmp_path)
+
+    loaded = cache.load_package_cache(
+        "pypi:demo", root=tmp_path, now=lambda: fetched_at
+    )
+    expired = cache.load_package_cache(
+        "pypi:demo",
+        root=tmp_path,
+        now=lambda: fetched_at.replace(day=fetched_at.day + 1),
+    )
+
+    assert loaded is not None
+    assert loaded[0].latest_version == "1.0.0"
+    assert expired is None

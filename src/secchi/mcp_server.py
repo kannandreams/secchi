@@ -11,7 +11,7 @@ from secchi import __version__
 from secchi.config import find_config
 from secchi.export import export_package_json
 from secchi.models import PackageRef
-from secchi.services.intelligence import IntelligenceResult
+from secchi.services.intelligence import IntelligenceResult, PackageIntelligenceService
 from secchi.services.resolver import parse_package_spec, resolve_package
 from secchi.workflows import check as check_workflow
 from secchi.workflows import compare as compare_workflow
@@ -28,6 +28,7 @@ server = MCPServer(
     ),
     version=__version__,
 )
+_intelligence_service = PackageIntelligenceService()
 
 
 async def _resolve_refs(package: str, registry: str | None) -> list[PackageRef]:
@@ -79,7 +80,9 @@ async def inspect_package(
             "matches": [],
             "message": "No exact package matches found.",
         }
-    intelligence = await inspect_workflow.run(refs, refresh=refresh)
+    intelligence = await inspect_workflow.run(
+        refs, refresh=refresh, service=_intelligence_service
+    )
     return {
         "query": package,
         "matches": [
@@ -142,6 +145,7 @@ async def inspect_project(
         format_name="json",
         output="-",
         refresh=refresh,
+        service=_intelligence_service,
     )
     return json.loads(output.content)
 
@@ -182,6 +186,7 @@ async def check_package(
                 min_health=min_health,
                 require_ci=require_ci,
                 refresh=refresh,
+                service=_intelligence_service,
             )
             item["passed"] = check_result.passed
             item["checks"] = [
@@ -220,7 +225,10 @@ async def compare_packages(
     if len(packages) > 20:
         raise ValueError("packages must contain no more than 20 package references")
     comparison = await compare_workflow.run(
-        packages, registry=registry, refresh=refresh
+        packages,
+        registry=registry,
+        refresh=refresh,
+        service=_intelligence_service,
     )
     return {"query": packages, **comparison.as_dict()}
 

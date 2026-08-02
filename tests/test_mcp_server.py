@@ -48,11 +48,12 @@ def test_inspect_package_returns_structured_package_data(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     ref = PackageRef("duckdb", Registry.PYPI)
-    service = FakeIntelligenceService()
-    service.result = _result(ref)
+    fake_service = FakeIntelligenceService()
+    fake_service.result = _result(ref)
 
-    async def fake_inspect(refs, *, refresh=False):
-        return service_project(ref, service.result)
+    async def fake_inspect(refs, *, refresh=False, service=None):
+        assert service is not None
+        return service_project(ref, fake_service.result)
 
     monkeypatch.setattr(mcp_server.inspect_workflow, "run", fake_inspect)
     monkeypatch.setattr(
@@ -208,9 +209,10 @@ def test_compare_packages_returns_ranked_recommendation(
 ) -> None:
     refs = [PackageRef("one", Registry.PYPI), PackageRef("two", Registry.PYPI)]
 
-    async def fake_compare(packages, *, registry=None, refresh=False):
+    async def fake_compare(packages, *, registry=None, refresh=False, service=None):
         assert packages == ["one", "two"]
         assert refresh is True
+        assert service is not None
         from secchi.services.comparison import compare_intelligence
 
         return compare_intelligence(

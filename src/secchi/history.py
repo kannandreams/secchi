@@ -9,14 +9,17 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
 from secchi.models import HistorySnapshot
 
 
-def history_file_path() -> Path:
+def history_file_path(root: Path | None = None) -> Path:
     """XDG_CACHE_HOME/secchi/history.json, else ~/.cache/secchi/history.json."""
+    if root is not None:
+        return root / "history.json"
     if base := os.environ.get("XDG_CACHE_HOME", ""):
         root = Path(base)
     else:
@@ -24,8 +27,8 @@ def history_file_path() -> Path:
     return root / "secchi" / "history.json"
 
 
-def _load_all() -> dict[str, list[dict]]:
-    path = history_file_path()
+def _load_all(path: Path | None = None) -> dict[str, list[dict]]:
+    path = path or history_file_path()
     if not path.exists():
         return {}
     try:
@@ -34,8 +37,8 @@ def _load_all() -> dict[str, list[dict]]:
         return {}
 
 
-def _save_all(data: dict[str, list[dict]]) -> None:
-    path = history_file_path()
+def _save_all(data: dict[str, list[dict]], path: Path | None = None) -> None:
+    path = path or history_file_path()
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data, indent=2))
@@ -43,9 +46,9 @@ def _save_all(data: dict[str, list[dict]]) -> None:
         pass
 
 
-def load_snapshots(key: str) -> list[HistorySnapshot]:
+def load_snapshots(key: str, *, path: Path | None = None) -> list[HistorySnapshot]:
     snapshots: list[HistorySnapshot] = []
-    for raw in _load_all().get(key, []):
+    for raw in _load_all(path).get(key, []):
         ts = raw.get("timestamp")
         try:
             timestamp = datetime.fromisoformat(ts) if ts else None
@@ -65,8 +68,14 @@ def load_snapshots(key: str) -> list[HistorySnapshot]:
     return snapshots
 
 
-def append_snapshot(key: str, snapshot: HistorySnapshot, max_keep: int = 420) -> None:
-    data = _load_all()
+def append_snapshot(
+    key: str,
+    snapshot: HistorySnapshot,
+    max_keep: int = 420,
+    *,
+    path: Path | None = None,
+) -> None:
+    data = _load_all(path)
     entries = data.get(key, [])
     entries.append(
         {
@@ -78,22 +87,24 @@ def append_snapshot(key: str, snapshot: HistorySnapshot, max_keep: int = 420) ->
         }
     )
     data[key] = entries[-max_keep:]
-    _save_all(data)
+    _save_all(data, path)
 
 
 def find_baseline(
     snapshots: list[HistorySnapshot],
     min_age_days: int = 6,
     max_age_days: int = 10,
+    *,
+    now: Callable[[], datetime] | None = None,
 ) -> HistorySnapshot | None:
     """Closest snapshot whose age falls in [min_age_days, max_age_days]."""
-    now = datetime.now(timezone.utc)
+    current_time = (now or (lambda: datetime.now(timezone.utc)))()
     candidates: list[tuple[float, HistorySnapshot]] = []
     for snap in snapshots:
         ts = snap.timestamp
         if ts.tzinfo is None:
             ts = ts.replace(tzinfo=timezone.utc)
-        age_days = (now - ts).total_seconds() / 86400
+        age_days = (current_time - ts).total_seconds() / 86400
         if min_age_days <= age_days <= max_age_days:
             candidates.append((abs(age_days - 7), snap))
     if not candidates:

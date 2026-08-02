@@ -13,6 +13,7 @@ from secchi.config import find_config, list_projects
 from secchi.models import Registry
 from secchi.renderers.summary import render_summary
 from secchi.services.comparison import render_comparison
+from secchi.services.intelligence import PackageIntelligenceService
 from secchi.workflows import check, compare, dashboard, report, search, show
 from secchi.workflows.common import WorkflowError
 
@@ -153,7 +154,11 @@ def cmd_init() -> None:
     print(f"\n✅  Config written to {output_path}")
 
 
-def _run_dashboard(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+def _run_dashboard(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+    service: PackageIntelligenceService,
+) -> None:
     try:
         request = asyncio.run(
             dashboard.run(
@@ -173,6 +178,7 @@ def _run_dashboard(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
         config_path=request.config_path,
         force_refresh=request.refresh,
         workspace=request.workspace,
+        intelligence=service,
     ).run()
 
 
@@ -209,6 +215,7 @@ def main() -> None:
         args.dashboard_config = None
         args.dashboard_refresh = args.refresh
         args.command = "dashboard"
+    service = PackageIntelligenceService()
     if args.list:
         config_path = find_config(args.config)
         if not config_path:
@@ -217,12 +224,17 @@ def main() -> None:
             print(name)
         return
     if args.command == "dashboard" or args.command is None:
-        _run_dashboard(args, parser)
+        _run_dashboard(args, parser, service)
         return
     if args.command == "show":
         try:
             result = asyncio.run(
-                show.run(args.package, registry=args.registry, refresh=args.refresh)
+                show.run(
+                    args.package,
+                    registry=args.registry,
+                    refresh=args.refresh,
+                    service=service,
+                )
             )
         except (WorkflowError, ValueError) as exc:
             parser.error(str(exc))
@@ -244,6 +256,7 @@ def main() -> None:
                     format_name=args.format,
                     output=args.output,
                     refresh=args.refresh,
+                    service=service,
                 )
             )
         except (WorkflowError, ValueError, FileNotFoundError) as exc:
@@ -264,6 +277,7 @@ def main() -> None:
                     min_health=args.min_health,
                     require_ci=args.require_ci,
                     refresh=args.refresh,
+                    service=service,
                 )
             )
         except (WorkflowError, ValueError) as exc:
@@ -278,7 +292,12 @@ def main() -> None:
     if args.command == "compare":
         try:
             comparison = asyncio.run(
-                compare.run(args.packages, registry=args.registry, refresh=args.refresh)
+                compare.run(
+                    args.packages,
+                    registry=args.registry,
+                    refresh=args.refresh,
+                    service=service,
+                )
             )
         except (WorkflowError, ValueError) as exc:
             parser.error(str(exc))

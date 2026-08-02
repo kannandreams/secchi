@@ -70,6 +70,7 @@ class Secchi(App[None]):
         config_path: Path,
         force_refresh: bool = False,
         workspace: list[Project] | None = None,
+        intelligence: PackageIntelligenceService | None = None,
     ) -> None:
         super().__init__()
         self._project = project
@@ -84,7 +85,7 @@ class Secchi(App[None]):
         self._workspace_state = WorkspaceState()
         self._render_in_progress = False
         self._render_again = False
-        self._intelligence = PackageIntelligenceService()
+        self._intelligence = intelligence or PackageIntelligenceService()
 
     @property
     def project(self) -> Project:
