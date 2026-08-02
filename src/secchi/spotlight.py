@@ -14,7 +14,6 @@ import httpx
 from secchi.cache import cache_root
 from secchi.http import HttpClientFactory
 
-
 SPOTLIGHT_URL = "https://kannandreams.github.io/secchi-spotlight/spotlight.json"
 DISABLE_ENV = "SECCHI_DISABLE_SPOTLIGHT"
 MAX_RESPONSE_BYTES = 8_192

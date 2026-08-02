@@ -21,7 +21,6 @@ from secchi.utils import (
     shorten_number,
 )
 
-
 # Kept in one place so additional package sources can be surfaced without
 # changing the project-card layout. Only ecosystems present in source_registries
 # are rendered today.
@@ -67,7 +66,8 @@ class DetailView(Container):
 
             if self._warnings:
                 warning_lines = "\n".join(
-                    f"• {warning.source}: {warning.message}" for warning in self._warnings
+                    f"• {warning.source}: {warning.message}"
+                    for warning in self._warnings
                 )
                 yield Static(
                     f"[b yellow]Signal warnings[/]\n{warning_lines}",
@@ -77,9 +77,7 @@ class DetailView(Container):
             if self._info and self._info.latest_version:
                 yield from self._compose_tabs()
             elif self._error:
-                yield Static(
-                    f"[b red]Error[/]\n{self._error.message}", id="error-view"
-                )
+                yield Static(f"[b red]Error[/]\n{self._error.message}", id="error-view")
             else:
                 yield Static("Loading…", id="loading-view")
 
@@ -103,9 +101,19 @@ class DetailView(Container):
             lines.append(f"[#E5E7EB]{info.description[:96]}[/]")
 
         repo = derive_github_repo([info.repository_url, info.homepage])
-        repo_str = f"github.com/{repo[0]}/{repo[1]}" if repo else (info.repository_url or "—")
-        docs_str = _short_url(info.documentation_url or info.homepage) if (info.documentation_url or info.homepage) else "—"
-        stars = shorten_number(info.github_stats.stars) if info.github_stats.resolved else "—"
+        repo_str = (
+            f"github.com/{repo[0]}/{repo[1]}" if repo else (info.repository_url or "—")
+        )
+        docs_str = (
+            _short_url(info.documentation_url or info.homepage)
+            if (info.documentation_url or info.homepage)
+            else "—"
+        )
+        stars = (
+            shorten_number(info.github_stats.stars)
+            if info.github_stats.resolved
+            else "—"
+        )
         latest = f"v{info.latest_version}" if info.latest_version else "—"
 
         lines.append(
@@ -174,7 +182,9 @@ class DetailView(Container):
         latest_card = StatCard(
             "LATEST VERSION",
             f"v{info.latest_version}" if info.latest_version else "—",
-            delta=f"{latest_pct:.0f}% adoption" if latest_pct is not None else "— adoption",
+            delta=f"{latest_pct:.0f}% adoption"
+            if latest_pct is not None
+            else "— adoption",
             signal=_rollout_signal(latest_pct),
             delta_color=_rollout_color(latest_pct),
             signal_color=_rollout_color(latest_pct),
@@ -234,7 +244,7 @@ class DetailView(Container):
     def _deps_pane(self) -> VerticalScroll:
         table = DataTable(cursor_type=None, zebra_stripes=True)
         table.add_columns("Package", "Requirement", "Type")
-        for dep in (self._info.dependencies if self._info else []):
+        for dep in self._info.dependencies if self._info else []:
             table.add_row(
                 Text(dep.name),
                 dep.requirement or "—",
@@ -247,8 +257,10 @@ class DetailView(Container):
     def _versions_pane(self) -> VerticalScroll:
         table = DataTable(cursor_type=None, zebra_stripes=True)
         table.add_columns("Version", "Released", "Downloads", "Size")
-        for ver in (self._info.versions[:100] if self._info else []):
-            date_str = ver.release_date.strftime("%Y-%m-%d") if ver.release_date else "—"
+        for ver in self._info.versions[:100] if self._info else []:
+            date_str = (
+                ver.release_date.strftime("%Y-%m-%d") if ver.release_date else "—"
+            )
             label = f"(yanked) {ver.version}" if ver.is_yanked else ver.version
             table.add_row(
                 Text(label, style=palette.RED if ver.is_yanked else ""),

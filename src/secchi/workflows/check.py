@@ -29,11 +29,7 @@ async def run(
 ) -> CheckResult:
     if min_health < 0 or min_health > 100:
         raise ValueError("min_health must be between 0 and 100")
-    ref = (
-        parse_package_spec(package, registry)
-        if isinstance(package, str)
-        else package
-    )
+    ref = parse_package_spec(package, registry) if isinstance(package, str) else package
     result = await require_package(ref, refresh)
     checks = evaluate_default_policy(
         result.info,

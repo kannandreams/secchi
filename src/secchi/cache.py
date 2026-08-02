@@ -49,7 +49,9 @@ def load_package_cache(key: str) -> tuple[PackageInfo, datetime] | None:
         schema_version = raw.get("schema_version", 0)
         if not isinstance(schema_version, int) or schema_version > CACHE_SCHEMA_VERSION:
             return None
-        envelope = CacheEnvelope.model_validate({**raw, "schema_version": schema_version})
+        envelope = CacheEnvelope.model_validate(
+            {**raw, "schema_version": schema_version}
+        )
         fetched_at = envelope.fetched_at
         today = datetime.now().astimezone().date()
         if fetched_at.astimezone().date() != today:
@@ -89,9 +91,7 @@ def _decode_package_info(raw: dict[str, Any]) -> PackageInfo:
     info = PackageInfo(
         name=raw.get("name", ""),
         registry=Registry(raw.get("registry", "pypi")),
-        source_registries=[
-            Registry(r) for r in raw.get("source_registries", []) if r
-        ],
+        source_registries=[Registry(r) for r in raw.get("source_registries", []) if r],
         description=raw.get("description", ""),
         author=raw.get("author", ""),
         license=raw.get("license", ""),

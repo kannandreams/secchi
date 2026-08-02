@@ -10,7 +10,6 @@ import httpx
 from secchi.api.sparse import SparseAdapter
 from secchi.models import PackageInfo, Registry, SearchResult, Version
 
-
 GO_PROXY = "https://proxy.golang.org"
 
 
@@ -52,7 +51,9 @@ class GoModuleAdapter(SparseAdapter):
         async with self._client_scope() as client:
             response = await client.get(f"{GO_PROXY}/{module}/@v/list")
             response.raise_for_status()
-        versions = [Version(version=line) for line in response.text.splitlines() if line]
+        versions = [
+            Version(version=line) for line in response.text.splitlines() if line
+        ]
         return versions[-100:]
 
     async def search(self, query: str, limit: int = 10) -> list[SearchResult]:

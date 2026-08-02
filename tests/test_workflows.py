@@ -1,6 +1,12 @@
 import asyncio
 
-from secchi.models import DerivedPackageData, HealthScore, PackageInfo, PackageRef, Registry
+from secchi.models import (
+    DerivedPackageData,
+    HealthScore,
+    PackageInfo,
+    PackageRef,
+    Registry,
+)
 from secchi.services.intelligence import IntelligenceResult
 from secchi.workflows import check, dashboard
 

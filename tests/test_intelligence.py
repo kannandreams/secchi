@@ -21,7 +21,9 @@ class PartialAdapter:
     async def fetch_versions(self, name: str) -> list[Version]:
         raise RuntimeError("registry versions endpoint unavailable")
 
-    async def fetch_download_trend(self, name: str, days: int = 30) -> list[DownloadTrendPoint]:
+    async def fetch_download_trend(
+        self, name: str, days: int = 30
+    ) -> list[DownloadTrendPoint]:
         return [DownloadTrendPoint("2026-08-01", 10)]
 
     async def fetch_download_counts(self, name: str) -> DownloadCounts:
@@ -46,14 +48,18 @@ class PartialAdapter:
 def test_optional_enrichment_failure_keeps_package_usable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(intelligence, "create_adapter", lambda registry: PartialAdapter())
+    monkeypatch.setattr(
+        intelligence, "create_adapter", lambda registry: PartialAdapter()
+    )
     monkeypatch.setattr(
         intelligence,
         "fetch_github_extended_stats_for_package",
         _github_result,
     )
     monkeypatch.setattr(intelligence, "load_package_cache", lambda key: None)
-    monkeypatch.setattr(intelligence, "save_package_cache", lambda key, info, fetched_at: None)
+    monkeypatch.setattr(
+        intelligence, "save_package_cache", lambda key, info, fetched_at: None
+    )
     monkeypatch.setattr(
         intelligence.PackageIntelligenceService,
         "_apply_history_deltas",

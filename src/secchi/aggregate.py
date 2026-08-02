@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import replace
-from typing import Iterable
 
 from secchi.models import (
     DownloadTrendPoint,
@@ -46,15 +46,21 @@ def combine_package_infos(ref: PackageRef, infos: list[PackageInfo]) -> PackageI
     combined.download_counts.month = sum(info.download_counts.month for info in infos)
     combined.download_trend = combine_download_trends(infos)
 
-    best_github = next((info.github_stats for info in infos if info.github_stats.resolved), None)
+    best_github = next(
+        (info.github_stats for info in infos if info.github_stats.resolved), None
+    )
     if best_github is not None:
         combined.github_stats = best_github
 
-    crates_info = next((info for info in infos if info.registry is Registry.CRATES), None)
+    crates_info = next(
+        (info for info in infos if info.registry is Registry.CRATES), None
+    )
     if crates_info is not None:
         combined.reverse_dependencies = crates_info.reverse_dependencies
         combined.reverse_dependency_count = crates_info.reverse_dependency_count
-        combined.reverse_dependency_monthly_growth = crates_info.reverse_dependency_monthly_growth
+        combined.reverse_dependency_monthly_growth = (
+            crates_info.reverse_dependency_monthly_growth
+        )
     combined.health_history = primary.health_history
     return combined
 
@@ -69,7 +75,11 @@ def pick_primary_info(infos: list[PackageInfo]) -> PackageInfo:
 
 def unique_registries(registries: Iterable[Registry]) -> list[Registry]:
     seen: set[Registry] = set()
-    return [registry for registry in registries if not (registry in seen or seen.add(registry))]
+    return [
+        registry
+        for registry in registries
+        if not (registry in seen or seen.add(registry))
+    ]
 
 
 def combine_download_trends(infos: list[PackageInfo]) -> list[DownloadTrendPoint]:
@@ -77,20 +87,30 @@ def combine_download_trends(infos: list[PackageInfo]) -> list[DownloadTrendPoint
     for info in infos:
         for point in info.download_trend:
             counts[point.date] = counts.get(point.date, 0) + point.count
-    return [DownloadTrendPoint(date=date, count=counts[date]) for date in sorted(counts)]
+    return [
+        DownloadTrendPoint(date=date, count=counts[date]) for date in sorted(counts)
+    ]
 
 
 def combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
     totals: dict[str, int] = {}
     for info in infos:
         label = info.registry.display_name
-        count = info.download_counts.month or sum(p.count for p in info.download_trend[-30:])
+        count = info.download_counts.month or sum(
+            p.count for p in info.download_trend[-30:]
+        )
         totals[label] = totals.get(label, 0) + (count or info.total_downloads)
     total = sum(totals.values())
     if total <= 0:
-        return InstallBreakdown(caption="No 30-day download data available across ecosystems.")
+        return InstallBreakdown(
+            caption="No 30-day download data available across ecosystems."
+        )
     methods = [
         InstallMethod(label=label, count=count, percent=count / total * 100)
-        for label, count in sorted(totals.items(), key=lambda item: item[1], reverse=True)
+        for label, count in sorted(
+            totals.items(), key=lambda item: item[1], reverse=True
+        )
     ]
-    return InstallBreakdown(methods=methods, caption="Combined from registry 30-day download totals.")
+    return InstallBreakdown(
+        methods=methods, caption="Combined from registry 30-day download totals."
+    )

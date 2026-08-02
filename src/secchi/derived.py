@@ -17,9 +17,9 @@ from secchi.models import (
     HealthSubScore,
     InstallBreakdown,
     InstallMethod,
-    ReverseDependencySummary,
     PackageInfo,
     Registry,
+    ReverseDependencySummary,
 )
 
 
@@ -280,14 +280,18 @@ def compute_install_breakdown(info: PackageInfo) -> InstallBreakdown:
                 count=count,
                 percent=100.0 if count > 0 else 0.0,
             )
-        ] if count > 0 else [],
+        ]
+        if count > 0
+        else [],
         caption=caption,
         is_estimate=False,
     )
 
 
 def _registry_activity_count(info: PackageInfo) -> int:
-    count = info.download_counts.month or sum(p.count for p in info.download_trend[-30:])
+    count = info.download_counts.month or sum(
+        p.count for p in info.download_trend[-30:]
+    )
     return count or info.total_downloads
 
 
@@ -309,7 +313,9 @@ def compute_reverse_dependency_summary(info: PackageInfo) -> ReverseDependencySu
 # ── Activity timeline ────────────────────────────────────────────────────────
 
 
-def compute_activity_timeline(info: PackageInfo, limit: int = 15) -> list[ActivityEvent]:
+def compute_activity_timeline(
+    info: PackageInfo, limit: int = 15
+) -> list[ActivityEvent]:
     events: list[ActivityEvent] = []
     for v in info.versions:
         rd = _aware(v.release_date)

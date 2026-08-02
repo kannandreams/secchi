@@ -44,12 +44,16 @@ async def run(
         project_report = build_project_report(project, intelligence.results)
         content = render_project_report(normalized_format, project_report)
         subject = project.title or project.name
-        target = Path(output) if output and output != "-" else default_report_path(
-            subject, normalized_format, project=True
+        target = (
+            Path(output)
+            if output and output != "-"
+            else default_report_path(subject, normalized_format, project=True)
         )
     else:
         if not package:
-            raise WorkflowError("Provide a package name or --project PROJECT for a report.")
+            raise WorkflowError(
+                "Provide a package name or --project PROJECT for a report."
+            )
         ref = parse_package_spec(package, registry)
         result = await require_package(ref, refresh)
         content = render_report(
@@ -60,7 +64,9 @@ async def run(
             ref.name,
             result.warnings,
         )
-        target = Path(output) if output and output != "-" else default_report_path(
-            ref.name, normalized_format
+        target = (
+            Path(output)
+            if output and output != "-"
+            else default_report_path(ref.name, normalized_format)
         )
     return ReportOutput(content, normalized_format, target)

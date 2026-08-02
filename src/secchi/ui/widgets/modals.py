@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -11,7 +13,6 @@ from textual.widgets import Button, Input, OptionList, Static
 from textual.widgets.option_list import Option
 
 from secchi.models import PackageRef, Project
-
 
 _SHORTCUTS = [
     ("↑ / ↓", "Move the selection in the sidebar"),
@@ -28,7 +29,9 @@ _SHORTCUTS = [
 class SearchScreen(ModalScreen[PackageRef | None]):
     """Substring search over the project's packages."""
 
-    BINDINGS = [Binding("escape", "dismiss_screen", "Close", show=False)]
+    BINDINGS: ClassVar[list[Binding]] = [
+        Binding("escape", "dismiss_screen", "Close", show=False)
+    ]
 
     def __init__(self, project: Project) -> None:
         super().__init__()
@@ -105,7 +108,9 @@ class SearchScreen(ModalScreen[PackageRef | None]):
 class HelpScreen(ModalScreen[None]):
     """Keyboard shortcut reference overlay."""
 
-    BINDINGS = [Binding("escape,q,question_mark", "dismiss_screen", "Close", show=False)]
+    BINDINGS: ClassVar[list[Binding]] = [
+        Binding("escape,q,question_mark", "dismiss_screen", "Close", show=False)
+    ]
 
     def compose(self) -> ComposeResult:
         rows = "\n".join(f"[b white]{k:<12}[/] [white]{v}[/]" for k, v in _SHORTCUTS)
@@ -124,7 +129,7 @@ class HelpScreen(ModalScreen[None]):
 class ExportScreen(ModalScreen[str | None]):
     """Export modal for package or project reports."""
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[Binding]] = [
         Binding("escape", "dismiss_none", "Cancel", show=False),
         Binding("left", "focus_left", "Left", show=False),
         Binding("right", "focus_right", "Right", show=False),

@@ -11,9 +11,7 @@ class WorkflowError(RuntimeError):
 
 
 async def fetch_package(ref: PackageRef, refresh: bool = False) -> IntelligenceResult:
-    return await PackageIntelligenceService().fetch_package(
-        ref, force_refresh=refresh
-    )
+    return await PackageIntelligenceService().fetch_package(ref, force_refresh=refresh)
 
 
 async def require_package(ref: PackageRef, refresh: bool = False) -> IntelligenceResult:

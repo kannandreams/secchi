@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 
 
 class Registry(str, Enum):
@@ -61,6 +61,7 @@ class Registry(str, Enum):
 @dataclass
 class PackageRef:
     """A reference to a package from config."""
+
     name: str
     registry: Registry
     favorite: bool = False
@@ -70,6 +71,7 @@ class PackageRef:
 @dataclass
 class Project:
     """A named collection of packages to monitor."""
+
     name: str
     description: str = ""
     favorite: bool = False
@@ -81,6 +83,7 @@ class Project:
 @dataclass
 class Version:
     """A specific version of a package."""
+
     version: str
     release_date: datetime | None = None
     downloads: int = 0
@@ -94,6 +97,7 @@ class Version:
 @dataclass
 class DownloadTrendPoint:
     """A single data point for download trend charts."""
+
     date: str
     count: int
 
@@ -101,6 +105,7 @@ class DownloadTrendPoint:
 @dataclass
 class DownloadCounts:
     """Breakdown of downloads by period."""
+
     today: int = 0
     week: int = 0
     month: int = 0
@@ -109,14 +114,15 @@ class DownloadCounts:
 @dataclass
 class GitHubStats:
     """GitHub repository stats (raw, from the repo + signals APIs)."""
+
     stars: int = 0
     forks: int = 0
     open_issues: int = 0
     created_at: datetime | None = None
     pushed_at: datetime | None = None  # proxy for "last commit"
-    has_ci: bool = False               # proxy for "Testing": .github/workflows non-empty
+    has_ci: bool = False  # proxy for "Testing": .github/workflows non-empty
     has_readme: bool = False
-    resolved: bool = False             # True iff an owner/repo was derivable + fetched
+    resolved: bool = False  # True iff an owner/repo was derivable + fetched
     # week-over-week deltas from local history cache. None = no baseline yet ("—").
     stars_delta_7d: int | None = None
     open_issues_delta_7d: int | None = None
@@ -125,6 +131,7 @@ class GitHubStats:
 @dataclass
 class Dependency:
     """A dependency of a package."""
+
     name: str
     requirement: str = ""
     optional: bool = False
@@ -136,6 +143,7 @@ class ReleaseFile:
 
     PyPI has several per version; npm/crates get one synthetic entry.
     """
+
     packagetype: str  # "bdist_wheel" | "sdist" | "npm-package" | "crate"
     size: int = 0
     filename: str = ""
@@ -144,6 +152,7 @@ class ReleaseFile:
 @dataclass
 class ReverseDependency:
     """A package that depends on this one, ranked by its own real total downloads."""
+
     name: str
     downloads: int = 0
 
@@ -154,6 +163,7 @@ class GitHubIssueEvent:
 
     Feeds both health-score issue counts and the Activity timeline.
     """
+
     number: int
     title: str
     is_pull_request: bool
@@ -165,6 +175,7 @@ class GitHubIssueEvent:
 @dataclass
 class HistorySnapshot:
     """A point-in-time snapshot cached locally to derive week-over-week deltas."""
+
     timestamp: datetime
     stars: int
     open_issues: int
@@ -175,6 +186,7 @@ class HistorySnapshot:
 @dataclass
 class MetricTimelinePoint:
     """A compact labeled metric point for dashboard sparklines."""
+
     label: str
     value: int
 
@@ -250,16 +262,19 @@ class HealthSubScore:
 @dataclass
 class HealthScore:
     sub_scores: list[HealthSubScore] = field(default_factory=list)
-    total: int = 0   # 0-100
+    total: int = 0  # 0-100
     grade: str = "—"  # "A".."F"
 
 
 @dataclass
 class DerivedPackageData:
     """All display-ready metrics derived (via arithmetic, no I/O) from a PackageInfo."""
+
     health_score: HealthScore = field(default_factory=HealthScore)
     install_breakdown: InstallBreakdown = field(default_factory=InstallBreakdown)
-    reverse_dependency_summary: ReverseDependencySummary = field(default_factory=ReverseDependencySummary)
+    reverse_dependency_summary: ReverseDependencySummary = field(
+        default_factory=ReverseDependencySummary
+    )
     health_timeline: list[MetricTimelinePoint] = field(default_factory=list)
     activity: list[ActivityEvent] = field(default_factory=list)
     release_adoption: dict[str, float] = field(default_factory=dict)
@@ -271,6 +286,7 @@ class DerivedPackageData:
 @dataclass
 class PackageInfo:
     """Full package information fetched from the registry."""
+
     name: str
     registry: Registry
     source_registries: list[Registry] = field(default_factory=list)
@@ -292,8 +308,12 @@ class PackageInfo:
     release_notes: str = ""
     # raw extras feeding derivation
     latest_release_files: list[ReleaseFile] = field(default_factory=list)
-    version_downloads_recent: dict[int | str, int] = field(default_factory=dict)  # crates.io only
-    reverse_dependencies: list[ReverseDependency] = field(default_factory=list)    # crates.io only
+    version_downloads_recent: dict[int | str, int] = field(
+        default_factory=dict
+    )  # crates.io only
+    reverse_dependencies: list[ReverseDependency] = field(
+        default_factory=list
+    )  # crates.io only
     reverse_dependency_count: int | None = None
     reverse_dependency_monthly_growth: int | None = None
     health_history: list[MetricTimelinePoint] = field(default_factory=list)
@@ -303,6 +323,7 @@ class PackageInfo:
 @dataclass
 class FetchError:
     """Error when fetching package data."""
+
     package_name: str
     registry: Registry
     message: str

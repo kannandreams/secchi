@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 import httpx
 
@@ -53,9 +53,7 @@ class RegistryAdapter(Protocol):
         """Total projects depending on this package. Default: no API."""
         return None
 
-    async def fetch_version_download_breakdown(
-        self, name: str
-    ) -> dict[int | str, int]:
+    async def fetch_version_download_breakdown(self, name: str) -> dict[int | str, int]:
         """Per-version download totals keyed by version id. Default: no API."""
         return {}
 
@@ -67,7 +65,7 @@ class RegistryAdapter(Protocol):
 class AdapterBase:
     """Shared client binding for concrete registry adapters."""
 
-    default_headers: dict[str, str] = {}
+    default_headers: ClassVar[dict[str, str]] = {}
 
     def __init__(self, client: httpx.AsyncClient) -> None:
         self.client = client
@@ -79,7 +77,9 @@ class AdapterBase:
 class _ClientLease:
     """Context-manager view that never closes the shared client."""
 
-    def __init__(self, client: httpx.AsyncClient, headers: dict[str, str] | None = None) -> None:
+    def __init__(
+        self, client: httpx.AsyncClient, headers: dict[str, str] | None = None
+    ) -> None:
         self.client = client
         self.headers = headers or {}
 
@@ -98,8 +98,8 @@ class _ClientLease:
 
 def create_adapter(registry: Registry, *, client: httpx.AsyncClient) -> RegistryAdapter:
     """Factory: return the correct adapter for a given registry."""
-    from secchi.api.crates import CratesAdapter
     from secchi.api.cran import CranAdapter
+    from secchi.api.crates import CratesAdapter
     from secchi.api.golang import GoModuleAdapter
     from secchi.api.homebrew import HomebrewAdapter
     from secchi.api.npm import NpmAdapter

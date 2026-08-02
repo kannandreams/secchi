@@ -7,7 +7,6 @@ import httpx
 from secchi.api.sparse import SparseAdapter
 from secchi.models import PackageInfo, Registry, SearchResult, Version
 
-
 FORMULA_API = "https://formulae.brew.sh/api/formula"
 
 

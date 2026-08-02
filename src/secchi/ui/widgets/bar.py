@@ -16,7 +16,7 @@ def render_bar(
     filled_char: str = _FULL,
     empty_char: str = _EMPTY,
 ) -> str:
-    """Return a Rich-markup horizontal bar for `fraction` (0.0–1.0).
+    """Return a Rich-markup horizontal bar for `fraction` (0.0-1.0).
 
     `color` must be a literal Rich color name (not a Textual CSS variable),
     since this string is fed to Static.update()/Text markup, not the stylesheet.

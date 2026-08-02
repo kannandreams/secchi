@@ -33,7 +33,9 @@ def evaluate_default_policy(
             PolicyResult(
                 "continuous integration",
                 info.github_stats.has_ci,
-                "GitHub workflow detected" if info.github_stats.has_ci else "No GitHub workflow detected",
+                "GitHub workflow detected"
+                if info.github_stats.has_ci
+                else "No GitHub workflow detected",
             )
         )
     return results

@@ -43,21 +43,41 @@ class NpmAdapter(AdapterBase, RegistryAdapter):
             data = resp.json()
 
             latest_tag = data.get("dist-tags", {}).get("latest", "")
-            latest_info = data.get("versions", {}).get(latest_tag, {}) if latest_tag else {}
+            latest_info = (
+                data.get("versions", {}).get(latest_tag, {}) if latest_tag else {}
+            )
 
             description = data.get("description", "")
             author_info = data.get("author", {})
-            author = author_info.get("name", "") if isinstance(author_info, dict) else str(author_info) if author_info else ""
+            author = (
+                author_info.get("name", "")
+                if isinstance(author_info, dict)
+                else str(author_info)
+                if author_info
+                else ""
+            )
 
             repo_info = data.get("repository", {})
-            repo_url = repo_info.get("url", "") if isinstance(repo_info, dict) else str(repo_info) if repo_info else ""
+            repo_url = (
+                repo_info.get("url", "")
+                if isinstance(repo_info, dict)
+                else str(repo_info)
+                if repo_info
+                else ""
+            )
 
             homepage = data.get("homepage", "")
 
             if latest_info:
                 latest_date = next(
-                    (Version(version=v, release_date=_parse_npm_time(data.get("time", {}).get(v)))
-                     for v in [latest_tag] if v in data.get("time", {})),
+                    (
+                        Version(
+                            version=v,
+                            release_date=_parse_npm_time(data.get("time", {}).get(v)),
+                        )
+                        for v in [latest_tag]
+                        if v in data.get("time", {})
+                    ),
                     Version(version=latest_tag),
                 )
                 latest_release_date = latest_date.release_date
@@ -104,7 +124,11 @@ class NpmAdapter(AdapterBase, RegistryAdapter):
             time_data = data.get("time", {})
             for ver, info in data.get("versions", {}).items():
                 release_date = _parse_npm_time(time_data.get(ver))
-                size = info.get("dist", {}).get("unpackedSize") if isinstance(info, dict) else None
+                size = (
+                    info.get("dist", {}).get("unpackedSize")
+                    if isinstance(info, dict)
+                    else None
+                )
                 versions.append(
                     Version(
                         version=ver,
@@ -154,7 +178,9 @@ class NpmAdapter(AdapterBase, RegistryAdapter):
                 else:
                     end = datetime.now(timezone.utc).date()
                     start = end - timedelta(days=days)
-                    url = f"{NPM_DOWNLOADS}/range/{start:%Y-%m-%d}:{end:%Y-%m-%d}/{name}"
+                    url = (
+                        f"{NPM_DOWNLOADS}/range/{start:%Y-%m-%d}:{end:%Y-%m-%d}/{name}"
+                    )
                 resp = await client.get(url)
                 resp.raise_for_status()
                 data = resp.json()
@@ -176,9 +202,7 @@ class NpmAdapter(AdapterBase, RegistryAdapter):
                 ("last-month", "month"),
             ]:
                 try:
-                    resp = await client.get(
-                        f"{NPM_DOWNLOADS}/point/{period}/{name}"
-                    )
+                    resp = await client.get(f"{NPM_DOWNLOADS}/point/{period}/{name}")
                     resp.raise_for_status()
                     val = resp.json().get("downloads", 0)
                     if store == "today":
@@ -208,9 +232,7 @@ class NpmAdapter(AdapterBase, RegistryAdapter):
     async def _fetch_total_downloads(self, name: str) -> int:
         async with self._client_scope() as client:
             try:
-                resp = await client.get(
-                    f"{NPM_DOWNLOADS}/point/last-year/{name}"
-                )
+                resp = await client.get(f"{NPM_DOWNLOADS}/point/last-year/{name}")
                 resp.raise_for_status()
                 return resp.json().get("downloads", 0)
             except httpx.HTTPError:

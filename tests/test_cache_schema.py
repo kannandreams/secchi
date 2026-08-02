@@ -2,12 +2,13 @@ import json
 from datetime import datetime, timezone
 
 import pytest
+from pydantic import ValidationError
+
 from secchi import cache
+from secchi.export import export_package_json
 from secchi.models import PackageInfo, Registry
 from secchi.schema import CACHE_SCHEMA_VERSION, PACKAGE_EXPORT_SCHEMA_VERSION
-from secchi.export import export_package_json
 from secchi.schemas import CacheEnvelope, PackageExport
-from pydantic import ValidationError
 
 
 def test_cache_writes_and_reads_versioned_envelope(tmp_path, monkeypatch) -> None:
@@ -33,7 +34,12 @@ def test_legacy_unversioned_cache_is_readable_and_future_cache_is_ignored(
     path = cache.package_cache_path("pypi:demo")
     path.parent.mkdir(parents=True)
 
-    payload = {"fetched_at": fetched_at, "package": cache._encode({"name": "demo", "registry": "pypi", "latest_version": "1.0.0"})}
+    payload = {
+        "fetched_at": fetched_at,
+        "package": cache._encode(
+            {"name": "demo", "registry": "pypi", "latest_version": "1.0.0"}
+        ),
+    }
     path.write_text(json.dumps(payload))
     assert cache.load_package_cache("pypi:demo")[0].name == info.name
 

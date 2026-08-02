@@ -37,6 +37,7 @@ _CLI_CATEGORIES = {
 
 class CratesAdapter(AdapterBase, RegistryAdapter):
     default_headers = _HEADERS
+
     @property
     def registry(self) -> Registry:
         return Registry.CRATES
@@ -172,9 +173,7 @@ class CratesAdapter(AdapterBase, RegistryAdapter):
         month = sum(p.count for p in trend)
         return DownloadCounts(today=today, week=week, month=month)
 
-    async def fetch_version_download_breakdown(
-        self, name: str
-    ) -> dict[int | str, int]:
+    async def fetch_version_download_breakdown(self, name: str) -> dict[int | str, int]:
         """Sum version_downloads per crates.io numeric version id.
 
         Real per-version signal — the numeric id joins to Version.external_id.

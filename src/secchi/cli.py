@@ -19,52 +19,89 @@ from secchi.workflows.common import WorkflowError
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="secchi", description="Open source package intelligence from your terminal."
+        prog="secchi",
+        description="Open source package intelligence from your terminal.",
     )
     parser.add_argument("--version", action="version", version=f"secchi {__version__}")
     parser.add_argument("--project", "-p", help="Project name from configuration")
     parser.add_argument("--config", "-c", help="Path to secchi.toml or .secchi.toml")
-    parser.add_argument("--refresh", "-r", action="store_true", help="Bypass local cache")
-    parser.add_argument("--list", "-l", action="store_true", help="List configured projects and exit")
+    parser.add_argument(
+        "--refresh", "-r", action="store_true", help="Bypass local cache"
+    )
+    parser.add_argument(
+        "--list", "-l", action="store_true", help="List configured projects and exit"
+    )
 
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("init", help="Interactively create secchi.toml")
 
-    dashboard_parser = sub.add_parser("dashboard", help="Launch the interactive dashboard")
-    dashboard_parser.add_argument("package", nargs="?", help="Package name or registry:name")
-    dashboard_parser.add_argument("--registry", choices=[item.value for item in Registry])
+    dashboard_parser = sub.add_parser(
+        "dashboard", help="Launch the interactive dashboard"
+    )
+    dashboard_parser.add_argument(
+        "package", nargs="?", help="Package name or registry:name"
+    )
+    dashboard_parser.add_argument(
+        "--registry", choices=[item.value for item in Registry]
+    )
     dashboard_parser.add_argument("--project", "-p", dest="dashboard_project")
     dashboard_parser.add_argument("--config", "-c", dest="dashboard_config")
-    dashboard_parser.add_argument("--refresh", "-r", dest="dashboard_refresh", action="store_true")
+    dashboard_parser.add_argument(
+        "--refresh", "-r", dest="dashboard_refresh", action="store_true"
+    )
 
-    show_parser = sub.add_parser("show", help="Print a concise package intelligence summary")
+    show_parser = sub.add_parser(
+        "show", help="Print a concise package intelligence summary"
+    )
     show_parser.add_argument("package", help="Package name or registry:name")
     show_parser.add_argument("--registry", choices=[item.value for item in Registry])
     show_parser.add_argument("--refresh", "-r", action="store_true")
 
-    search_parser = sub.add_parser("search", help="Find packages across supported registries")
+    search_parser = sub.add_parser(
+        "search", help="Find packages across supported registries"
+    )
     search_parser.add_argument("package", help="Exact package name")
     search_parser.add_argument("--registry", choices=[item.value for item in Registry])
     search_parser.add_argument("--refresh", "-r", action="store_true")
 
-    report_parser = sub.add_parser("report", help="Generate a package or project report")
-    report_parser.add_argument("package", nargs="?", help="Package name or registry:name")
-    report_parser.add_argument("--project", dest="report_project", help="Configured project name")
-    report_parser.add_argument("--config", dest="report_config", help="Workspace config path")
+    report_parser = sub.add_parser(
+        "report", help="Generate a package or project report"
+    )
+    report_parser.add_argument(
+        "package", nargs="?", help="Package name or registry:name"
+    )
+    report_parser.add_argument(
+        "--project", dest="report_project", help="Configured project name"
+    )
+    report_parser.add_argument(
+        "--config", dest="report_config", help="Workspace config path"
+    )
     report_parser.add_argument("--registry", choices=[item.value for item in Registry])
-    report_parser.add_argument("--format", choices=["json", "html", "md", "markdown"], default="json")
-    report_parser.add_argument("--output", "-o", help="Target file path, or '-' for stdout")
+    report_parser.add_argument(
+        "--format", choices=["json", "html", "md", "markdown"], default="json"
+    )
+    report_parser.add_argument(
+        "--output", "-o", help="Target file path, or '-' for stdout"
+    )
     report_parser.add_argument("--refresh", "-r", action="store_true")
 
-    check_parser = sub.add_parser("check", help="Evaluate simple package health policies")
+    check_parser = sub.add_parser(
+        "check", help="Evaluate simple package health policies"
+    )
     check_parser.add_argument("package", help="Package name or registry:name")
     check_parser.add_argument("--registry", choices=[item.value for item in Registry])
     check_parser.add_argument("--min-health", type=int, default=70)
     check_parser.add_argument("--require-ci", action="store_true")
     check_parser.add_argument("--refresh", "-r", action="store_true")
 
-    compare_parser = sub.add_parser("compare", help="Compare package choices with agent-readable evidence")
-    compare_parser.add_argument("packages", nargs="+", help="Two or more package names or registry:name references")
+    compare_parser = sub.add_parser(
+        "compare", help="Compare package choices with agent-readable evidence"
+    )
+    compare_parser.add_argument(
+        "packages",
+        nargs="+",
+        help="Two or more package names or registry:name references",
+    )
     compare_parser.add_argument("--registry", choices=[item.value for item in Registry])
     compare_parser.add_argument("--format", choices=["text", "json"], default="text")
     compare_parser.add_argument("--refresh", "-r", action="store_true")
@@ -97,10 +134,16 @@ def cmd_init() -> None:
             package_name = input("    Package name: ").strip()
             if not package_name:
                 break
-            registry = input("    Registry [pypi/crates.io/npm/homebrew/go/cran, default: pypi]: ").strip()
+            registry = input(
+                "    Registry [pypi/crates.io/npm/homebrew/go/cran, default: pypi]: "
+            ).strip()
             packages.append({"name": package_name, "registry": registry or "pypi"})
         if packages:
-            projects[name] = {"description": description, "favorite": favorite, "packages": packages}
+            projects[name] = {
+                "description": description,
+                "favorite": favorite,
+                "packages": packages,
+            }
         if input("Add another project? [y/N]: ").strip().lower() not in ("y", "yes"):
             break
     if not projects:
@@ -136,13 +179,17 @@ def _run_dashboard(args: argparse.Namespace, parser: argparse.ArgumentParser) ->
 def _run_search(args: argparse.Namespace) -> None:
     results = asyncio.run(search.run(args.package, registry=args.registry, limit=10))
     if not results:
-        print(f"No packages matching '{args.package}' found in the selected registries.")
+        print(
+            f"No packages matching '{args.package}' found in the selected registries."
+        )
         return
     print(f"Matches for {args.package}:\n")
     for result in results:
         description = (result.description or "No description").splitlines()[0]
         marker = "exact" if result.exact else "match"
-        print(f"{result.registry.display_name:<10} {result.name:<24} {result.version or '—':<12} {marker:<6} {description}")
+        print(
+            f"{result.registry.display_name:<10} {result.name:<24} {result.version or '—':<12} {marker:<6} {description}"
+        )
 
 
 def main() -> None:

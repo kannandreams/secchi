@@ -10,7 +10,6 @@ from typing import Any
 
 import httpx
 
-
 RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 RETRYABLE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
@@ -26,7 +25,9 @@ class SecchiAsyncClient(httpx.AsyncClient):
             **kwargs,
         )
 
-    async def request(self, method: str, url: str, *args: Any, **kwargs: Any) -> httpx.Response:
+    async def request(
+        self, method: str, url: str, *args: Any, **kwargs: Any
+    ) -> httpx.Response:
         method_upper = method.upper()
         retries = self.max_retries if method_upper in RETRYABLE_METHODS else 0
         for attempt in range(retries + 1):
@@ -78,6 +79,9 @@ def _retry_after(response: httpx.Response) -> float | None:
             date = parsedate_to_datetime(raw)
             if date.tzinfo is None:
                 date = date.replace(tzinfo=timezone.utc)
-            return max(0.0, min(10.0, date.timestamp() - datetime.now(timezone.utc).timestamp()))
+            return max(
+                0.0,
+                min(10.0, date.timestamp() - datetime.now(timezone.utc).timestamp()),
+            )
         except (TypeError, ValueError, OverflowError):
             return None

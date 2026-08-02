@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
+
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widget import Widget
@@ -44,10 +46,8 @@ class Panel(Vertical):
 
     def set_caption(self, caption: str) -> None:
         self._caption = caption
-        try:
+        with suppress(Exception):
             self.query_one(".panel-caption", Static).update(caption)
-        except Exception:
-            pass
 
 
 class PanelBody(Vertical):

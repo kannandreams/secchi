@@ -52,7 +52,9 @@ class ComparisonResult:
 
     @property
     def winner(self) -> ComparisonCandidate | None:
-        usable = [candidate for candidate in self.candidates if candidate.score is not None]
+        usable = [
+            candidate for candidate in self.candidates if candidate.score is not None
+        ]
         return usable[0] if usable else None
 
     def as_dict(self) -> dict:
@@ -108,7 +110,14 @@ def evaluate_candidate(result: IntelligenceResult) -> ComparisonCandidate:
     community = _community_score(info.github_stats.stars, info.github_stats.resolved)
     recency = _recency_score(info)
     completeness = _completeness_score(info)
-    score = round(health * 0.55 + momentum * 0.15 + community * 0.10 + recency * 0.10 + completeness * 0.10, 1)
+    score = round(
+        health * 0.55
+        + momentum * 0.15
+        + community * 0.10
+        + recency * 0.10
+        + completeness * 0.10,
+        1,
+    )
     confidence = round(completeness / 100, 2)
 
     strengths: list[str] = []
@@ -168,8 +177,14 @@ def evaluate_candidate(result: IntelligenceResult) -> ComparisonCandidate:
     )
 
 
-def _recommendation(score: float, confidence: float, info: PackageInfo) -> Recommendation:
-    if not info.latest_version or (info.versions and info.versions[0].is_yanked) or score < 40:
+def _recommendation(
+    score: float, confidence: float, info: PackageInfo
+) -> Recommendation:
+    if (
+        not info.latest_version
+        or (info.versions and info.versions[0].is_yanked)
+        or score < 40
+    ):
         return Recommendation.AVOID
     if score >= 80 and confidence >= 0.65:
         return Recommendation.RECOMMENDED
@@ -254,7 +269,11 @@ def render_comparison(result: ComparisonResult) -> str:
             lines.append(f"{index}. {ref} — {candidate.recommendation.value}")
             lines.append(f"   Error: {candidate.error}")
             continue
-        change = "—" if candidate.adoption_change_pct is None else f"{candidate.adoption_change_pct:+.1f}%"
+        change = (
+            "—"
+            if candidate.adoption_change_pct is None
+            else f"{candidate.adoption_change_pct:+.1f}%"
+        )
         stars = "—" if candidate.github_stars is None else f"{candidate.github_stars:,}"
         lines.extend(
             [
@@ -273,5 +292,7 @@ def render_comparison(result: ComparisonResult) -> str:
             f"Recommendation: {result.winner.ref.name} ({result.winner.ref.registry.value}) "
             f"— {result.winner.recommendation.value}."
         )
-    lines.append("Note: Secchi provides advisory evidence; review compatibility, license, and security requirements before adopting.")
+    lines.append(
+        "Note: Secchi provides advisory evidence; review compatibility, license, and security requirements before adopting."
+    )
     return "\n".join(lines)

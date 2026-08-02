@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import re
+from contextlib import suppress
 from datetime import datetime
 from html import unescape
-import re
 from typing import Any
 
 import httpx
@@ -55,12 +56,10 @@ class PyPIAdapter(AdapterBase, RegistryAdapter):
             if latest_files:
                 upload_time_raw = latest_files[0].get("upload_time", "")
                 if upload_time_raw:
-                    try:
+                    with suppress(ValueError, TypeError):
                         upload_time = datetime.fromisoformat(
                             upload_time_raw.replace("Z", "+00:00")
                         )
-                    except (ValueError, TypeError):
-                        pass
 
             release_files = [
                 ReleaseFile(

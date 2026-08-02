@@ -15,7 +15,9 @@ from secchi.workspace import (
 )
 
 
-def test_logical_package_refs_collapses_registry_duplicates_and_preserves_favorite() -> None:
+def test_logical_package_refs_collapses_registry_duplicates_and_preserves_favorite() -> (
+    None
+):
     refs = logical_package_refs(
         [
             PackageRef("DuckDB", Registry.PYPI),
@@ -45,7 +47,10 @@ def test_combine_package_infos_uses_primary_source_and_merges_signals() -> None:
         latest_version="2.0.0",
         total_downloads=50,
         download_counts=DownloadCounts(today=2, week=8, month=20),
-        download_trend=[DownloadTrendPoint("2026-01-01", 5), DownloadTrendPoint("2026-01-02", 6)],
+        download_trend=[
+            DownloadTrendPoint("2026-01-01", 5),
+            DownloadTrendPoint("2026-01-02", 6),
+        ],
     )
     npm.github_stats = GitHubStats(stars=42, resolved=True)
 

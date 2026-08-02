@@ -13,7 +13,6 @@ from secchi.renderers.summary import render_summary
 from secchi.schema import PROJECT_EXPORT_SCHEMA_VERSION
 from secchi.schemas import ProjectExport
 
-
 SECCHI_REPOSITORY_URL = "https://github.com/kannandreams/secchi"
 
 
@@ -52,7 +51,9 @@ def build_project_report(
             {"source": warning.source, "message": warning.message}
             for warning in result.warnings
         ]
-        sources.append(ProjectSourceReport(ref, result.info, result.derived, error, warnings))
+        sources.append(
+            ProjectSourceReport(ref, result.info, result.derived, error, warnings)
+        )
     return ProjectReport(
         project=project,
         sources=sources,
@@ -84,7 +85,11 @@ def render_markdown(
     warnings: list[object] | None = None,
 ) -> str:
     change = derived.downloads_30d_pct_change
-    adoption = "No baseline available" if change is None else f"{change:+.1f}% vs previous 30 days"
+    adoption = (
+        "No baseline available"
+        if change is None
+        else f"{change:+.1f}% vs previous 30 days"
+    )
     rows = "\n".join(
         f"| {score.label} | {score.score} / {score.max_score} |"
         for score in derived.health_score.sub_scores
@@ -93,18 +98,18 @@ def render_markdown(
 
 Registry: `{ref.registry.value}`
 
-{info.description or 'No package description available.'}
+{info.description or "No package description available."}
 
 ## Overview
 
 | Signal | Value |
 | --- | --- |
 | Health score | {derived.health_score.total} / 100 ({derived.health_score.grade}) |
-| Latest version | {info.latest_version or '—'} |
+| Latest version | {info.latest_version or "—"} |
 | Downloads (30d) | {derived.downloads_30d_total:,} |
 | Adoption change | {adoption} |
 | GitHub stars | {info.github_stats.stars:,} |
-| Reverse dependencies | {info.reverse_dependency_count if info.reverse_dependency_count is not None else '—'} |
+| Reverse dependencies | {info.reverse_dependency_count if info.reverse_dependency_count is not None else "—"} |
 
 ## Health breakdown
 
@@ -130,11 +135,11 @@ def render_html(
     return f"""<!doctype html>
 <html lang=\"en\"><head><meta charset=\"utf-8\"><title>Secchi report: {escape(info.name)}</title>
 <style>body{{font:16px system-ui,sans-serif;max-width:900px;margin:3rem auto;padding:0 1rem;line-height:1.5;color:#18212f}}table{{border-collapse:collapse;width:100%;max-width:720px}}th,td{{border:1px solid #d7dde7;padding:.55rem;text-align:left}}th{{background:#eef2f7}}</style>
-</head><body><h1>{escape(info.name)}</h1><p>{escape(info.description or 'No package description available.')}</p>
+</head><body><h1>{escape(info.name)}</h1><p>{escape(info.description or "No package description available.")}</p>
 <p>Registry: <code>{escape(ref.registry.value)}</code></p><h2>Overview</h2>
 <table><tr><th>Signal</th><th>Value</th></tr>
 <tr><td>Health score</td><td>{derived.health_score.total} / 100 ({escape(derived.health_score.grade)})</td></tr>
-<tr><td>Latest version</td><td>{escape(info.latest_version or '—')}</td></tr>
+<tr><td>Latest version</td><td>{escape(info.latest_version or "—")}</td></tr>
 <tr><td>Downloads (30d)</td><td>{derived.downloads_30d_total:,}</td></tr>
 <tr><td>GitHub stars</td><td>{info.github_stats.stars:,}</td></tr></table>
 <h2>Health breakdown</h2><table><tr><th>Category</th><th>Score</th></tr>{rows}</table>
@@ -151,9 +156,9 @@ def render_terminal_report(info: PackageInfo, derived: DerivedPackageData) -> st
 
 def render_project_report(format_name: str, report: ProjectReport) -> str:
     if format_name == "json":
-        return ProjectExport.model_validate(_project_report_data(report)).model_dump_json(
-            indent=2, by_alias=True
-        )
+        return ProjectExport.model_validate(
+            _project_report_data(report)
+        ).model_dump_json(indent=2, by_alias=True)
     if format_name == "md":
         return _project_markdown(report)
     if format_name == "html":
@@ -162,7 +167,11 @@ def render_project_report(format_name: str, report: ProjectReport) -> str:
 
 
 def default_report_path(
-    subject: str, format_name: str, *, project: bool = False, directory: Path | None = None
+    subject: str,
+    format_name: str,
+    *,
+    project: bool = False,
+    directory: Path | None = None,
 ) -> Path:
     safe = subject.replace("/", "_").replace(" ", "_")
     suffix = "project" if project else "package"
@@ -173,8 +182,12 @@ def default_report_path(
 
 def _project_report_data(report: ProjectReport) -> dict:
     available = [source for source in report.sources if source.info and source.derived]
-    health_scores = [source.derived.health_score.total for source in available if source.derived]
-    downloads = sum(source.derived.downloads_30d_total for source in available if source.derived)
+    health_scores = [
+        source.derived.health_score.total for source in available if source.derived
+    ]
+    downloads = sum(
+        source.derived.downloads_30d_total for source in available if source.derived
+    )
     return {
         "schema_version": PROJECT_EXPORT_SCHEMA_VERSION,
         "schema": "secchi.project-intelligence",
@@ -188,7 +201,9 @@ def _project_report_data(report: ProjectReport) -> dict:
         },
         "generated_at": report.generated_at.isoformat(),
         "summary": {
-            "health_score": round(sum(health_scores) / len(health_scores)) if health_scores else None,
+            "health_score": round(sum(health_scores) / len(health_scores))
+            if health_scores
+            else None,
             "downloads_30d": downloads,
             "source_count": len(report.sources),
             "healthy_source_count": len(available),
@@ -198,8 +213,12 @@ def _project_report_data(report: ProjectReport) -> dict:
                 "package": source.ref.name,
                 "registry": source.ref.registry.value,
                 "latest_version": source.info.latest_version if source.info else None,
-                "health_score": source.derived.health_score.total if source.derived else None,
-                "downloads_30d": source.derived.downloads_30d_total if source.derived else None,
+                "health_score": source.derived.health_score.total
+                if source.derived
+                else None,
+                "downloads_30d": source.derived.downloads_30d_total
+                if source.derived
+                else None,
                 "error": source.error,
                 "warnings": source.warnings,
             }
@@ -213,19 +232,19 @@ def _project_markdown(report: ProjectReport) -> str:
     project = data["project"]
     summary = data["summary"]
     rows = "\n".join(_source_markdown_row(source) for source in data["sources"])
-    return f"""# {project['title']}
+    return f"""# {project["title"]}
 
-{project['description'] or 'No project description available.'}
+{project["description"] or "No project description available."}
 
-Repository: {project['repository'] or '—'}
+Repository: {project["repository"] or "—"}
 
 ## Project summary
 
 | Signal | Value |
 | --- | --- |
-| Health score | {summary['health_score'] if summary['health_score'] is not None else '—'} / 100 |
-| Downloads (30d) | {summary['downloads_30d']:,} |
-| Healthy sources | {summary['healthy_source_count']} / {summary['source_count']} |
+| Health score | {summary["health_score"] if summary["health_score"] is not None else "—"} / 100 |
+| Downloads (30d) | {summary["downloads_30d"]:,} |
+| Healthy sources | {summary["healthy_source_count"]} / {summary["source_count"]} |
 
 ## Package sources
 
@@ -233,15 +252,13 @@ Repository: {project['repository'] or '—'}
 | --- | --- | --- | ---: | ---: | --- |
 {rows}
 
-{_markdown_attribution(project['repository'])}
+{_markdown_attribution(project["repository"])}
 """
 
 
 def _source_markdown_row(source: dict) -> str:
     downloads = (
-        f"{source['downloads_30d']:,}"
-        if source["downloads_30d"] is not None
-        else "—"
+        f"{source['downloads_30d']:,}" if source["downloads_30d"] is not None else "—"
     )
     return (
         f"| {source['package']} | {source['registry']} | {source['latest_version'] or '—'} | "
@@ -265,13 +282,13 @@ def _project_html(report: ProjectReport) -> str:
         for source in data["sources"]
     )
     return f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Secchi project report: {escape(project['title'])}</title>
+<html lang="en"><head><meta charset="utf-8"><title>Secchi project report: {escape(project["title"])}</title>
 <style>body{{font:16px system-ui,sans-serif;max-width:1000px;margin:3rem auto;padding:0 1rem;line-height:1.5;color:#18212f}}table{{border-collapse:collapse;width:100%}}th,td{{border:1px solid #d7dde7;padding:.55rem;text-align:left}}th{{background:#eef2f7}}.summary{{display:flex;gap:2rem}}.metric{{padding:1rem;background:#f5f7fa;border-radius:.4rem}}</style>
-</head><body><h1>{escape(project['title'])}</h1><p>{escape(project['description'] or 'No project description available.')}</p>
-<p>Repository: {escape(project['repository'] or '—')}</p>
-<div class="summary"><div class="metric"><strong>Health</strong><br>{summary['health_score'] if summary['health_score'] is not None else '—'} / 100</div><div class="metric"><strong>Downloads (30d)</strong><br>{summary['downloads_30d']:,}</div><div class="metric"><strong>Healthy sources</strong><br>{summary['healthy_source_count']} / {summary['source_count']}</div></div>
+</head><body><h1>{escape(project["title"])}</h1><p>{escape(project["description"] or "No project description available.")}</p>
+<p>Repository: {escape(project["repository"] or "—")}</p>
+<div class="summary"><div class="metric"><strong>Health</strong><br>{summary["health_score"] if summary["health_score"] is not None else "—"} / 100</div><div class="metric"><strong>Downloads (30d)</strong><br>{summary["downloads_30d"]:,}</div><div class="metric"><strong>Healthy sources</strong><br>{summary["healthy_source_count"]} / {summary["source_count"]}</div></div>
 <h2>Package sources</h2><table><thead><tr><th>Package</th><th>Registry</th><th>Latest</th><th>Health</th><th>Downloads (30d)</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table>
-{_html_attribution(project['repository'])}
+{_html_attribution(project["repository"])}
 </body></html>
 """
 
@@ -291,9 +308,7 @@ def _source_status(source: dict) -> str:
 def _markdown_warnings(warnings: list[object] | None) -> str:
     if not warnings:
         return ""
-    rows = "\n".join(
-        f"- `{warning.source}`: {warning.message}" for warning in warnings
-    )
+    rows = "\n".join(f"- `{warning.source}`: {warning.message}" for warning in warnings)
     return f"## Signal warnings\n\n{rows}\n"
 
 
@@ -313,7 +328,5 @@ def _html_attribution(repository_url: str | None) -> str:
         if repository_url
         else ""
     )
-    secchi_link = (
-        f'<a href="{escape(SECCHI_REPOSITORY_URL, quote=True)}">Secchi</a>'
-    )
+    secchi_link = f'<a href="{escape(SECCHI_REPOSITORY_URL, quote=True)}">Secchi</a>'
     return f'<footer style="margin-top:2rem;color:#5f6b7a">Generated by {secchi_link}{star}</footer>'

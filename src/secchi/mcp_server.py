@@ -19,7 +19,6 @@ from secchi.workflows import inspect as inspect_workflow
 from secchi.workflows import report as report_workflow
 from secchi.workflows import search as search_workflow
 
-
 server = MCPServer(
     name="secchi",
     title="Secchi Package Intelligence",
@@ -42,7 +41,9 @@ def _package_result(result: IntelligenceResult) -> dict[str, Any]:
         return {
             "package": result.ref.name,
             "registry": result.ref.registry.value,
-            "error": result.error.message if result.error else "No package data returned.",
+            "error": result.error.message
+            if result.error
+            else "No package data returned.",
         }
     return json.loads(
         export_package_json(
@@ -73,11 +74,17 @@ async def inspect_package(
     """Return health, adoption, release, dependency, and repository signals."""
     refs = await _resolve_refs(package, registry)
     if not refs:
-        return {"query": package, "matches": [], "message": "No exact package matches found."}
+        return {
+            "query": package,
+            "matches": [],
+            "message": "No exact package matches found.",
+        }
     intelligence = await inspect_workflow.run(refs, refresh=refresh)
     return {
         "query": package,
-        "matches": [_package_result(result) for result in intelligence.results.values()],
+        "matches": [
+            _package_result(result) for result in intelligence.results.values()
+        ],
     }
 
 
@@ -126,7 +133,9 @@ async def inspect_project(
     """Return project-wide intelligence using the same report pipeline as the CLI."""
     config_path = find_config(config)
     if config_path is None:
-        raise ValueError("No Secchi config found. Provide config or create secchi.toml.")
+        raise ValueError(
+            "No Secchi config found. Provide config or create secchi.toml."
+        )
     output = await report_workflow.run(
         project_name=project,
         config=str(config_path),
@@ -155,7 +164,11 @@ async def check_package(
         raise ValueError("min_health must be between 0 and 100")
     refs = await _resolve_refs(package, registry)
     if not refs:
-        return {"query": package, "matches": [], "message": "No exact package matches found."}
+        return {
+            "query": package,
+            "matches": [],
+            "message": "No exact package matches found.",
+        }
 
     matches: list[dict[str, Any]] = []
     for ref in refs:

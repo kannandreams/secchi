@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical, VerticalScroll
@@ -55,7 +57,7 @@ class Sidebar(Vertical):
 
     can_focus = True
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[Binding]] = [
         Binding("up", "cursor_up", "Up", show=False),
         Binding("down", "cursor_down", "Down", show=False),
         Binding("enter", "select_cursor", "Select", show=False),
@@ -125,7 +127,11 @@ class Sidebar(Vertical):
                 projects = [project for project in projects if project.favorite]
             for project in projects:
                 star = f"[{palette.YELLOW}]★[/] " if project.favorite else ""
-                description = f" [dim]— {project.description[:24]}[/]" if project.description else ""
+                description = (
+                    f" [dim]— {project.description[:24]}[/]"
+                    if project.description
+                    else ""
+                )
                 title = project.title or project.name
                 project_item = ProjectItem(project)
                 project_item.update(f"{star}[b]{title}[/]{description}")
@@ -186,7 +192,7 @@ class Sidebar(Vertical):
     def _refresh_versions(self) -> None:
         app = self.app
         data = getattr(app, "package_data", {})
-        for order_key, item in self._items.items():
+        for _order_key, item in self._items.items():
             info = data.get(self._pkg_key(item.ref))
             if info and info.latest_version:
                 item.set_version(info.latest_version)

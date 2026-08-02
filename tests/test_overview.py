@@ -73,9 +73,24 @@ def test_adoption_trend_responsive_limits_and_interpretation() -> None:
     assert _point_limit(40) == 5
     assert _point_limit(60) == 8
     assert _point_limit(90) == 12
-    assert _trend_label(18.3, [MetricTimelinePoint("Jan", 1), MetricTimelinePoint("Feb", 2)]) == "Growing"
-    assert _trend_label(-18.3, [MetricTimelinePoint("Jan", 2), MetricTimelinePoint("Feb", 1)]) == "Declining"
-    assert _trend_label(2.0, [MetricTimelinePoint("Jan", 1), MetricTimelinePoint("Feb", 1)]) == "Stable"
+    assert (
+        _trend_label(
+            18.3, [MetricTimelinePoint("Jan", 1), MetricTimelinePoint("Feb", 2)]
+        )
+        == "Growing"
+    )
+    assert (
+        _trend_label(
+            -18.3, [MetricTimelinePoint("Jan", 2), MetricTimelinePoint("Feb", 1)]
+        )
+        == "Declining"
+    )
+    assert (
+        _trend_label(
+            2.0, [MetricTimelinePoint("Jan", 1), MetricTimelinePoint("Feb", 1)]
+        )
+        == "Stable"
+    )
 
 
 def test_line_chart_contains_connected_observations_and_labels() -> None:
@@ -93,7 +108,7 @@ def test_line_chart_contains_connected_observations_and_labels() -> None:
     assert "Jan" in chart
     assert "Mar" in chart
     assert "●" in chart
-    assert "╱" in chart or "╲" in chart
+    assert any(char in chart for char in (chr(0x2571), chr(0x2572)))
 
 
 def test_overview_widgets_have_explicit_empty_states() -> None:

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 from secchi import derived as derive
 from secchi.aggregate import package_key
@@ -15,8 +16,8 @@ from secchi.history import append_snapshot, compute_delta, find_baseline, load_s
 from secchi.http import HttpClientFactory
 from secchi.models import (
     DerivedPackageData,
-    FetchError,
     DownloadCounts,
+    FetchError,
     GitHubStats,
     HistorySnapshot,
     MetricTimelinePoint,
@@ -36,7 +37,7 @@ class IntelligenceResult:
     ref: PackageRef
     info: PackageInfo | None = None
     derived: DerivedPackageData | None = None
-    warnings: list["SignalWarning"] = field(default_factory=list)
+    warnings: list[SignalWarning] = field(default_factory=list)
     error: FetchError | None = None
     fetched_at: datetime | None = None
 
@@ -104,7 +105,9 @@ class PackageIntelligenceService:
         except Exception as exc:
             return IntelligenceResult(
                 ref=ref,
-                error=FetchError(package_name=ref.name, registry=ref.registry, message=str(exc)),
+                error=FetchError(
+                    package_name=ref.name, registry=ref.registry, message=str(exc)
+                ),
             )
 
     async def _fetch_fresh(
@@ -118,12 +121,18 @@ class PackageIntelligenceService:
         info = await adapter.fetch_package(ref.name)
         optional: list[tuple[Any, SignalWarning | None]]
         optional = await asyncio.gather(
-            self._optional_signal("versions", lambda: adapter.fetch_versions(ref.name), []),
             self._optional_signal(
-                "download trend", lambda: adapter.fetch_download_trend(ref.name, days=730), []
+                "versions", lambda: adapter.fetch_versions(ref.name), []
             ),
             self._optional_signal(
-                "download counts", lambda: adapter.fetch_download_counts(ref.name), DownloadCounts()
+                "download trend",
+                lambda: adapter.fetch_download_trend(ref.name, days=730),
+                [],
+            ),
+            self._optional_signal(
+                "download counts",
+                lambda: adapter.fetch_download_counts(ref.name),
+                DownloadCounts(),
             ),
             self._optional_signal(
                 "GitHub extended stats",
@@ -177,7 +186,9 @@ class PackageIntelligenceService:
             if warning:
                 warnings.append(warning)
             notes, warning = await self._optional_signal(
-                "release notes", lambda: adapter.fetch_release_notes(ref.name, info.latest_version), ""
+                "release notes",
+                lambda: adapter.fetch_release_notes(ref.name, info.latest_version),
+                "",
             )
             if warning:
                 warnings.append(warning)
@@ -185,7 +196,10 @@ class PackageIntelligenceService:
                 github_notes, warning = await self._optional_signal(
                     "GitHub release notes",
                     lambda: fetch_release_notes_for_package(
-                        info.homepage, info.repository_url, info.latest_version, client=client
+                        info.homepage,
+                        info.repository_url,
+                        info.latest_version,
+                        client=client,
                     ),
                     "",
                 )
@@ -212,7 +226,9 @@ class PackageIntelligenceService:
         github = info.github_stats
         if github.resolved:
             baseline = find_baseline(snapshots)
-            github.stars_delta_7d = compute_delta(github.stars, baseline.stars if baseline else None)
+            github.stars_delta_7d = compute_delta(
+                github.stars, baseline.stars if baseline else None
+            )
             github.open_issues_delta_7d = compute_delta(
                 github.open_issues, baseline.open_issues if baseline else None
             )

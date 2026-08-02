@@ -18,7 +18,9 @@ from secchi.models import (
 from secchi.services.intelligence import IntelligenceResult, ProjectIntelligence
 
 
-def _result(ref: PackageRef, health: int = 88, *, has_ci: bool = True) -> IntelligenceResult:
+def _result(
+    ref: PackageRef, health: int = 88, *, has_ci: bool = True
+) -> IntelligenceResult:
     info = PackageInfo(name=ref.name, registry=ref.registry, latest_version="1.2.3")
     info.github_stats.has_ci = has_ci
     derived = DerivedPackageData(health_score=HealthScore(total=health))
@@ -42,10 +44,13 @@ class FakeIntelligenceService:
         )
 
 
-def test_inspect_package_returns_structured_package_data(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_inspect_package_returns_structured_package_data(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     ref = PackageRef("duckdb", Registry.PYPI)
     service = FakeIntelligenceService()
     service.result = _result(ref)
+
     async def fake_inspect(refs, *, refresh=False):
         return service_project(ref, service.result)
 
@@ -63,7 +68,9 @@ def test_inspect_package_returns_structured_package_data(monkeypatch: pytest.Mon
     assert result["matches"][0]["derived"]["health_score"]["total"] == 88
 
 
-def test_inspect_package_reports_no_exact_match(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_inspect_package_reports_no_exact_match(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def no_refs(package: str, registry: str | None) -> list[PackageRef]:
         return []
 
@@ -78,9 +85,13 @@ def test_inspect_package_reports_no_exact_match(monkeypatch: pytest.MonkeyPatch)
     }
 
 
-def test_search_packages_normalizes_ranked_results(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_search_packages_normalizes_ranked_results(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class FakeSearch:
-        async def search(self, query: str, *, registries, limit: int) -> list[SearchResult]:
+        async def search(
+            self, query: str, *, registries, limit: int
+        ) -> list[SearchResult]:
             assert query == "duckdb"
             assert registries == [Registry.PYPI]
             assert limit == 5
@@ -99,9 +110,7 @@ def test_search_packages_normalizes_ranked_results(monkeypatch: pytest.MonkeyPat
         assert query == "duckdb"
         assert registry == "pypi"
         assert limit == 5
-        return await FakeSearch().search(
-            query, registries=[Registry.PYPI], limit=limit
-        )
+        return await FakeSearch().search(query, registries=[Registry.PYPI], limit=limit)
 
     monkeypatch.setattr(mcp_server.search_workflow, "run", fake_search)
 
@@ -137,6 +146,7 @@ packages = [{ name = "demo", registry = "pypi" }]
     ref = PackageRef("demo", Registry.PYPI, project_name="demo")
     service = FakeIntelligenceService()
     service.result = _result(ref)
+
     async def fake_report(**kwargs):
         return SimpleNamespace(
             content=json.dumps(
@@ -150,7 +160,9 @@ packages = [{ name = "demo", registry = "pypi" }]
 
     monkeypatch.setattr(mcp_server.report_workflow, "run", fake_report)
 
-    result = asyncio.run(mcp_server.inspect_project("demo", config=str(config), refresh=True))
+    result = asyncio.run(
+        mcp_server.inspect_project("demo", config=str(config), refresh=True)
+    )
 
     assert result["generated_by"] == "Secchi"
     assert result["project"]["title"] == "Demo Project"
@@ -161,10 +173,15 @@ def test_check_package_returns_policy_results(monkeypatch: pytest.MonkeyPatch) -
     ref = PackageRef("demo", Registry.PYPI)
     service = FakeIntelligenceService()
     service.result = _result(ref, health=65, has_ci=False)
+
     async def fake_check(ref, **kwargs):
         checks = [
-            SimpleNamespace(name="minimum health score", passed=False, detail="65 / 100"),
-            SimpleNamespace(name="continuous integration", passed=False, detail="No workflow"),
+            SimpleNamespace(
+                name="minimum health score", passed=False, detail="65 / 100"
+            ),
+            SimpleNamespace(
+                name="continuous integration", passed=False, detail="No workflow"
+            ),
         ]
         return SimpleNamespace(passed=False, checks=checks, warnings=[])
 
@@ -176,9 +193,7 @@ def test_check_package_returns_policy_results(monkeypatch: pytest.MonkeyPatch) -
     )
 
     result = asyncio.run(
-        mcp_server.check_package(
-            "demo", min_health=70, require_ci=True, refresh=True
-        )
+        mcp_server.check_package("demo", min_health=70, require_ci=True, refresh=True)
     )
 
     assert result["matches"][0]["passed"] is False
@@ -188,7 +203,9 @@ def test_check_package_returns_policy_results(monkeypatch: pytest.MonkeyPatch) -
     }
 
 
-def test_compare_packages_returns_ranked_recommendation(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_compare_packages_returns_ranked_recommendation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     refs = [PackageRef("one", Registry.PYPI), PackageRef("two", Registry.PYPI)]
 
     async def fake_compare(packages, *, registry=None, refresh=False):
@@ -196,10 +213,12 @@ def test_compare_packages_returns_ranked_recommendation(monkeypatch: pytest.Monk
         assert refresh is True
         from secchi.services.comparison import compare_intelligence
 
-        return compare_intelligence([
-            _result(refs[0], health=70),
-            _result(refs[1], health=92),
-        ])
+        return compare_intelligence(
+            [
+                _result(refs[0], health=70),
+                _result(refs[1], health=92),
+            ]
+        )
 
     monkeypatch.setattr(mcp_server.compare_workflow, "run", fake_compare)
     result = asyncio.run(mcp_server.compare_packages(["one", "two"], refresh=True))

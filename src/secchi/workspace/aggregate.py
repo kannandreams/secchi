@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import replace
-from typing import Iterable
 
 from secchi.models import (
     DownloadTrendPoint,
@@ -50,7 +50,9 @@ def combine_package_infos(ref: PackageRef, infos: list[PackageInfo]) -> PackageI
     if best_github is not None:
         combined.github_stats = best_github
 
-    crates_info = next((info for info in infos if info.registry is Registry.CRATES), None)
+    crates_info = next(
+        (info for info in infos if info.registry is Registry.CRATES), None
+    )
     if crates_info is not None:
         combined.reverse_dependencies = crates_info.reverse_dependencies
         combined.reverse_dependency_count = crates_info.reverse_dependency_count
@@ -87,7 +89,9 @@ def combine_download_trends(infos: list[PackageInfo]) -> list[DownloadTrendPoint
     for info in infos:
         for point in info.download_trend:
             counts[point.date] = counts.get(point.date, 0) + point.count
-    return [DownloadTrendPoint(date=date, count=counts[date]) for date in sorted(counts)]
+    return [
+        DownloadTrendPoint(date=date, count=counts[date]) for date in sorted(counts)
+    ]
 
 
 def combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
@@ -111,7 +115,9 @@ def combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
 
     methods = [
         InstallMethod(label=label, count=count, percent=count / total * 100)
-        for label, count in sorted(totals.items(), key=lambda item: item[1], reverse=True)
+        for label, count in sorted(
+            totals.items(), key=lambda item: item[1], reverse=True
+        )
     ]
     return InstallBreakdown(
         methods=methods,

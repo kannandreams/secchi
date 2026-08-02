@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import ClassVar
 
+from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal
-from textual import on
 
 from secchi import derived as derive
 from secchi.export import save_report
@@ -20,15 +22,18 @@ from secchi.models import (
     PackageRef,
     Project,
 )
-from secchi.spotlight import fetch_spotlight, spotlight_disabled
-from secchi.services.intelligence import PackageIntelligenceService
-from secchi.services.intelligence import IntelligenceResult, SignalWarning
 from secchi.renderers.reports import (
     build_project_report,
     render_project_report,
     render_report,
 )
-from secchi.trending import load_cached_trending, fetch_trending, save_cached_trending
+from secchi.services.intelligence import (
+    IntelligenceResult,
+    PackageIntelligenceService,
+    SignalWarning,
+)
+from secchi.spotlight import fetch_spotlight, spotlight_disabled
+from secchi.trending import fetch_trending, load_cached_trending, save_cached_trending
 from secchi.ui.widgets.detail import DetailView
 from secchi.ui.widgets.header_bar import SecchiHeader
 from secchi.ui.widgets.modals import ExportScreen, HelpScreen, SearchScreen
@@ -49,7 +54,7 @@ class Secchi(App[None]):
     CSS_PATH = "styles/dashboard.tcss"
     TITLE = "secchi"
 
-    BINDINGS = [
+    BINDINGS: ClassVar[list[Binding]] = [
         Binding("r", "refresh", "Refresh", priority=True),
         Binding("e", "export", "Export"),
         Binding("slash", "search", "Search"),
@@ -221,7 +226,9 @@ class Secchi(App[None]):
                         ref=source_ref,
                         info=self._package_data.get(package_key(source_ref)),
                         derived=self._derived_data.get(package_key(source_ref)),
-                        warnings=self._package_warnings.get(package_key(source_ref), []),
+                        warnings=self._package_warnings.get(
+                            package_key(source_ref), []
+                        ),
                         error=self._package_errors.get(package_key(source_ref)),
                     )
                     for source_ref in project.packages
@@ -236,7 +243,9 @@ class Secchi(App[None]):
                 if info is None or derived is None:
                     self.notify("No data loaded yet.", severity="warning")
                     return
-                content = render_report(format_name, info, derived, ref, self._project.name)
+                content = render_report(
+                    format_name, info, derived, ref, self._project.name
+                )
                 subject = ref.name
                 project_name = self._project.name
             path = save_report(content, project_name, subject, format_name)
@@ -246,19 +255,15 @@ class Secchi(App[None]):
 
     def _start_spotlight_fetch(self) -> None:
         if spotlight_disabled():
-            try:
+            with suppress(Exception):
                 self.query_one(Sidebar).set_spotlight(None)
-            except Exception:
-                pass
             return
         self.run_worker(self._fetch_spotlight(), exclusive=False, group="spotlight")
 
     async def _fetch_spotlight(self) -> None:
         spotlight = await fetch_spotlight()
-        try:
+        with suppress(Exception):
             self.query_one(Sidebar).set_spotlight(spotlight)
-        except Exception:
-            pass
 
     def _start_trending_fetch(self) -> None:
         try:
@@ -274,10 +279,8 @@ class Secchi(App[None]):
         trending = await fetch_trending()
         if trending is not None:
             save_cached_trending(trending)
-        try:
+        with suppress(Exception):
             self.query_one(Sidebar).set_trending(trending)
-        except Exception:
-            pass
 
     # ── navigation ──
 
@@ -302,10 +305,8 @@ class Secchi(App[None]):
             self._start_data_fetch(project_name=ref.project_name)
         if render:
             self._render_selected()
-        try:
+        with suppress(Exception):
             self.query_one(Sidebar).select_package(ref)
-        except Exception:
-            pass
 
     @on(Sidebar.PackageSelected)
     def _on_package_selected(self, event: Sidebar.PackageSelected) -> None:
@@ -325,9 +326,7 @@ class Secchi(App[None]):
             self._render_again = True
             return
         self._render_in_progress = True
-        self.run_worker(
-            self._render_selected_loop, exclusive=False, group="render"
-        )
+        self.run_worker(self._render_selected_loop, exclusive=False, group="render")
 
     async def _render_selected_loop(self) -> None:
         try:
@@ -359,7 +358,9 @@ class Secchi(App[None]):
             await main.remove_children()
             if ref != self._workspace_state.selected_ref:
                 return
-            await main.mount(DetailView(ref, info, error, derived, warnings, parent_app=self))
+            await main.mount(
+                DetailView(ref, info, error, derived, warnings, parent_app=self)
+            )
         except asyncio.CancelledError:
             return
 
@@ -404,9 +405,7 @@ class Secchi(App[None]):
         force: bool = False,
         project_name: str | None = None,
     ) -> None:
-        result = await self._intelligence.fetch_project(
-            refs, force_refresh=force
-        )
+        result = await self._intelligence.fetch_project(refs, force_refresh=force)
         for key, package_result in result.results.items():
             if package_result.info is not None:
                 self._package_data[key] = package_result.info

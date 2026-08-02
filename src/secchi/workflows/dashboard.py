@@ -30,7 +30,9 @@ def _workspace_project(config_path: Path) -> Project:
             )
             for ref in project.packages
         )
-    return Project(name="Workspace", description="Configured Secchi workspace", packages=refs)
+    return Project(
+        name="Workspace", description="Configured Secchi workspace", packages=refs
+    )
 
 
 async def run(
@@ -77,4 +79,6 @@ async def run(
             project = _workspace_project(config_path)
     if not project.packages:
         raise WorkflowError("The selected workspace has no packages.")
-    return DashboardRequest(project, config_path, workspace if not package else None, refresh)
+    return DashboardRequest(
+        project, config_path, workspace if not package else None, refresh
+    )

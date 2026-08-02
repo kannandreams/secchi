@@ -23,6 +23,7 @@ class PackageSearchService:
         selected = registries or list(Registry)
 
         async with HttpClientFactory().create() as client:
+
             async def search_registry(registry: Registry) -> list[SearchResult]:
                 try:
                     try:
@@ -39,12 +40,19 @@ class PackageSearchService:
             )
         results = [result for batch in batches for result in batch]
         results.sort(key=lambda result: self._sort_key(result, query))
-        return results[:limit * len(selected)]
+        return results[: limit * len(selected)]
 
     @staticmethod
     def _sort_key(result: SearchResult, query: str) -> tuple[int, int, float, str]:
         exact = 0 if result.exact or result.name.casefold() == query.casefold() else 1
         # Registry APIs use incompatible score scales. Compress large download
         # scores while preserving useful ordering within a registry.
-        normalized_score = math.log10(result.score + 1) if result.score > 1 else result.score
-        return (exact, 0 if result.name.casefold().startswith(query.casefold()) else 1, -normalized_score, result.name.casefold())
+        normalized_score = (
+            math.log10(result.score + 1) if result.score > 1 else result.score
+        )
+        return (
+            exact,
+            0 if result.name.casefold().startswith(query.casefold()) else 1,
+            -normalized_score,
+            result.name.casefold(),
+        )

@@ -51,13 +51,8 @@ def load_project(config_path: Path, project_name: str) -> Project:
 
     if project_name not in projects:
         available = list(projects.keys())
-        if available:
-            hint = f" Available projects: {', '.join(available)}"
-        else:
-            hint = ""
-        raise ValueError(
-            f"Project '{project_name}' not found in {config_path}.{hint}"
-        )
+        hint = f" Available projects: {', '.join(available)}" if available else ""
+        raise ValueError(f"Project '{project_name}' not found in {config_path}.{hint}")
 
     raw = projects[project_name]
     project = Project(
@@ -81,7 +76,7 @@ def load_project(config_path: Path, project_name: str) -> Project:
             raise ValueError(
                 f"Unknown registry '{registry_raw}' for package '{name}'. "
                 f"Must be one of: {', '.join(r.value for r in Registry)}"
-            )
+            ) from None
         project.packages.append(
             PackageRef(
                 name=name,

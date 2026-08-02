@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from secchi.api.base import AdapterBase
-
 from secchi.models import (
     Dependency,
     DownloadCounts,

@@ -7,7 +7,6 @@ import httpx
 from secchi.api.sparse import SparseAdapter
 from secchi.models import Dependency, PackageInfo, Registry, SearchResult, Version
 
-
 CRAN_DB = "https://crandb.r-pkg.org"
 
 

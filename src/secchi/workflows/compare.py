@@ -14,7 +14,9 @@ async def _resolve_refs(specs: list[str], registry: str | None) -> list[PackageR
             continue
         matches = await resolve_package(spec)
         if not matches:
-            raise ValueError(f"No exact package named '{spec}' was found across registries.")
+            raise ValueError(
+                f"No exact package named '{spec}' was found across registries."
+            )
         refs.append(sorted(matches, key=lambda ref: preference[ref.registry])[0])
     return refs
 

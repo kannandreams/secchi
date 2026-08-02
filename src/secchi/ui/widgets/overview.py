@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime, timezone
+from itertools import pairwise
 
 from rich.markup import escape
 from textual import on
@@ -24,7 +25,6 @@ from secchi.ui import palette
 from secchi.ui.widgets.bar import render_bar
 from secchi.ui.widgets.panel import Panel
 from secchi.utils import format_pct_delta, shorten_number
-
 
 _RANGES: tuple[tuple[str, int], ...] = (("30d", 30), ("90d", 90), ("1y", 365))
 
@@ -117,12 +117,16 @@ class AdoptionTrendBody(Static):
     def _update_content(self) -> None:
         width = self.size.width or 36
         max_points = _point_limit(width)
-        points = _adoption_points(self._info.download_trend, self._range_days, max_points)
+        points = _adoption_points(
+            self._info.download_trend, self._range_days, max_points
+        )
         if len(points) < 2:
             self.update("[dim]No historical adoption data available.[/]")
             return
 
-        total, pct = _period_download_summary(self._info.download_trend, self._range_days)
+        total, pct = _period_download_summary(
+            self._info.download_trend, self._range_days
+        )
         trend = _trend_label(pct, points)
         trend_color = palette.RED if trend == "Declining" else palette.GREEN
         pct_text, pct_color = format_pct_delta(pct)
@@ -221,7 +225,10 @@ class ReverseDependenciesPanel(Panel):
 
         return [
             Static("[dim]Projects depending on this package[/]"),
-            Static(f"[b {palette.GREEN}]{shorten_number(self._summary.count)}[/]", classes="ov-big-number"),
+            Static(
+                f"[b {palette.GREEN}]{shorten_number(self._summary.count)}[/]",
+                classes="ov-big-number",
+            ),
             Static(growth_line),
             Static(f"\n[dim]Signal:[/] {signal}"),
         ]
@@ -249,13 +256,15 @@ class HealthTimelineBody(Static):
 
     def _update_content(self) -> None:
         width = self.size.width or 36
-        points = self._points[-_point_limit(width):]
+        points = self._points[-_point_limit(width) :]
         if len(points) < 2:
             self.update("[dim]Health history will appear after future snapshots.[/]")
             return
 
         delta = points[-1].value - points[0].value
-        trend = "Stable" if abs(delta) <= 3 else "Improving" if delta > 0 else "Declining"
+        trend = (
+            "Stable" if abs(delta) <= 3 else "Improving" if delta > 0 else "Declining"
+        )
         color = palette.RED if trend == "Declining" else palette.GREEN
         chart = _render_line_chart(
             points,
@@ -303,11 +312,7 @@ class VersionAdoptionPanel(Panel):
 
         latest = adoption.get(self._info.versions[0].version, 0.0)
         summary = (
-            "Healthy"
-            if latest >= 50
-            else "Fragmented"
-            if latest >= 25
-            else "Lagging"
+            "Healthy" if latest >= 50 else "Fragmented" if latest >= 25 else "Lagging"
         )
         rows.append(Static(f"\n[dim]Latest version adoption:[/] {summary}"))
         return rows
@@ -388,7 +393,7 @@ def _period_download_summary(
         return 0, None
     current_len = min(days, len(trend))
     current = sum(point.count for point in trend[-current_len:])
-    previous_slice = trend[-(current_len * 2):-current_len]
+    previous_slice = trend[-(current_len * 2) : -current_len]
     previous = sum(point.count for point in previous_slice)
     if previous <= 0:
         return current, None
@@ -435,7 +440,7 @@ def _render_line_chart(
         y = chart_height - 1 - round(ratio * (chart_height - 1))
         coords.append((x, y))
 
-    for start, end in zip(coords, coords[1:]):
+    for start, end in pairwise(coords):
         _draw_segment(grid, start, end)
     for x, y in coords:
         grid[y][x] = "●"
@@ -446,8 +451,7 @@ def _render_line_chart(
         axis = "┤" if row < chart_height - 1 else "└"
         label = f"{shorten_number(value):>{left_width}}"
         lines.append(
-            f"[{palette.SEPARATOR}]{label} {axis}[/]"
-            f"[{line_color}]{''.join(cells)}[/]"
+            f"[{palette.SEPARATOR}]{label} {axis}[/][{line_color}]{''.join(cells)}[/]"
         )
 
     label_row = [" " for _ in range(plot_width)]
@@ -485,7 +489,7 @@ def _draw_segment(
         if (x, y) == start or (x, y) == end:
             continue
         dy = y - prev[1]
-        grid[y][x] = "─" if dy == 0 else "╱" if dy < 0 else "╲"
+        grid[y][x] = "─" if dy == 0 else chr(0x2571) if dy < 0 else chr(0x2572)
         prev = (x, y)
 
 

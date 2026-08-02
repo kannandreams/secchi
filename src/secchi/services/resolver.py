@@ -18,7 +18,9 @@ def parse_package_spec(spec: str, registry: str | None = None) -> PackageRef:
         selected = Registry(registry) if registry else Registry.PYPI
     except ValueError as exc:
         supported = ", ".join(item.value for item in Registry)
-        raise ValueError(f"Unknown registry '{registry}'. Supported: {supported}") from exc
+        raise ValueError(
+            f"Unknown registry '{registry}'. Supported: {supported}"
+        ) from exc
     return PackageRef(name=spec, registry=selected)
 
 
