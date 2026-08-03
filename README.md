@@ -263,6 +263,11 @@ uv run textual run --dev src/secchi/dev.py -- -p tuffcli
 
 Press `ctrl+r` to manually reload the dashboard without exiting.
 
+## Project Information
+
+- [Contributing](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
+
 ## License
 
 Apache 2.0
