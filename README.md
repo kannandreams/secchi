@@ -85,7 +85,7 @@ secchi init
 Launch the dashboard for a project:
 
 ```bash
-secchi -p tuffcli
+secchi -p duckdb
 secchi --project opencode
 ```
 
@@ -258,7 +258,7 @@ secchi init                             Interactively create secchi.toml
 Live reload during development:
 
 ```bash
-uv run textual run --dev src/secchi/dev.py -- -p tuffcli
+uv run textual run --dev src/secchi/dev.py -- -p duckdb
 ```
 
 Press `ctrl+r` to manually reload the dashboard without exiting.
