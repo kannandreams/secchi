@@ -16,12 +16,6 @@
 Secchi lets you explore, compare, monitor, and report on package health,
 adoption, dependencies, releases, and ecosystem signals from your terminal.
 
-CI publishes the XML and HTML coverage reports as a GitHub Actions artifact;
-open the workflow run and download `coverage-python-3.12` to inspect the full
-report. The latest `main` coverage report is also published at
-[`kannandreams.github.io/secchi/coverage/`](https://kannandreams.github.io/secchi/coverage/)
-after GitHub Pages is enabled for the repository.
-
 ![secchi TUI dashboard](https://raw.githubusercontent.com/kannandreams/secchi/main/assets/secchi-v0.1.0-demo-1.gif)
 
 ## Supported Ecosystems
@@ -262,6 +256,14 @@ uv run textual run --dev src/secchi/dev.py -- -p duckdb
 ```
 
 Press `ctrl+r` to manually reload the dashboard without exiting.
+
+### Coverage Reports
+
+CI publishes the XML and HTML coverage reports as a GitHub Actions artifact;
+open the workflow run and download `coverage-python-3.12` to inspect the full
+report. The latest `main` coverage report is also published at
+[`kannandreams.github.io/secchi/coverage/`](https://kannandreams.github.io/secchi/coverage/)
+after GitHub Pages is enabled for the repository.
 
 ## Project Information
 
