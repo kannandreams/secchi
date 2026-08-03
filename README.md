@@ -259,9 +259,7 @@ Press `ctrl+r` to manually reload the dashboard without exiting.
 
 ### Coverage Reports
 
-CI publishes the XML and HTML coverage reports as a GitHub Actions artifact;
-open the workflow run and download `coverage-python-3.12` to inspect the full
-report. The latest `main` coverage report is also published at
+The latest `main` coverage report is published at
 [`kannandreams.github.io/secchi/coverage/`](https://kannandreams.github.io/secchi/coverage/)
 after GitHub Pages is enabled for the repository.
 
