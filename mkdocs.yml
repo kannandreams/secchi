@@ -1,0 +1,42 @@
+site_name: Secchi
+site_description: Open source package intelligence from your terminal
+site_url: https://kannandreams.github.io/secchi/
+repo_url: https://github.com/kannandreams/secchi
+repo_name: kannandreams/secchi
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - search.highlight
+  palette:
+    - scheme: default
+      primary: black
+      accent: black
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Commands: commands.md
+  - Workspace: workspace.md
+  - Reports: reports.md
+  - MCP and agents: mcp.md
+  - Development: development.md
+  - Contributing: contributing.md
