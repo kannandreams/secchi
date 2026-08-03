@@ -1,4 +1,4 @@
-name: Publish coverage report
+name: Publish documentation and coverage
 
 on:
   push:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   coverage:
-    name: Build coverage site
+    name: Build documentation and coverage site
     runs-on: ubuntu-latest
 
     steps:
@@ -39,11 +39,11 @@ jobs:
       - name: Run tests with coverage
         run: uv run pytest --cov=secchi --cov-report=html
 
-      - name: Prepare Pages site
+      - name: Build MkDocs site
         run: |
+          uv run mkdocs build --strict --site-dir site
           mkdir -p site/coverage
           cp -R htmlcov/. site/coverage/
-          printf '%s\n' '<!doctype html><meta charset="utf-8"><title>Secchi coverage</title><h1>Secchi coverage</h1><p><a href="coverage/">Open the latest HTML coverage report</a></p>' > site/index.html
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
