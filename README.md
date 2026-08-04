@@ -16,7 +16,7 @@
 Secchi lets you explore, compare, monitor, and report on package health,
 adoption, dependencies, releases, and ecosystem signals from your terminal.
 
-![secchi TUI dashboard](https://raw.githubusercontent.com/kannandreams/secchi/main/assets/secchi-v0.1.0-demo-1.gif)
+![secchi TUI dashboard](https://raw.githubusercontent.com/kannandreams/secchi/main/assets/duck-db-demo.png)
 
 ## Supported Ecosystems
 

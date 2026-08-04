@@ -5,7 +5,7 @@
 Secchi helps engineers and coding agents explore, compare, monitor, and report
 on package health, adoption, dependencies, releases, and ecosystem signals.
 
-![Secchi dashboard](https://raw.githubusercontent.com/kannandreams/secchi/main/assets/secchi-v0.1.0-demo-1.gif)
+![Secchi dashboard](https://raw.githubusercontent.com/kannandreams/secchi/main/assets/duck-db-demo.png)
 
 ## Why Secchi?
 
