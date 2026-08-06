@@ -5,6 +5,10 @@
 Secchi helps engineers and coding agents explore, compare, monitor, and report
 on package health, adoption, dependencies, releases, and ecosystem signals.
 
+> **Pronunciation:** Secchi is pronounced **“SEK-ee.”** The name is inspired by
+> the [Secchi disk](https://www.merriam-webster.com/dictionary/Secchi%20disc),
+> an instrument used to measure water clarity.
+
 ![Secchi dashboard](https://raw.githubusercontent.com/kannandreams/secchi/main/assets/duck-db-demo.png)
 
 ## Why Secchi?

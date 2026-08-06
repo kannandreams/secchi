@@ -16,6 +16,11 @@
 Secchi lets you explore, compare, monitor, and report on package health,
 adoption, dependencies, releases, and ecosystem signals from your terminal.
 
+> **How to pronounce it:** Secchi is pronounced **“SEK-ee.”** The name is
+> inspired by the [Secchi disk](https://www.merriam-webster.com/dictionary/Secchi%20disc),
+> an instrument used to measure water clarity—an apt metaphor for making
+> package intelligence easier to see.
+
 ![secchi TUI dashboard](https://raw.githubusercontent.com/kannandreams/secchi/main/assets/duck-db-demo.png)
 
 ## Supported Ecosystems
