@@ -45,6 +45,7 @@ adoption, dependencies, releases, and ecosystem signals from your terminal.
 | Explore | Workspace monitoring | Monitor configured projects and registry sources | ✅ |
 | Explore | Cross-registry search | Find packages across supported ecosystems | ✅ |
 | Explore | Health and adoption signals | Understand project momentum and maintenance quality | ✅ |
+| Explore | Security advisories | See OSV advisories affecting the latest package version | ✅ |
 | Explore | Package comparison | Rank package choices with health, adoption, and confidence evidence | ✅ |
 | Report | JSON reports | Use package intelligence in scripts and automation | ✅ |
 | Report | Markdown reports | Share readable reports in GitHub, Notion, or documentation | ✅ |
@@ -167,6 +168,13 @@ into a failed result.
 
 Reports are written to the current directory by default. Use `--output` to
 choose a file path, or `--output -` to print the report to stdout.
+
+Package inspection includes a Security tab in the dashboard and advisory data
+in `show`, JSON, Markdown, HTML, and MCP results. Advisories are queried from
+OSV.dev for the latest published version. A failed advisory lookup is reported
+as a non-fatal signal warning; it does not change the health score or policy
+check result. Homebrew does not currently have a stable OSV ecosystem mapping
+in Secchi and is reported without advisory coverage.
 
 See [DuckDB report examples](examples/reports/README.md) for package and
 project exports in JSON, Markdown, and HTML.

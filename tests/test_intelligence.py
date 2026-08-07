@@ -57,6 +57,10 @@ def test_optional_enrichment_failure_keeps_package_usable(
         "fetch_github_extended_stats_for_package",
         _github_result,
     )
+    async def no_advisories(info, client):
+        return []
+
+    monkeypatch.setattr(intelligence, "fetch_osv_advisories", no_advisories)
     monkeypatch.setattr(intelligence, "load_package_cache", lambda key: None)
     monkeypatch.setattr(
         intelligence, "save_package_cache", lambda key, info, fetched_at: None

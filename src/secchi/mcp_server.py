@@ -26,7 +26,7 @@ server = MCPServer(
     name="secchi",
     title="Secchi Package Intelligence",
     description=(
-        "Explore package health, adoption, dependencies, releases, and "
+        "Explore package health, security advisories, adoption, dependencies, releases, and "
         "ecosystem signals across supported registries."
     ),
     version=__version__,
@@ -76,7 +76,7 @@ async def inspect_package(
     registry: str | None = None,
     refresh: bool = False,
 ) -> dict[str, Any]:
-    """Return health, adoption, release, dependency, and repository signals."""
+    """Return health, security advisory, adoption, release, dependency, and repository signals."""
     refs = await _resolve_refs(package, registry)
     if not refs:
         return {

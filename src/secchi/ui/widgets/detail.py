@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from rich.markup import escape
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Container, Grid, Horizontal, VerticalScroll
@@ -203,6 +204,8 @@ class DetailView(Container):
         with TabbedContent(id="detail-tabs"):
             with TabPane("Overview", id="tab-overview"):
                 yield OverviewTab(info, derived)
+            with TabPane("Security", id="tab-security"):
+                yield self._security_pane()
             with TabPane("Releases", id="tab-releases"):
                 yield self._releases_pane()
             with TabPane("Dependencies", id="tab-deps"):
@@ -253,6 +256,35 @@ class DetailView(Container):
         if not (self._info and self._info.dependencies):
             table.add_row(Text("—"), "no dependencies", "")
         return VerticalScroll(table, classes="tab-scroll")
+
+    def _security_pane(self) -> VerticalScroll:
+        advisories = self._info.security_advisories if self._info else []
+        if not advisories:
+            return VerticalScroll(
+                Static(
+                    "[b green]No known advisories[/]\n"
+                    "No OSV advisories affect the latest published version.",
+                    classes="pane-block",
+                ),
+                classes="tab-scroll",
+            )
+
+        children: list[Static] = [
+            Static(
+                f"[b red]{len(advisories)} advisory(ies)[/] affect the latest version.",
+                classes="pane-heading",
+            )
+        ]
+        for advisory in advisories:
+            fixed = ", ".join(advisory.fixed_versions) or "No fixed version listed"
+            lines = [
+                f"[b red]{escape(advisory.id)}[/]  {escape(advisory.severity or 'Severity unavailable')}",
+                escape(advisory.summary or "No summary available."),
+                f"Fixed versions: {escape(fixed)}",
+                f"[dim]{escape(advisory.url)}[/]",
+            ]
+            children.append(Static("\n".join(lines), classes="pane-block"))
+        return VerticalScroll(*children, classes="tab-scroll")
 
     def _versions_pane(self) -> VerticalScroll:
         table = DataTable(cursor_type=None, zebra_stripes=True)

@@ -62,6 +62,7 @@ def combine_package_infos(ref: PackageRef, infos: list[PackageInfo]) -> PackageI
             crates_info.reverse_dependency_monthly_growth
         )
     combined.health_history = primary.health_history
+    combined.security_advisories = _combine_security_advisories(infos)
     return combined
 
 
@@ -90,6 +91,17 @@ def combine_download_trends(infos: list[PackageInfo]) -> list[DownloadTrendPoint
     return [
         DownloadTrendPoint(date=date, count=counts[date]) for date in sorted(counts)
     ]
+
+
+def _combine_security_advisories(infos: list[PackageInfo]):
+    seen: set[str] = set()
+    advisories = []
+    for info in infos:
+        for advisory in info.security_advisories:
+            if advisory.id not in seen:
+                seen.add(advisory.id)
+                advisories.append(advisory)
+    return advisories
 
 
 def combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:

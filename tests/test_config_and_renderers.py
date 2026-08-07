@@ -75,6 +75,7 @@ def test_summary_includes_primary_signals() -> None:
     assert "Health Score      92 / 100" in output
     assert "Latest Version    1.5.5" in output
     assert "GitHub Stars      34.0k" in output
+    assert "Security Advisories 0" in output
 
 
 def test_default_policy_reports_a_failed_health_threshold() -> None:
@@ -117,6 +118,34 @@ def test_package_reports_include_repository_attribution() -> None:
     assert "https://github.com/example/demo" in html
 
 
+def test_package_reports_include_security_advisories() -> None:
+    from secchi.models import SecurityAdvisory
+    from secchi.renderers.reports import render_report
+
+    info = PackageInfo(
+        name="demo",
+        registry=Registry.PYPI,
+        latest_version="2.0.0",
+        security_advisories=[
+            SecurityAdvisory(
+                id="GHSA-demo-1234-abcd",
+                summary="A demo vulnerability",
+                severity="HIGH",
+                fixed_versions=["2.0.1"],
+                url="https://osv.dev/vulnerability/GHSA-demo-1234-abcd",
+            )
+        ],
+    )
+    ref = PackageRef("demo", Registry.PYPI)
+    derived = DerivedPackageData(health_score=HealthScore(total=90))
+
+    markdown = render_report("md", info, derived, ref, "demo")
+    html = render_report("html", info, derived, ref, "demo")
+    assert "GHSA-demo-1234-abcd" in markdown
+    assert "2.0.1" in markdown
+    assert "GHSA-demo-1234-abcd" in html
+
+
 def test_project_report_contains_sources_in_all_formats() -> None:
     project = Project(
         name="demo",
@@ -145,7 +174,7 @@ def test_project_report_contains_sources_in_all_formats() -> None:
     assert '"source_count": 1' in render_project_report("json", report)
     project_json = json.loads(render_project_report("json", report))
     assert project_json["schema"] == "secchi.project-intelligence"
-    assert project_json["schema_version"] == 1
+    assert project_json["schema_version"] == 2
 
 
 def test_search_service_prioritizes_exact_matches_and_survives_registry_errors(

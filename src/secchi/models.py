@@ -158,6 +158,30 @@ class ReverseDependency:
 
 
 @dataclass
+class AdvisoryReference:
+    """An external reference attached to a security advisory."""
+
+    type: str
+    url: str
+
+
+@dataclass
+class SecurityAdvisory:
+    """A vulnerability affecting the inspected package version."""
+
+    id: str
+    summary: str = ""
+    details: str = ""
+    aliases: list[str] = field(default_factory=list)
+    severity: str = ""
+    published: datetime | None = None
+    modified: datetime | None = None
+    fixed_versions: list[str] = field(default_factory=list)
+    references: list[AdvisoryReference] = field(default_factory=list)
+    url: str = ""
+
+
+@dataclass
 class GitHubIssueEvent:
     """Raw GitHub issue OR pull request record.
 
@@ -318,6 +342,7 @@ class PackageInfo:
     reverse_dependency_monthly_growth: int | None = None
     health_history: list[MetricTimelinePoint] = field(default_factory=list)
     github_issue_events: list[GitHubIssueEvent] = field(default_factory=list)
+    security_advisories: list[SecurityAdvisory] = field(default_factory=list)
 
 
 @dataclass

@@ -27,6 +27,7 @@ from secchi.models import (
     PackageInfo,
     PackageRef,
 )
+from secchi.security import fetch_osv_advisories
 from secchi.utils import (
     fetch_github_extended_stats_for_package,
     fetch_release_notes_for_package,
@@ -170,6 +171,11 @@ class PackageIntelligenceService:
                 lambda: adapter.fetch_reverse_dependency_count(ref.name),
                 None,
             ),
+            self._optional_signal(
+                "security advisories",
+                lambda: fetch_osv_advisories(info, client=client),
+                [],
+            ),
         )
         values = [item[0] for item in optional]
         warnings = [item[1] for item in optional if item[1] is not None]
@@ -181,6 +187,7 @@ class PackageIntelligenceService:
             version_downloads,
             reverse_dependencies,
             reverse_dependency_count,
+            security_advisories,
         ) = values
         info.versions = versions
         info.download_trend = trend
@@ -189,6 +196,7 @@ class PackageIntelligenceService:
         info.version_downloads_recent = version_downloads
         info.reverse_dependencies = reverse_dependencies
         info.reverse_dependency_count = reverse_dependency_count
+        info.security_advisories = security_advisories
 
         if info.latest_version:
             dependencies, warning = await self._optional_signal(

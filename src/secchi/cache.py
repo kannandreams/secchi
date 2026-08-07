@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from secchi.models import (
+    AdvisoryReference,
     Dependency,
     DownloadCounts,
     DownloadTrendPoint,
@@ -21,6 +22,7 @@ from secchi.models import (
     Registry,
     ReleaseFile,
     ReverseDependency,
+    SecurityAdvisory,
     Version,
 )
 from secchi.schema import CACHE_SCHEMA_VERSION
@@ -150,6 +152,9 @@ def _decode_package_info(raw: dict[str, Any]) -> PackageInfo:
     info.github_issue_events = [
         _decode_issue_event(e) for e in raw.get("github_issue_events", [])
     ]
+    info.security_advisories = [
+        _decode_advisory(a) for a in raw.get("security_advisories", [])
+    ]
     return info
 
 
@@ -202,6 +207,25 @@ def _decode_issue_event(raw: dict[str, Any]) -> GitHubIssueEvent:
         is_pull_request=raw.get("is_pull_request", False),
         created_at=_parse_datetime(raw.get("created_at")) or datetime.min,
         closed_at=_parse_datetime(raw.get("closed_at")),
+        url=raw.get("url", ""),
+    )
+
+
+def _decode_advisory(raw: dict[str, Any]) -> SecurityAdvisory:
+    return SecurityAdvisory(
+        id=raw.get("id", ""),
+        summary=raw.get("summary", ""),
+        details=raw.get("details", ""),
+        aliases=raw.get("aliases", []),
+        severity=raw.get("severity", ""),
+        published=_parse_datetime(raw.get("published")),
+        modified=_parse_datetime(raw.get("modified")),
+        fixed_versions=raw.get("fixed_versions", []),
+        references=[
+            AdvisoryReference(type=item.get("type", ""), url=item.get("url", ""))
+            for item in raw.get("references", [])
+            if isinstance(item, dict)
+        ],
         url=raw.get("url", ""),
     )
 

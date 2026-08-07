@@ -14,6 +14,7 @@ def render_summary(info: PackageInfo, derived: DerivedPackageData) -> str:
         _format_count(info.github_stats.stars) if info.github_stats.resolved else "—"
     )
     dependents = _format_count(info.reverse_dependency_count)
+    advisories = str(len(info.security_advisories))
     health = derived.health_score.total
     return "\n".join(
         [
@@ -24,6 +25,7 @@ def render_summary(info: PackageInfo, derived: DerivedPackageData) -> str:
             f"Downloads         {adoption}",
             f"GitHub Stars      {stars}",
             f"Dependents        {dependents}",
+            f"Security Advisories {advisories}",
         ]
     )
 

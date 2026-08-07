@@ -121,6 +121,28 @@ def _serialize_package_info(info: PackageInfo) -> dict[str, Any]:
         "health_history": [
             {"label": p.label, "value": p.value} for p in info.health_history
         ],
+        "security_advisories": [
+            {
+                "id": advisory.id,
+                "summary": advisory.summary,
+                "details": advisory.details,
+                "aliases": advisory.aliases,
+                "severity": advisory.severity,
+                "published": advisory.published.isoformat()
+                if advisory.published
+                else None,
+                "modified": advisory.modified.isoformat()
+                if advisory.modified
+                else None,
+                "fixed_versions": advisory.fixed_versions,
+                "references": [
+                    {"type": reference.type, "url": reference.url}
+                    for reference in advisory.references
+                ],
+                "url": advisory.url,
+            }
+            for advisory in info.security_advisories
+        ],
     }
 
 
