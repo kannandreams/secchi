@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from secchi import cache
 from secchi.export import export_package_json
-from secchi.models import PackageInfo, Registry
+from secchi.models import PackageInfo, Registry, SecurityAdvisory
 from secchi.schema import CACHE_SCHEMA_VERSION, PACKAGE_EXPORT_SCHEMA_VERSION
 from secchi.schemas import CacheEnvelope, PackageExport
 
@@ -23,6 +23,27 @@ def test_cache_writes_and_reads_versioned_envelope(tmp_path, monkeypatch) -> Non
     assert raw["schema_version"] == CACHE_SCHEMA_VERSION
     assert loaded is not None
     assert loaded[0].latest_version == "1.0.0"
+
+
+def test_security_cache_is_scoped_to_package_version_and_day(tmp_path) -> None:
+    fetched_at = datetime.now(timezone.utc)
+    advisory = SecurityAdvisory(id="GHSA-demo-1234-abcd", severity="HIGH")
+
+    cache.save_security_cache(
+        "pypi:demo", "1.0.0", [advisory], fetched_at, root=tmp_path
+    )
+
+    loaded = cache.load_security_cache(
+        "pypi:demo", "1.0.0", root=tmp_path, now=lambda: fetched_at
+    )
+    assert loaded is not None
+    assert loaded[0][0].id == advisory.id
+    assert (
+        cache.load_security_cache(
+            "pypi:demo", "2.0.0", root=tmp_path, now=lambda: fetched_at
+        )
+        is None
+    )
 
 
 def test_legacy_unversioned_cache_is_readable_and_future_cache_is_ignored(

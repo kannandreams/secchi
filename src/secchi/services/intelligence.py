@@ -14,7 +14,12 @@ import httpx
 from secchi import derived as derive
 from secchi.aggregate import package_key
 from secchi.api.base import create_adapter
-from secchi.cache import load_package_cache, save_package_cache
+from secchi.cache import (
+    load_package_cache,
+    load_security_cache,
+    save_package_cache,
+    save_security_cache,
+)
 from secchi.history import append_snapshot, compute_delta, find_baseline, load_snapshots
 from secchi.http import HttpClientFactory
 from secchi.models import (
@@ -77,10 +82,21 @@ class PackageIntelligenceService:
         self.http_factory = http_factory or HttpClientFactory()
 
     async def fetch_project(
-        self, refs: list[PackageRef], *, force_refresh: bool = False
+        self,
+        refs: list[PackageRef],
+        *,
+        force_refresh: bool = False,
+        force_security_refresh: bool = False,
     ) -> ProjectIntelligence:
         results = await asyncio.gather(
-            *(self.fetch_package(ref, force_refresh=force_refresh) for ref in refs)
+            *(
+                self.fetch_package(
+                    ref,
+                    force_refresh=force_refresh,
+                    force_security_refresh=force_security_refresh,
+                )
+                for ref in refs
+            )
         )
         fetched_times = [result.fetched_at for result in results if result.fetched_at]
         return ProjectIntelligence(
@@ -89,7 +105,11 @@ class PackageIntelligenceService:
         )
 
     async def fetch_package(
-        self, ref: PackageRef, *, force_refresh: bool = False
+        self,
+        ref: PackageRef,
+        *,
+        force_refresh: bool = False,
+        force_security_refresh: bool = False,
     ) -> IntelligenceResult:
         key = package_key(ref)
         try:
@@ -97,15 +117,26 @@ class PackageIntelligenceService:
                 cached = self._load_cache(key)
                 if cached is not None:
                     info, fetched_at = cached
+                    security_warnings = await self._refresh_security_if_needed(
+                        key,
+                        info,
+                        force=force_security_refresh,
+                    )
                     return IntelligenceResult(
                         ref=ref,
                         info=info,
                         derived=derive.compute_all(info),
+                        warnings=security_warnings,
                         fetched_at=fetched_at,
                     )
 
             async with self.http_factory.create() as client:
                 info, warnings = await self._fetch_fresh(ref, client)
+                info.security_advisories, security_warning = await self._fetch_security(
+                    key, info, client
+                )
+                if security_warning:
+                    warnings.append(security_warning)
             self._apply_history_deltas(key, info)
             derived = derive.compute_all(info)
             fetched_at = self.clock()
@@ -171,11 +202,6 @@ class PackageIntelligenceService:
                 lambda: adapter.fetch_reverse_dependency_count(ref.name),
                 None,
             ),
-            self._optional_signal(
-                "security advisories",
-                lambda: fetch_osv_advisories(info, client=client),
-                [],
-            ),
         )
         values = [item[0] for item in optional]
         warnings = [item[1] for item in optional if item[1] is not None]
@@ -187,7 +213,6 @@ class PackageIntelligenceService:
             version_downloads,
             reverse_dependencies,
             reverse_dependency_count,
-            security_advisories,
         ) = values
         info.versions = versions
         info.download_trend = trend
@@ -196,7 +221,6 @@ class PackageIntelligenceService:
         info.version_downloads_recent = version_downloads
         info.reverse_dependencies = reverse_dependencies
         info.reverse_dependency_count = reverse_dependency_count
-        info.security_advisories = security_advisories
 
         if info.latest_version:
             dependencies, warning = await self._optional_signal(
@@ -230,6 +254,43 @@ class PackageIntelligenceService:
                     warnings.append(warning)
             info.release_notes = notes
         return info, warnings
+
+    async def _refresh_security_if_needed(
+        self,
+        key: str,
+        info: PackageInfo,
+        *,
+        force: bool,
+    ) -> list[SignalWarning]:
+        if not force:
+            cached = self._load_security_cache(key, info.latest_version)
+            if cached is not None:
+                info.security_advisories = cached[0]
+                return []
+
+        async with self.http_factory.create() as client:
+            advisories, warning = await self._fetch_security(
+                key, info, client, fallback=info.security_advisories
+            )
+        info.security_advisories = advisories
+        return [warning] if warning else []
+
+    async def _fetch_security(
+        self,
+        key: str,
+        info: PackageInfo,
+        client,
+        *,
+        fallback: list | None = None,
+    ) -> tuple[list, SignalWarning | None]:
+        advisories, warning = await self._optional_signal(
+            "security advisories",
+            lambda: fetch_osv_advisories(info, client=client),
+            fallback if fallback is not None else [],
+        )
+        if warning is None:
+            self._save_security_cache(key, info.latest_version, advisories, self.clock())
+        return advisories, warning
 
     async def _optional_signal(
         self,
@@ -286,11 +347,36 @@ class PackageIntelligenceService:
             return load_package_cache(key)
         return load_package_cache(key, root=self.cache_dir, now=self.clock)
 
+    def _load_security_cache(self, key: str, package_version: str):
+        if self.cache_dir is None:
+            return load_security_cache(key, package_version, now=self.clock)
+        return load_security_cache(
+            key, package_version, root=self.cache_dir, now=self.clock
+        )
+
     def _save_cache(self, key: str, info: PackageInfo, fetched_at: datetime) -> None:
         if self.cache_dir is None:
             save_package_cache(key, info, fetched_at)
         else:
             save_package_cache(key, info, fetched_at, root=self.cache_dir)
+
+    def _save_security_cache(
+        self,
+        key: str,
+        package_version: str,
+        advisories: list,
+        fetched_at: datetime,
+    ) -> None:
+        if self.cache_dir is None:
+            save_security_cache(key, package_version, advisories, fetched_at)
+        else:
+            save_security_cache(
+                key,
+                package_version,
+                advisories,
+                fetched_at,
+                root=self.cache_dir,
+            )
 
     def _history_path(self) -> Path:
         assert self.cache_dir is not None

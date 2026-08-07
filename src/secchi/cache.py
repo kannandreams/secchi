@@ -25,7 +25,7 @@ from secchi.models import (
     SecurityAdvisory,
     Version,
 )
-from secchi.schema import CACHE_SCHEMA_VERSION
+from secchi.schema import CACHE_SCHEMA_VERSION, SECURITY_CACHE_SCHEMA_VERSION
 from secchi.schemas import CacheEnvelope
 
 
@@ -39,6 +39,67 @@ def cache_root() -> Path:
 def package_cache_path(key: str, *, root: Path | None = None) -> Path:
     safe = key.replace("/", "_").replace(":", "__")
     return (root or cache_root()) / "packages" / f"{safe}.json"
+
+
+def security_cache_path(key: str, *, root: Path | None = None) -> Path:
+    safe = key.replace("/", "_").replace(":", "__")
+    return (root or cache_root()) / "security" / f"{safe}.json"
+
+
+def load_security_cache(
+    key: str,
+    package_version: str,
+    *,
+    root: Path | None = None,
+    now: Callable[[], datetime] | None = None,
+) -> tuple[list[SecurityAdvisory], datetime] | None:
+    path = security_cache_path(key, root=root)
+    if not path.exists():
+        return None
+    try:
+        raw = json.loads(path.read_text())
+        if not isinstance(raw, dict):
+            return None
+        if raw.get("schema_version") != SECURITY_CACHE_SCHEMA_VERSION:
+            return None
+        if raw.get("package_version", "") != package_version:
+            return None
+        fetched_at = _parse_datetime(raw.get("fetched_at"))
+        if fetched_at is None:
+            return None
+        today = (now or (lambda: datetime.now().astimezone()))().date()
+        if fetched_at.astimezone().date() != today:
+            return None
+        advisories = raw.get("advisories", [])
+        if not isinstance(advisories, list):
+            return None
+        if not all(isinstance(item, dict) for item in advisories):
+            return None
+        return [_decode_advisory(item) for item in advisories], fetched_at
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError, OSError):
+        return None
+
+
+def save_security_cache(
+    key: str,
+    package_version: str,
+    advisories: list[SecurityAdvisory],
+    fetched_at: datetime,
+    *,
+    root: Path | None = None,
+) -> None:
+    path = security_cache_path(key, root=root)
+    payload = {
+        "schema_version": SECURITY_CACHE_SCHEMA_VERSION,
+        "fetched_at": fetched_at.isoformat(),
+        "package_version": package_version,
+        "advisories": _encode([asdict(advisory) for advisory in advisories]),
+    }
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True))
+    except OSError:
+        pass
 
 
 def load_package_cache(

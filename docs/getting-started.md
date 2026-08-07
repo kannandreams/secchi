@@ -66,12 +66,22 @@ See [Workspace](workspace.md) for the full configuration model.
 
 ## Refresh data
 
-Package data is cached locally for the current day. Use `--refresh` when you
-need to request fresh registry data:
+Package data is cached locally for the current day. Use `--no-cache` when you
+need a complete fresh fetch. It bypasses the cache and re-fetches package
+metadata, registry signals, GitHub signals, and security advisories from
+OSV.dev:
 
 ```bash
-secchi dashboard duckdb --refresh
-secchi report duckdb --refresh --format json
+secchi dashboard duckdb --no-cache
+secchi report duckdb --no-cache --format json
+```
+
+To refresh only OSV security advisories while reusing the other package
+signals, use:
+
+```bash
+secchi dashboard duckdb --security-no-cache
+secchi show duckdb --security-no-cache
 ```
 
 Optional signals such as download history or reverse dependencies may be

@@ -11,9 +11,14 @@ async def run(
     *,
     registry: str | None = None,
     refresh: bool = False,
+    security_refresh: bool = False,
     service: PackageIntelligenceService | None = None,
 ) -> IntelligenceResult:
     ref = parse_package_spec(package, registry) if isinstance(package, str) else package
+    if security_refresh:
+        return await require_package(
+            ref, refresh, security_refresh=True, service=service
+        )
     if service is None:
         return await require_package(ref, refresh)
     return await require_package(ref, refresh, service=service)

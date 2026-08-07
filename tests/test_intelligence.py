@@ -86,6 +86,37 @@ def test_optional_enrichment_failure_keeps_package_usable(
     ]
 
 
+def test_security_refresh_reuses_general_package_cache(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls = {"adapter": 0, "osv": 0}
+
+    def adapter_factory(registry):
+        calls["adapter"] += 1
+        return PartialAdapter()
+
+    async def fake_osv(info, client):
+        calls["osv"] += 1
+        return []
+
+    monkeypatch.setattr(intelligence, "create_adapter", adapter_factory)
+    monkeypatch.setattr(intelligence, "fetch_osv_advisories", fake_osv)
+    monkeypatch.setattr(
+        intelligence,
+        "fetch_github_extended_stats_for_package",
+        _github_result,
+    )
+
+    service = intelligence.PackageIntelligenceService(cache_dir=tmp_path)
+    ref = PackageRef("demo", Registry.PYPI)
+
+    asyncio.run(service.fetch_package(ref, force_refresh=True))
+    asyncio.run(service.fetch_package(ref))
+    asyncio.run(service.fetch_package(ref, force_security_refresh=True))
+
+    assert calls == {"adapter": 1, "osv": 2}
+
+
 def test_unexpected_enrichment_error_is_not_hidden(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

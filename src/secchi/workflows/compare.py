@@ -28,11 +28,17 @@ async def run(
     *,
     registry: str | None = None,
     refresh: bool = False,
+    security_refresh: bool = False,
     service: PackageIntelligenceService | None = None,
 ) -> ComparisonResult:
     if len(specs) < 2:
         raise SecchiError("Compare requires at least two packages.")
     refs = await _resolve_refs(specs, registry)
     pipeline = service or PackageIntelligenceService()
-    intelligence = await pipeline.fetch_project(refs, force_refresh=refresh)
+    if security_refresh:
+        intelligence = await pipeline.fetch_project(
+            refs, force_refresh=refresh, force_security_refresh=True
+        )
+    else:
+        intelligence = await pipeline.fetch_project(refs, force_refresh=refresh)
     return compare_intelligence(list(intelligence.results.values()))

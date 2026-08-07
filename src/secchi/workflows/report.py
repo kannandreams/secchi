@@ -32,6 +32,7 @@ async def run(
     format_name: str = "json",
     output: str | None = None,
     refresh: bool = False,
+    security_refresh: bool = False,
     service: PackageIntelligenceService | None = None,
 ) -> ReportOutput:
     normalized_format = "md" if format_name == "markdown" else format_name
@@ -41,9 +42,16 @@ async def run(
             raise ConfigError("No config found for project report.")
         project = load_project(config_path, project_name)
         pipeline = service or PackageIntelligenceService()
-        intelligence = await pipeline.fetch_project(
-            project.packages, force_refresh=refresh
-        )
+        if security_refresh:
+            intelligence = await pipeline.fetch_project(
+                project.packages,
+                force_refresh=refresh,
+                force_security_refresh=True,
+            )
+        else:
+            intelligence = await pipeline.fetch_project(
+                project.packages, force_refresh=refresh
+            )
         project_report = build_project_report(project, intelligence.results)
         content = render_project_report(normalized_format, project_report)
         subject = project.title or project.name
@@ -58,11 +66,14 @@ async def run(
                 "Provide a package name or --project PROJECT for a report."
             )
         ref = parse_package_spec(package, registry)
-        result = (
-            await require_package(ref, refresh, service=service)
-            if service is not None
-            else await require_package(ref, refresh)
-        )
+        if security_refresh:
+            result = await require_package(
+                ref, refresh, security_refresh=True, service=service
+            )
+        elif service is None:
+            result = await require_package(ref, refresh)
+        else:
+            result = await require_package(ref, refresh, service=service)
         content = render_report(
             normalized_format,
             result.info,

@@ -176,6 +176,13 @@ as a non-fatal signal warning; it does not change the health score or policy
 check result. Homebrew does not currently have a stable OSV ecosystem mapping
 in Secchi and is reported without advisory coverage.
 
+Use `--no-cache` for a complete fresh fetch. It bypasses the local cache and
+re-fetches package metadata, registry signals, GitHub signals, and OSV security
+advisories.
+
+Use `--security-no-cache` when only the OSV advisory data should be refreshed;
+the package, registry, and GitHub caches are reused.
+
 See [DuckDB report examples](examples/reports/README.md) for package and
 project exports in JSON, Markdown, and HTML.
 

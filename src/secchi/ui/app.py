@@ -71,6 +71,7 @@ class Secchi(App[None]):
         project: Project,
         config_path: Path,
         force_refresh: bool = False,
+        force_security_refresh: bool = False,
         workspace: list[Project] | None = None,
         intelligence: PackageIntelligenceService | None = None,
     ) -> None:
@@ -79,6 +80,7 @@ class Secchi(App[None]):
         self._workspace = workspace or []
         self._config_path = config_path
         self._force_refresh = force_refresh
+        self._force_security_refresh = force_security_refresh
         self._package_data: dict[str, PackageInfo] = {}
         self._package_errors: dict[str, FetchError] = {}
         self._package_warnings: dict[str, list[SignalWarning]] = {}
@@ -411,7 +413,12 @@ class Secchi(App[None]):
                 )
         group = f"fetch:{effective_project}" if effective_project else "fetch"
         self.run_worker(
-            self._fetch_all_packages(refs, force=force, project_name=effective_project),
+            self._fetch_all_packages(
+                refs,
+                force=force,
+                force_security_refresh=self._force_security_refresh or force,
+                project_name=effective_project,
+            ),
             exclusive=False,
             group=group,
         )
@@ -421,9 +428,14 @@ class Secchi(App[None]):
         refs: list[PackageRef],
         *,
         force: bool = False,
+        force_security_refresh: bool = False,
         project_name: str | None = None,
     ) -> None:
-        result = await self._intelligence.fetch_project(refs, force_refresh=force)
+        result = await self._intelligence.fetch_project(
+            refs,
+            force_refresh=force,
+            force_security_refresh=force_security_refresh,
+        )
         for key, package_result in result.results.items():
             if package_result.info is not None:
                 self._package_data[key] = package_result.info
@@ -442,7 +454,11 @@ class Secchi(App[None]):
         self, ref: PackageRef, *, force: bool = False
     ) -> None:
         key = package_key(ref)
-        result = await self._intelligence.fetch_package(ref, force_refresh=force)
+        result = await self._intelligence.fetch_package(
+            ref,
+            force_refresh=force,
+            force_security_refresh=force,
+        )
         if result.info is not None:
             self._package_data[key] = result.info
         if result.derived is not None:

@@ -27,7 +27,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--project", "-p", help="Project name from configuration")
     parser.add_argument("--config", "-c", help="Path to secchi.toml or .secchi.toml")
     parser.add_argument(
-        "--refresh", "-r", action="store_true", help="Bypass local cache"
+        "--no-cache",
+        dest="refresh",
+        action="store_true",
+        help=(
+            "Bypass the local cache and re-fetch package, registry, GitHub, "
+            "and security-advisory signals"
+        ),
+    )
+    parser.add_argument(
+        "--security-no-cache",
+        dest="security_refresh",
+        action="store_true",
+        help="Bypass only the advisory cache and re-fetch OSV security data",
     )
     parser.add_argument(
         "--list", "-l", action="store_true", help="List configured projects and exit"
@@ -48,7 +60,16 @@ def build_parser() -> argparse.ArgumentParser:
     dashboard_parser.add_argument("--project", "-p", dest="dashboard_project")
     dashboard_parser.add_argument("--config", "-c", dest="dashboard_config")
     dashboard_parser.add_argument(
-        "--refresh", "-r", dest="dashboard_refresh", action="store_true"
+        "--no-cache",
+        dest="dashboard_refresh",
+        action="store_true",
+        help="Re-fetch package data and security advisories instead of using cache",
+    )
+    dashboard_parser.add_argument(
+        "--security-no-cache",
+        dest="dashboard_security_refresh",
+        action="store_true",
+        help="Re-fetch only OSV security advisories instead of using their cache",
     )
 
     show_parser = sub.add_parser(
@@ -56,14 +77,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
     show_parser.add_argument("package", help="Package name or registry:name")
     show_parser.add_argument("--registry", choices=[item.value for item in Registry])
-    show_parser.add_argument("--refresh", "-r", action="store_true")
+    show_parser.add_argument(
+        "--no-cache",
+        dest="refresh",
+        action="store_true",
+        help="Re-fetch package data and security advisories instead of using cache",
+    )
+    show_parser.add_argument(
+        "--security-no-cache",
+        dest="show_security_refresh",
+        action="store_true",
+        help="Re-fetch only OSV security advisories instead of using their cache",
+    )
 
     search_parser = sub.add_parser(
         "search", help="Find packages across supported registries"
     )
     search_parser.add_argument("package", help="Exact package name")
     search_parser.add_argument("--registry", choices=[item.value for item in Registry])
-    search_parser.add_argument("--refresh", "-r", action="store_true")
+    search_parser.add_argument("--no-cache", dest="refresh", action="store_true")
 
     report_parser = sub.add_parser(
         "report", help="Generate a package or project report"
@@ -84,7 +116,18 @@ def build_parser() -> argparse.ArgumentParser:
     report_parser.add_argument(
         "--output", "-o", help="Target file path, or '-' for stdout"
     )
-    report_parser.add_argument("--refresh", "-r", action="store_true")
+    report_parser.add_argument(
+        "--no-cache",
+        dest="refresh",
+        action="store_true",
+        help="Re-fetch package data and security advisories instead of using cache",
+    )
+    report_parser.add_argument(
+        "--security-no-cache",
+        dest="report_security_refresh",
+        action="store_true",
+        help="Re-fetch only OSV security advisories instead of using their cache",
+    )
 
     check_parser = sub.add_parser(
         "check", help="Evaluate simple package health policies"
@@ -93,7 +136,11 @@ def build_parser() -> argparse.ArgumentParser:
     check_parser.add_argument("--registry", choices=[item.value for item in Registry])
     check_parser.add_argument("--min-health", type=int, default=70)
     check_parser.add_argument("--require-ci", action="store_true")
-    check_parser.add_argument("--refresh", "-r", action="store_true")
+    check_parser.add_argument("--no-cache", dest="refresh", action="store_true")
+    check_parser.add_argument(
+        "--security-no-cache", dest="check_security_refresh", action="store_true",
+        help="Re-fetch only OSV security advisories instead of using their cache",
+    )
 
     compare_parser = sub.add_parser(
         "compare", help="Compare package choices with agent-readable evidence"
@@ -105,10 +152,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compare_parser.add_argument("--registry", choices=[item.value for item in Registry])
     compare_parser.add_argument("--format", choices=["text", "json"], default="text")
-    compare_parser.add_argument("--refresh", "-r", action="store_true")
+    compare_parser.add_argument("--no-cache", dest="refresh", action="store_true")
+    compare_parser.add_argument(
+        "--security-no-cache", dest="compare_security_refresh", action="store_true",
+        help="Re-fetch only OSV security advisories instead of using their cache",
+    )
 
     monitor_parser = sub.add_parser("monitor", help="Alias for dashboard --project")
     monitor_parser.add_argument("project_name", help="Project name to monitor")
+    monitor_parser.add_argument("--no-cache", dest="refresh", action="store_true")
+    monitor_parser.add_argument(
+        "--security-no-cache", dest="security_refresh", action="store_true",
+        help="Re-fetch only OSV security advisories instead of using their cache",
+    )
     sub.add_parser("mcp", help="Run the Model Context Protocol server over stdio")
     return parser
 
@@ -167,6 +223,11 @@ def _run_dashboard(
                 project_name=getattr(args, "dashboard_project", None) or args.project,
                 config=getattr(args, "dashboard_config", None) or args.config,
                 refresh=getattr(args, "dashboard_refresh", False) or args.refresh,
+                security_refresh=(
+                    getattr(args, "dashboard_security_refresh", False)
+                    or args.security_refresh
+                    or args.refresh
+                ),
             )
         )
     except (SecchiError, ValueError) as exc:
@@ -178,6 +239,7 @@ def _run_dashboard(
         config_path=request.config_path,
         force_refresh=request.refresh,
         workspace=request.workspace,
+        force_security_refresh=request.security_refresh,
         intelligence=service,
     ).run()
 
@@ -233,6 +295,11 @@ def main() -> None:
                     args.package,
                     registry=args.registry,
                     refresh=args.refresh,
+                    security_refresh=(
+                        getattr(args, "show_security_refresh", False)
+                        or args.security_refresh
+                        or args.refresh
+                    ),
                     service=service,
                 )
             )
@@ -256,6 +323,11 @@ def main() -> None:
                     format_name=args.format,
                     output=args.output,
                     refresh=args.refresh,
+                    security_refresh=(
+                        getattr(args, "report_security_refresh", False)
+                        or args.security_refresh
+                        or args.refresh
+                    ),
                     service=service,
                 )
             )
@@ -277,6 +349,11 @@ def main() -> None:
                     min_health=args.min_health,
                     require_ci=args.require_ci,
                     refresh=args.refresh,
+                    security_refresh=(
+                        getattr(args, "check_security_refresh", False)
+                        or args.security_refresh
+                        or args.refresh
+                    ),
                     service=service,
                 )
             )
@@ -296,6 +373,11 @@ def main() -> None:
                     args.packages,
                     registry=args.registry,
                     refresh=args.refresh,
+                    security_refresh=(
+                        getattr(args, "compare_security_refresh", False)
+                        or args.security_refresh
+                        or args.refresh
+                    ),
                     service=service,
                 )
             )

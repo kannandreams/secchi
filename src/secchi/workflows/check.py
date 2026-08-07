@@ -27,16 +27,20 @@ async def run(
     min_health: int = 70,
     require_ci: bool = False,
     refresh: bool = False,
+    security_refresh: bool = False,
     service: PackageIntelligenceService | None = None,
 ) -> CheckResult:
     if min_health < 0 or min_health > 100:
         raise ValueError("min_health must be between 0 and 100")
     ref = parse_package_spec(package, registry) if isinstance(package, str) else package
-    result = (
-        await require_package(ref, refresh, service=service)
-        if service is not None
-        else await require_package(ref, refresh)
-    )
+    if security_refresh:
+        result = await require_package(
+            ref, refresh, security_refresh=True, service=service
+        )
+    elif service is not None:
+        result = await require_package(ref, refresh, service=service)
+    else:
+        result = await require_package(ref, refresh)
     checks = evaluate_default_policy(
         result.info,
         result.derived,

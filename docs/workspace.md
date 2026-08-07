@@ -55,16 +55,21 @@ Workspace projects load lazily. Opening the dashboard does not fetch every
 configured project immediately. Secchi fetches a project when it is selected,
 then keeps its results in the local cache for the current day.
 
-Refresh is scoped to the selected package or project:
+Refresh is scoped to the selected package or project. It bypasses the local
+cache and re-fetches package metadata, registry signals, GitHub signals, and
+OSV security advisories:
 
 ```bash
-secchi dashboard --config secchi.toml --refresh
-secchi report --config secchi.toml --project duckdb --refresh --format json
+secchi dashboard --config secchi.toml --no-cache
+secchi report --config secchi.toml --project duckdb --no-cache --format json
 ```
 
 Refreshing one project does not force unrelated projects to refresh. This
 limits API pressure while preserving explicit control when current data is
 needed.
+
+Use `--security-no-cache` when only OSV advisories need to be re-fetched; the
+general package cache remains in use.
 
 ## Multiple registries
 

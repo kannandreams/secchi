@@ -15,6 +15,7 @@ class DashboardRequest:
     config_path: Path
     workspace: list[Project] | None
     refresh: bool
+    security_refresh: bool
 
 
 def _workspace_project(config_path: Path) -> Project:
@@ -42,6 +43,7 @@ async def run(
     project_name: str | None = None,
     config: str | None = None,
     refresh: bool = False,
+    security_refresh: bool = False,
 ) -> DashboardRequest:
     config_path = find_config(config)
     workspace: list[Project] | None = None
@@ -80,5 +82,9 @@ async def run(
     if not project.packages:
         raise ConfigError("The selected workspace has no packages.")
     return DashboardRequest(
-        project, config_path, workspace if not package else None, refresh
+        project,
+        config_path,
+        workspace if not package else None,
+        refresh,
+        security_refresh,
     )
