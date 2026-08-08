@@ -309,7 +309,9 @@ def _markdown_attribution(repository_url: str | None) -> str:
 
 def _markdown_advisories(info: PackageInfo) -> str:
     if not info.security_advisories:
-        return "## Security advisories\n\nNo known advisories affect the latest version.\n"
+        return (
+            "## Security advisories\n\nNo known advisories affect the latest version.\n"
+        )
     rows = []
     for advisory in info.security_advisories:
         fixed = ", ".join(advisory.fixed_versions) or "No fixed version listed"

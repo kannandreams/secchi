@@ -138,7 +138,9 @@ def build_parser() -> argparse.ArgumentParser:
     check_parser.add_argument("--require-ci", action="store_true")
     check_parser.add_argument("--no-cache", dest="refresh", action="store_true")
     check_parser.add_argument(
-        "--security-no-cache", dest="check_security_refresh", action="store_true",
+        "--security-no-cache",
+        dest="check_security_refresh",
+        action="store_true",
         help="Re-fetch only OSV security advisories instead of using their cache",
     )
 
@@ -154,7 +156,9 @@ def build_parser() -> argparse.ArgumentParser:
     compare_parser.add_argument("--format", choices=["text", "json"], default="text")
     compare_parser.add_argument("--no-cache", dest="refresh", action="store_true")
     compare_parser.add_argument(
-        "--security-no-cache", dest="compare_security_refresh", action="store_true",
+        "--security-no-cache",
+        dest="compare_security_refresh",
+        action="store_true",
         help="Re-fetch only OSV security advisories instead of using their cache",
     )
 
@@ -162,7 +166,9 @@ def build_parser() -> argparse.ArgumentParser:
     monitor_parser.add_argument("project_name", help="Project name to monitor")
     monitor_parser.add_argument("--no-cache", dest="refresh", action="store_true")
     monitor_parser.add_argument(
-        "--security-no-cache", dest="security_refresh", action="store_true",
+        "--security-no-cache",
+        dest="security_refresh",
+        action="store_true",
         help="Re-fetch only OSV security advisories instead of using their cache",
     )
     sub.add_parser("mcp", help="Run the Model Context Protocol server over stdio")

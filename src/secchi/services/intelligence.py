@@ -289,7 +289,9 @@ class PackageIntelligenceService:
             fallback if fallback is not None else [],
         )
         if warning is None:
-            self._save_security_cache(key, info.latest_version, advisories, self.clock())
+            self._save_security_cache(
+                key, info.latest_version, advisories, self.clock()
+            )
         return advisories, warning
 
     async def _optional_signal(

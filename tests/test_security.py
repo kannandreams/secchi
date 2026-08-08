@@ -32,11 +32,18 @@ def test_osv_lookup_queries_latest_version_and_normalizes_advisory() -> None:
                             {
                                 "ecosystem_specific": {"severity": "HIGH"},
                                 "ranges": [
-                                    {"events": [{"introduced": "0"}, {"fixed": "2.0.1"}]}
+                                    {
+                                        "events": [
+                                            {"introduced": "0"},
+                                            {"fixed": "2.0.1"},
+                                        ]
+                                    }
                                 ],
                             }
                         ],
-                        "references": [{"type": "ADVISORY", "url": "https://example.test/advisory"}],
+                        "references": [
+                            {"type": "ADVISORY", "url": "https://example.test/advisory"}
+                        ],
                     },
                     {"id": "WITHDRAWN", "withdrawn": "2026-02-02T00:00:00Z"},
                 ]
@@ -47,7 +54,9 @@ def test_osv_lookup_queries_latest_version_and_normalizes_advisory() -> None:
     async def exercise() -> None:
         async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
             advisories = await fetch_osv_advisories(
-                PackageInfo(name="demo", registry=Registry.PYPI, latest_version="2.0.0"),
+                PackageInfo(
+                    name="demo", registry=Registry.PYPI, latest_version="2.0.0"
+                ),
                 client=client,
             )
 
@@ -68,7 +77,9 @@ def test_osv_lookup_skips_unsupported_registry() -> None:
     async def exercise() -> None:
         async with httpx.AsyncClient() as client:
             advisories = await fetch_osv_advisories(
-                PackageInfo(name="demo", registry=Registry.HOMEBREW, latest_version="1.0"),
+                PackageInfo(
+                    name="demo", registry=Registry.HOMEBREW, latest_version="1.0"
+                ),
                 client=client,
             )
         assert advisories == []
