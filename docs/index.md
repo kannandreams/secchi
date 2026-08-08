@@ -52,7 +52,7 @@ hide:
       <p>Monitor named projects with lazy loading. Configure once and revisit anytime.</p>
     </div>
     <div class="lp-card">
-      <div class="lp-card-icon">&#x25CB;</div>
+      <div class="lp-card-icon">&#x25B7;</div>
       <h3>MCP Server</h3>
       <p>Let AI coding agents inspect, search, compare, and check packages directly.</p>
     </div>
@@ -60,6 +60,12 @@ hide:
       <div class="lp-card-icon">&#x2295;</div>
       <h3>Security Advisories</h3>
       <p>OSV.dev vulnerability lookup for the latest version across PyPI, npm, crates.io, Go, and CRAN.</p>
+    </div>
+    <div class="lp-card">
+      <div class="lp-card-icon">+</div>
+      <h3>Request a Feature</h3>
+      <p>Contributions welcome.</p>
+      <a class="lp-card-btn" href="https://github.com/kannandreams/secchi/issues/new">New issue</a>
     </div>
   </div>
 </section>
@@ -75,26 +81,6 @@ hide:
     <div class="lp-eco"><img src="https://cdn.simpleicons.org/homebrew" alt=""><span>Homebrew</span></div>
     <div class="lp-eco"><img src="https://cdn.simpleicons.org/go" alt=""><span>Go Modules</span></div>
     <div class="lp-eco"><img src="https://cdn.simpleicons.org/r" alt=""><span>CRAN</span></div>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════ INSTALL ═══ -->
-
-<section class="lp-section">
-  <h2 class="lp-section-title">// install</h2>
-  <div class="lp-code-tabs">
-    <div class="lp-code-tab">
-      <span class="lp-code-label">uv</span>
-      <code>uv tool install secchi</code>
-    </div>
-    <div class="lp-code-tab">
-      <span class="lp-code-label">pipx</span>
-      <code>pipx install secchi</code>
-    </div>
-    <div class="lp-code-tab">
-      <span class="lp-code-label">pip</span>
-      <code>pip install secchi</code>
-    </div>
   </div>
 </section>
 
