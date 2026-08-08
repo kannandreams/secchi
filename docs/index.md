@@ -8,18 +8,18 @@ hide:
 
 <!-- ═══════════════════════════════════════════════════════════════ HERO ═══ -->
 
-<section class="lp-hero">
+<section class="lp-hero lp-hero--dashboard">
   <h1 class="lp-title">Open Source Package Intelligence</h1>
   <p class="lp-subtitle">Package <span id="lp-typeword"></span><span class="lp-cursor">|</span> signals in one place.</p>
   <div class="lp-hero-actions">
-    <a href="getting-started/" class="lp-btn lp-btn--primary">Get started</a>
-    <a href="https://github.com/kannandreams/secchi" class="lp-btn lp-btn--secondary">GitHub</a>
-  </div>
-  <div class="lp-hero-meta">
-    <span class="lp-badge"><code>uv tool install secchi</code></span>
-    <a class="lp-license" href="https://github.com/kannandreams/secchi/blob/main/LICENSE">Apache 2.0</a>
+    <a href="getting-started/" class="lp-btn lp-btn--primary">See the signals &rarr;</a>
   </div>
 </section>
+
+<div class="lp-try-first">
+  <span class="lp-try-first-label">// try first</span>
+  <code>uvx --from secchi secchi dashboard duckdb</code>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════ FEATURES ═══ -->
 

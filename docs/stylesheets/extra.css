@@ -19,8 +19,13 @@
 
 .md-header,
 .md-tabs {
-  background-color: #020202;
-  border-bottom: 1px solid #3A3A3A;
+  background: rgba(29, 78, 216, 0.68) !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.72);
+}
+
+.md-header__inner {
+  background: transparent !important;
+  border-bottom: 0;
 }
 
 .md-header .md-logo img {
@@ -149,6 +154,38 @@
 
 .md-sidebar {
   background: #020202;
+}
+
+/* The landing page hero is full-bleed, so remove Material's default content
+   gap above it without changing spacing on the documentation pages. */
+body:has(.lp-root) .md-main__inner {
+  margin-top: 0;
+}
+
+body:has(.lp-root) .md-content__inner {
+  padding-top: 0;
+}
+
+body:has(.lp-root) .md-content__inner::before {
+  display: none;
+}
+
+body:has(.lp-root) .md-header__button[for="__search"],
+body:has(.lp-root) .md-search {
+  display: none;
+}
+
+/* Keep the site name stable instead of swapping to the current page title. */
+.md-header__topic[data-md-component="header-topic"] {
+  display: none;
+}
+
+.md-header__title--active .md-header__topic:first-child {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  transition: none;
+  z-index: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -301,8 +338,69 @@
 /* ── Hero ───────────────────────────────────────────────────────────────── */
 
 .lp-hero {
+  position: relative;
   padding: 3.5rem 0 3rem 0;
   text-align: center;
+}
+
+.lp-hero--dashboard {
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0 calc(-50vw + 50%);
+  padding-right: calc(50vw - 50%);
+  padding-left: calc(50vw - 50%);
+  border-top: 1px solid #26352F;
+  border-bottom: 1px solid #26352F;
+  background-color: #050505;
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35);
+}
+
+.lp-hero--dashboard::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image:
+    linear-gradient(180deg, rgba(5, 5, 5, 0.42) 0%, rgba(5, 5, 5, 0.34) 52%, rgba(5, 5, 5, 0.58) 100%),
+    url('../assets/secchi-dashboard-preview.png');
+  background-position: center 26%;
+  background-size: cover;
+  content: "";
+  opacity: 0.82;
+}
+
+.lp-hero--dashboard .lp-title,
+.lp-hero--dashboard .lp-subtitle,
+.lp-hero--dashboard .lp-hero-actions,
+.lp-hero--dashboard .lp-hero-meta {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
+}
+
+.lp-try-first {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 2.8rem;
+  margin: 0 calc(-50vw + 50%);
+  padding: 0.45rem 1rem;
+  border-top: 1px solid #26352F;
+  border-bottom: 1px solid #26352F;
+  background: #050505;
+  box-sizing: border-box;
+}
+
+.lp-try-first-label {
+  color: #7CFFB2;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.lp-try-first code {
+  color: #E5E7EB;
+  font-size: 0.78rem;
 }
 
 .lp-logo {
@@ -664,6 +762,11 @@
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
+  .lp-try-first {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
   .lp-grid {
     grid-template-columns: repeat(2, 1fr);
   }
