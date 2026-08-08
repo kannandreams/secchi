@@ -99,10 +99,6 @@ hide:
       <div class="terminal-lines">
         <div class="terminal-line">
           <span class="terminal-prompt">~ $</span>
-          <span class="terminal-cmd">secchi init</span>
-        </div>
-        <div class="terminal-line">
-          <span class="terminal-prompt">~ $</span>
           <span class="terminal-cmd">secchi dashboard duckdb</span>
         </div>
         <div class="terminal-line">
