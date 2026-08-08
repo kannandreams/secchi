@@ -23,6 +23,34 @@ adoption, dependencies, releases, and ecosystem signals from your terminal.
 
 ![secchi TUI dashboard](https://raw.githubusercontent.com/kannandreams/secchi/main/assets/duck-db-demo.png)
 
+## Try Secchi first
+
+You can try the CLI and open the dashboard without installing Secchi as a
+permanent command. This uses [`uvx`](https://docs.astral.sh/uv/guides/tools/),
+which creates a temporary environment and removes it when you are done.
+
+You only need [uv](https://docs.astral.sh/uv/getting-started/installation/)
+installed:
+
+```bash
+# Print package intelligence in your terminal
+uvx --from secchi secchi show duckdb
+
+# Open the interactive dashboard
+uvx --from secchi secchi dashboard duckdb
+```
+
+See the available commands before trying a package:
+
+```bash
+uvx --from secchi secchi --help
+```
+
+If you like what you see, install Secchi permanently with one of the options
+below. You do not need to run `secchi init` for direct package exploration;
+`init` is only needed when you want to create a workspace configuration for
+your own projects.
+
 ## Supported Ecosystems
 
 <table>
@@ -60,7 +88,7 @@ adoption, dependencies, releases, and ecosystem signals from your terminal.
 
 ## Install
 
-Recommended installation methods:
+For regular use, install Secchi as a command-line tool:
 
 ```bash
 uv tool install secchi
@@ -76,7 +104,7 @@ pip install secchi
 
 ## Quick Start
 
-Scaffold a config file interactively:
+After installation, scaffold a config file interactively:
 
 ```bash
 secchi init
