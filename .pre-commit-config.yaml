@@ -13,3 +13,12 @@ repos:
       - id: ruff
         args: [check]
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: branch-name
+        name: Validate branch name
+        entry: scripts/check-branch-name.sh
+        language: script
+        stages: [pre-commit]
+        pass_filenames: false
