@@ -84,6 +84,29 @@ hide:
   </div>
 </section>
 
+<!-- ═══════════════════════════════════════════════════════════ SPOTLIGHT ═══ -->
+
+<section class="lp-section lp-spotlight">
+  <h2 class="lp-section-title">// secchi spotlight</h2>
+  <p class="lp-spotlight-tagline">Free promotion for open-source projects&mdash;from the terminal.</p>
+  <div class="lp-spotlight-layout">
+    <div class="lp-spotlight-intro">
+      <p class="lp-spotlight-copy">Have an open-source project you want to show in the Secchi Spotlight space? Submit a pull request and let more developers discover it.</p>
+      <div class="lp-section-cta">
+        <a href="https://github.com/kannandreams/secchi-spotlight/pulls" class="lp-btn lp-btn--primary">Submit your project &rarr;</a>
+      </div>
+    </div>
+    <div class="lp-spotlight-card" aria-label="Example Secchi Spotlight project">
+      <div class="lp-spotlight-card-label"><span>SPOTLIGHT</span></div>
+      <div class="lp-spotlight-card-body">
+        <h3>tuffcli</h3>
+        <p>Capability lifecycle manager<br>for coding agents.</p>
+        <div class="lp-spotlight-card-meta"><span class="lp-spotlight-star">&#9733;</span><span>1</span><span>Early project</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ════════════════════════════════════════════════════════════ QUICK ═══ -->
 
 <section class="lp-section lp-section--alt">

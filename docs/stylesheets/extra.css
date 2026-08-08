@@ -215,6 +215,89 @@
   margin-top: 1.5rem;
 }
 
+.lp-spotlight {
+  text-align: center;
+}
+
+.lp-spotlight-tagline {
+  margin: -0.5rem auto 2.25rem;
+  color: #9CAFC8 !important;
+  font-size: 0.85rem;
+}
+
+.lp-spotlight-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  align-items: center;
+  gap: 3rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.lp-spotlight-intro {
+  text-align: left;
+}
+
+.lp-spotlight-copy {
+  margin: 0;
+  color: #E5E7EB !important;
+}
+
+.lp-spotlight-card {
+  position: relative;
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 0.65rem;
+  border: 1px solid #3A4D45;
+  background: #061711;
+  text-align: left;
+}
+
+.lp-spotlight-card-label {
+  position: absolute;
+  top: -0.78rem;
+  left: 1.4rem;
+  padding: 0 0.6rem;
+  background: #000000;
+  color: #7CFFB2;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.lp-spotlight-card-body {
+  border: 1px solid #3A4D45;
+  padding: 1.1rem 1rem 0.8rem;
+}
+
+.lp-spotlight-card h3 {
+  margin: 0 0 0.25rem;
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 1.05rem;
+}
+
+.lp-spotlight-card p {
+  margin: 0;
+  color: #9CAFC8 !important;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.lp-spotlight-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-top: 0.5rem;
+  color: #B7B7B7;
+  font-size: 0.75rem;
+}
+
+.lp-spotlight-star {
+  color: #FACC15;
+  font-size: 1rem;
+}
+
 /* ── Hero ───────────────────────────────────────────────────────────────── */
 
 .lp-hero {
@@ -591,5 +674,14 @@
 
   .lp-root .lp-title {
     font-size: 2rem;
+  }
+
+  .lp-spotlight-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .lp-spotlight-intro {
+    text-align: center;
   }
 }
