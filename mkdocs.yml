@@ -7,15 +7,16 @@ repo_name: kannandreams/secchi
 theme:
   name: material
   language: en
+  logo: assets/secchi-logo.png
   features:
     - navigation.sections
     - navigation.top
     - content.code.copy
     - search.highlight
   palette:
-    - scheme: default
+    - scheme: slate
       primary: black
-      accent: black
+      accent: green
 
 extra_css:
   - stylesheets/extra.css
