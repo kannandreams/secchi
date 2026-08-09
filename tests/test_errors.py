@@ -53,6 +53,53 @@ def test_invalid_registry_is_a_config_error() -> None:
         parse_package_spec("demo", registry="unknown")
 
 
+def test_projects_written_as_an_array_is_a_config_error(tmp_path) -> None:
+    path = tmp_path / "secchi.toml"
+    path.write_text('projects = ["demo"]\n')
+
+    with pytest.raises(ConfigError, match="'projects' must be a TOML table"):
+        load_project(path, "demo")
+
+
+def test_package_entry_written_as_a_bare_string_is_a_config_error(tmp_path) -> None:
+    path = tmp_path / "secchi.toml"
+    path.write_text(
+        """[projects.demo]
+packages = ["requests"]
+"""
+    )
+
+    with pytest.raises(ConfigError, match=r"packages\[0\].*must be a TOML table"):
+        load_project(path, "demo")
+
+
+def test_package_entry_missing_name_is_a_config_error(tmp_path) -> None:
+    path = tmp_path / "secchi.toml"
+    path.write_text(
+        """[projects.demo]
+packages = [{ registry = "pypi" }]
+"""
+    )
+
+    with pytest.raises(ConfigError, match=r"packages\[0\].*missing a non-empty 'name'"):
+        load_project(path, "demo")
+
+
+def test_packages_written_as_a_table_is_a_config_error(tmp_path) -> None:
+    path = tmp_path / "secchi.toml"
+    path.write_text(
+        """[projects.demo]
+[projects.demo.packages]
+name = "demo"
+"""
+    )
+
+    with pytest.raises(
+        ConfigError, match="'packages' in project 'demo' must be an array"
+    ):
+        load_project(path, "demo")
+
+
 def test_require_package_classifies_missing_data() -> None:
     ref = PackageRef("missing", Registry.PYPI)
 
