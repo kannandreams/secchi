@@ -9,6 +9,7 @@ from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from secchi.models import (
     AdvisoryReference,
@@ -36,14 +37,26 @@ def cache_root() -> Path:
     return Path.home() / ".cache" / "secchi"
 
 
+def _safe_cache_key(key: str) -> str:
+    """Percent-encode a cache key into a single, collision-free filename.
+
+    ``quote(key, safe="")`` escapes every byte outside the URL-unreserved
+    set, so ``/`` and ``\\`` (path separators on POSIX/Windows) and ``:``
+    (invalid on Windows) can never reach the filesystem — the result is
+    always exactly one path component, ruling out traversal outside the
+    cache root. Because the encoding is injective, distinct keys can no
+    longer collide onto the same file (unlike a lossy character replace,
+    where e.g. ``a/b_c`` and ``a_b/c`` previously mapped to one file).
+    """
+    return quote(key, safe="")
+
+
 def package_cache_path(key: str, *, root: Path | None = None) -> Path:
-    safe = key.replace("/", "_").replace(":", "__")
-    return (root or cache_root()) / "packages" / f"{safe}.json"
+    return (root or cache_root()) / "packages" / f"{_safe_cache_key(key)}.json"
 
 
 def security_cache_path(key: str, *, root: Path | None = None) -> Path:
-    safe = key.replace("/", "_").replace(":", "__")
-    return (root or cache_root()) / "security" / f"{safe}.json"
+    return (root or cache_root()) / "security" / f"{_safe_cache_key(key)}.json"
 
 
 def load_security_cache(
