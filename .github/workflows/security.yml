@@ -68,3 +68,41 @@ jobs:
     steps:
       - name: Review dependency changes
         uses: actions/dependency-review-action@v4
+
+  security-required:
+    name: Security Required
+    needs:
+      - codeql
+      - dependency-audit
+      - dependency-review
+
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify security checks
+        env:
+          CODEQL_RESULT: ${{ needs.codeql.result }}
+          AUDIT_RESULT: ${{ needs.dependency-audit.result }}
+          REVIEW_RESULT: ${{ needs.dependency-review.result }}
+        run: |
+          echo "CodeQL:            $CODEQL_RESULT"
+          echo "Dependency audit:  $AUDIT_RESULT"
+          echo "Dependency review: $REVIEW_RESULT"
+
+          if [[ "$CODEQL_RESULT" != "success" ]]; then
+            echo "CodeQL failed or did not complete successfully."
+            exit 1
+          fi
+
+          if [[ "$AUDIT_RESULT" != "success" ]]; then
+            echo "Dependency audit failed or did not complete successfully."
+            exit 1
+          fi
+
+          if [[ "$REVIEW_RESULT" != "success" && "$REVIEW_RESULT" != "skipped" ]]; then
+            echo "Dependency review failed."
+            exit 1
+          fi
+
+          echo "All required security checks passed."

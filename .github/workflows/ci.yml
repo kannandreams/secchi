@@ -74,16 +74,21 @@ jobs:
       - name: Build verification
         run: uv build
 
-  required:
-    name: required
-    needs: checks
-    if: always()
+  ci-required:
+    name: CI Required
+    needs: 
+      - checks
+    if: ${{ always() }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Verify CI matrix
         run: |
+          echo "CI matrix result: ${{ needs.checks.result }}"
+
           if [[ "${{ needs.checks.result }}" != "success" ]]; then
             echo "CI matrix did not succeed"
             exit 1
           fi
+
+          echo "All CI checks passed."
