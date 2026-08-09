@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
 from threading import Lock
 
 
-class DiagnosticStatus(str, Enum):
+class DiagnosticStatus(StrEnum):
     SUCCESS = "SUCCESS"
     WARN = "WARN"
     FAILURE = "FAILURE"
@@ -28,7 +28,7 @@ class DiagnosticEvent:
     status_code: int | None = None
 
     def format(self) -> str:
-        time = self.timestamp.astimezone(timezone.utc).strftime("%H:%M:%S")
+        time = self.timestamp.astimezone(UTC).strftime("%H:%M:%S")
         suffix = f" -> {self.status_code}" if self.status_code is not None else ""
         target = f" {self.url}" if self.url else ""
         return f"{time} {self.status.value:<7} [{self.source}] {self.message}{target}{suffix}"
@@ -46,7 +46,7 @@ class DiagnosticLog:
     ) -> None:
         self.path = path
         self.max_events = max_events
-        self.clock = clock or (lambda: datetime.now(timezone.utc))
+        self.clock = clock or (lambda: datetime.now(UTC))
         self._events: list[DiagnosticEvent] = []
         self._lock = Lock()
         if path is not None:

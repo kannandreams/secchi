@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 import os
-import sys
+import tomllib
 from pathlib import Path
 
 from secchi.errors import ConfigError
 from secchi.models import PackageRef, Project, Registry
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib  # type: ignore
 
 
 def _config_locations() -> list[Path]:

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from secchi.derived import (
     compute_activity_timeline,
@@ -20,7 +20,7 @@ from secchi.models import (
 
 
 def _days_ago(days: int) -> datetime:
-    return datetime.now(timezone.utc) - timedelta(days=days)
+    return datetime.now(UTC) - timedelta(days=days)
 
 
 def test_health_score_breaks_down_project_signals() -> None:

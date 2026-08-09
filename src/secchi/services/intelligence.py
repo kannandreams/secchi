@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -84,7 +84,7 @@ class PackageIntelligenceService:
         diagnostics: DiagnosticLog | None = None,
     ) -> None:
         self.cache_dir = cache_dir
-        self.clock = clock or (lambda: datetime.now(timezone.utc))
+        self.clock = clock or (lambda: datetime.now(UTC))
         self.diagnostics = diagnostics
         self.http_factory = http_factory or HttpClientFactory(diagnostics=diagnostics)
 
@@ -434,12 +434,12 @@ def health_history_points(
             continue
         timestamp = snapshot.timestamp
         if timestamp.tzinfo is None:
-            timestamp = timestamp.replace(tzinfo=timezone.utc)
+            timestamp = timestamp.replace(tzinfo=UTC)
         key = timestamp.strftime("%Y-%m")
         current = latest_by_month.get(key)
         if current is None or timestamp > current[0]:
             latest_by_month[key] = (timestamp, snapshot.health_score)
-    current_time = (now or (lambda: datetime.now(timezone.utc)))()
+    current_time = (now or (lambda: datetime.now(UTC)))()
     latest_by_month[current_time.strftime("%Y-%m")] = (current_time, current_health)
     return [
         MetricTimelinePoint(label=timestamp.strftime("%b"), value=value)

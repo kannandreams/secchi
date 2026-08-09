@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from html import escape
 from pathlib import Path
 
@@ -58,7 +58,7 @@ def build_project_report(
     return ProjectReport(
         project=project,
         sources=sources,
-        generated_at=datetime.now(timezone.utc),
+        generated_at=datetime.now(UTC),
     )
 
 
@@ -180,7 +180,7 @@ def default_report_path(
 ) -> Path:
     safe = subject.replace("/", "_").replace(" ", "_")
     suffix = "project" if project else "package"
-    date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
     extension = "md" if format_name == "markdown" else format_name
     return (directory or Path.cwd()) / f"secchi-{safe}-{suffix}-{date}.{extension}"
 

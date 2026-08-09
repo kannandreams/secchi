@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 
-class Registry(str, Enum):
+class Registry(StrEnum):
     PYPI = "pypi"
     CRATES = "crates.io"
     NPM = "npm"
@@ -239,7 +239,7 @@ class ReverseDependencySummary:
     caption: str = ""
 
 
-class ActivityEventKind(str, Enum):
+class ActivityEventKind(StrEnum):
     RELEASE = "release"
     ISSUE_OPENED = "issue_opened"
     ISSUE_CLOSED = "issue_closed"

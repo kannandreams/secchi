@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlparse
 
 import httpx
@@ -29,8 +29,8 @@ def format_age(dt: datetime | None) -> str:
     if dt is None:
         return "—"
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    days = (datetime.now(timezone.utc) - dt).days
+        dt = dt.replace(tzinfo=UTC)
+    days = (datetime.now(UTC) - dt).days
     if days < 0:
         days = 0
     if days == 0:
@@ -52,8 +52,8 @@ def format_age_short(dt: datetime | None) -> str:
     if dt is None:
         return "—"
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    days = max((datetime.now(timezone.utc) - dt).days, 0)
+        dt = dt.replace(tzinfo=UTC)
+    days = max((datetime.now(UTC) - dt).days, 0)
     if days == 0:
         return "today"
     if days < 14:
@@ -234,7 +234,7 @@ async def fetch_github_issue_events(
     which is always >= created_at and >= closed_at, so nothing created/closed in
     the window is missed. PRs are distinguished by the 'pull_request' key.
     """
-    since = (datetime.now(timezone.utc) - timedelta(days=since_days)).strftime(
+    since = (datetime.now(UTC) - timedelta(days=since_days)).strftime(
         "%Y-%m-%dT%H:%M:%SZ"
     )
     events: list[GitHubIssueEvent] = []

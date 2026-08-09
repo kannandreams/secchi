@@ -68,6 +68,31 @@ You are still welcome to submit a feature pull request without prior discussion.
 
 This approach helps keep development focused while the project's foundations and direction are still evolving.
 
+## Working with Coding Agents
+
+Secchi ships agent-readable engineering standards in `.claude/skills/` (with
+`CLAUDE.md` as the entry point). If you build your contribution with a coding
+agent such as Claude Code, the agent picks these up automatically:
+
+* `secchi-architecture` — layering rules, design patterns, and where each kind
+  of change belongs.
+* `add-registry-adapter` — the full checklist for adding a new ecosystem.
+* `secchi-testing` — the house testing style; behaviour changes must ship tests.
+* `self-review` — a pre-push "peer review" that replays every CI and
+  pre-commit gate locally and reviews your diff against the standards above.
+
+These documents are also useful reading for human contributors — they describe
+the same conventions reviewers will hold your pull request to. Before pushing,
+run the self-review (or at minimum the same gates it runs):
+
+```bash
+uvx pre-commit run --all-files
+uv run ruff check .
+uv run ruff format --check src tests
+uv run pytest
+uv build
+```
+
 ## Pull Requests
 
 When submitting a pull request:

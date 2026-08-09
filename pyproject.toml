@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "Beautiful TUI dashboard to monitor packages across PyPI, crates.io, and npm"
 readme = "README.md"
 license = { text = "Apache-2.0" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "Kannan Kalidasan" },
 ]

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -176,7 +176,7 @@ class NpmAdapter(AdapterBase, RegistryAdapter):
                 if days <= 31:
                     url = f"{NPM_DOWNLOADS}/range/last-month/{name}"
                 else:
-                    end = datetime.now(timezone.utc).date()
+                    end = datetime.now(UTC).date()
                     start = end - timedelta(days=days)
                     url = (
                         f"{NPM_DOWNLOADS}/range/{start:%Y-%m-%d}:{end:%Y-%m-%d}/{name}"

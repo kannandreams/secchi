@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +25,7 @@ def export_package_json(
         project=project_name,
         package=ref.name,
         registry=ref.registry.value,
-        exported_at=datetime.now(timezone.utc),
+        exported_at=datetime.now(UTC),
         package_info=_serialize_package_info(info) if info else None,
         derived=_serialize_derived(derived) if derived else None,
         warnings=[
@@ -48,7 +48,7 @@ def save_report(
     directory: Path | None = None,
 ) -> Path:
     """Save a report in the target directory, creating it when necessary."""
-    date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date = datetime.now(UTC).strftime("%Y-%m-%d")
     safe_project = project_name.replace("/", "_").replace(" ", "_")
     safe_subject = subject.replace("/", "_").replace(" ", "_")
     extension = "md" if format_name == "markdown" else format_name
