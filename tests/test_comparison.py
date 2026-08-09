@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from secchi.models import (
     DerivedPackageData,
@@ -20,9 +20,9 @@ def _result(name: str, health: int, change: float, stars: int) -> IntelligenceRe
         name=name,
         registry=Registry.PYPI,
         latest_version="1.0.0",
-        latest_release_date=datetime.now(timezone.utc),
+        latest_release_date=datetime.now(UTC),
         download_counts=DownloadCounts(month=100),
-        versions=[Version("1.0.0", datetime.now(timezone.utc))],
+        versions=[Version("1.0.0", datetime.now(UTC))],
         dependencies=[],
         repository_url=f"https://github.com/example/{name}",
     )

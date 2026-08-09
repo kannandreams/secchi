@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from itertools import pairwise
 
 from rich.markup import escape
@@ -504,7 +504,7 @@ def _point_limit(width: int) -> int:
 
 def _parse_day(raw: str) -> datetime | None:
     try:
-        return datetime.fromisoformat(raw).replace(tzinfo=timezone.utc)
+        return datetime.fromisoformat(raw).replace(tzinfo=UTC)
     except (TypeError, ValueError):
         return None
 

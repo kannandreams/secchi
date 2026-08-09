@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 
 from secchi.models import PackageInfo, PackageRef
 from secchi.schema import COMPARISON_SCHEMA_VERSION
@@ -18,7 +18,7 @@ from secchi.schemas import ComparisonExport
 from secchi.services.intelligence import IntelligenceResult
 
 
-class Recommendation(str, Enum):
+class Recommendation(StrEnum):
     RECOMMENDED = "Recommended"
     ACCEPTABLE = "Acceptable"
     CAUTION = "Use with caution"
@@ -212,8 +212,8 @@ def _recency_score(info: PackageInfo) -> float:
     if date is None:
         return 0
     if date.tzinfo is None:
-        date = date.replace(tzinfo=timezone.utc)
-    age_days = max(0, (datetime.now(timezone.utc) - date).days)
+        date = date.replace(tzinfo=UTC)
+    age_days = max(0, (datetime.now(UTC) - date).days)
     if age_days <= 90:
         return 100
     if age_days <= 180:

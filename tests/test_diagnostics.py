@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 
@@ -18,7 +18,7 @@ def test_diagnostic_log_formats_and_writes_events(tmp_path) -> None:
     path = tmp_path / "secchi.log"
     log = DiagnosticLog(
         path=path,
-        clock=lambda: datetime(2026, 8, 9, 11, 30, tzinfo=timezone.utc),
+        clock=lambda: datetime(2026, 8, 9, 11, 30, tzinfo=UTC),
     )
 
     log.record(

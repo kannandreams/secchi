@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
 
@@ -452,7 +452,7 @@ class Secchi(App[None]):
             self._package_warnings[key] = package_result.warnings
             if package_result.error is not None:
                 self._package_errors[key] = package_result.error
-        self._refreshed_at = result.refreshed_at or datetime.now(timezone.utc)
+        self._refreshed_at = result.refreshed_at or datetime.now(UTC)
         if project_name:
             self._workspace_state.finish_load(project_name)
         self._notify_ui_update()

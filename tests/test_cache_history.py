@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from secchi import cache
 from secchi.history import compute_delta, find_baseline
@@ -11,7 +11,7 @@ from secchi.models import HistorySnapshot, PackageInfo, Registry
 from secchi.schema import CACHE_SCHEMA_VERSION
 from secchi.services.intelligence import health_history_points
 
-NOW = datetime(2026, 8, 2, 12, tzinfo=timezone.utc)
+NOW = datetime(2026, 8, 2, 12, tzinfo=UTC)
 
 
 def test_same_day_cache_is_a_hit_and_previous_day_cache_is_a_miss(tmp_path) -> None:
@@ -79,9 +79,9 @@ def test_monthly_growth_uses_28_to_35_day_baseline() -> None:
 
 def test_health_timeline_keeps_latest_monthly_snapshot_and_current_score() -> None:
     snapshots = [
-        HistorySnapshot(datetime(2026, 6, 10, tzinfo=timezone.utc), 1, 1, 80),
-        HistorySnapshot(datetime(2026, 7, 1, tzinfo=timezone.utc), 1, 1, 82),
-        HistorySnapshot(datetime(2026, 7, 20, tzinfo=timezone.utc), 1, 1, 88),
+        HistorySnapshot(datetime(2026, 6, 10, tzinfo=UTC), 1, 1, 80),
+        HistorySnapshot(datetime(2026, 7, 1, tzinfo=UTC), 1, 1, 82),
+        HistorySnapshot(datetime(2026, 7, 20, tzinfo=UTC), 1, 1, 88),
     ]
 
     timeline = health_history_points(snapshots, 92, now=lambda: NOW)

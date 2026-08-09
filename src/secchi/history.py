@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from secchi.models import HistorySnapshot
@@ -98,12 +98,12 @@ def find_baseline(
     now: Callable[[], datetime] | None = None,
 ) -> HistorySnapshot | None:
     """Closest snapshot whose age falls in [min_age_days, max_age_days]."""
-    current_time = (now or (lambda: datetime.now(timezone.utc)))()
+    current_time = (now or (lambda: datetime.now(UTC)))()
     candidates: list[tuple[float, HistorySnapshot]] = []
     for snap in snapshots:
         ts = snap.timestamp
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
         age_days = (current_time - ts).total_seconds() / 86400
         if min_age_days <= age_days <= max_age_days:
             candidates.append((abs(age_days - 7), snap))

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import random
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from typing import Any
 
@@ -131,10 +131,10 @@ def _retry_after(response: httpx.Response) -> float | None:
         try:
             date = parsedate_to_datetime(raw)
             if date.tzinfo is None:
-                date = date.replace(tzinfo=timezone.utc)
+                date = date.replace(tzinfo=UTC)
             return max(
                 0.0,
-                min(10.0, date.timestamp() - datetime.now(timezone.utc).timestamp()),
+                min(10.0, date.timestamp() - datetime.now(UTC).timestamp()),
             )
         except (TypeError, ValueError, OverflowError):
             return None

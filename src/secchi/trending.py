@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -35,7 +35,7 @@ FALLBACK_TRENDING = TrendingRepo(
 
 
 def _trending_date() -> str:
-    return (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")
+    return (datetime.now(UTC) - timedelta(days=7)).strftime("%Y-%m-%d")
 
 
 async def fetch_trending() -> TrendingRepo | None:

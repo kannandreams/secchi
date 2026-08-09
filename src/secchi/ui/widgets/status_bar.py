@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from textual.app import ComposeResult
@@ -43,7 +43,7 @@ def format_path(path: Path | None) -> str:
 def _age_text(refreshed_at: datetime | None) -> str:
     if refreshed_at is None:
         return "refreshing…"
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     mins = int((now - refreshed_at).total_seconds() / 60)
     if mins < 1:
         return "just now"

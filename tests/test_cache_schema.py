@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -14,7 +14,7 @@ from secchi.schemas import CacheEnvelope, PackageExport
 def test_cache_writes_and_reads_versioned_envelope(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(cache, "cache_root", lambda: tmp_path)
     info = PackageInfo(name="demo", registry=Registry.PYPI, latest_version="1.0.0")
-    fetched_at = datetime.now(timezone.utc)
+    fetched_at = datetime.now(UTC)
 
     cache.save_package_cache("pypi:demo", info, fetched_at)
     raw = json.loads(cache.package_cache_path("pypi:demo").read_text())
@@ -26,7 +26,7 @@ def test_cache_writes_and_reads_versioned_envelope(tmp_path, monkeypatch) -> Non
 
 
 def test_security_cache_is_scoped_to_package_version_and_day(tmp_path) -> None:
-    fetched_at = datetime.now(timezone.utc)
+    fetched_at = datetime.now(UTC)
     advisory = SecurityAdvisory(id="GHSA-demo-1234-abcd", severity="HIGH")
 
     cache.save_security_cache(
@@ -51,7 +51,7 @@ def test_legacy_unversioned_cache_is_readable_and_future_cache_is_ignored(
 ) -> None:
     monkeypatch.setattr(cache, "cache_root", lambda: tmp_path)
     info = PackageInfo(name="demo", registry=Registry.PYPI, latest_version="1.0.0")
-    fetched_at = datetime.now(timezone.utc).astimezone().isoformat()
+    fetched_at = datetime.now(UTC).astimezone().isoformat()
     path = cache.package_cache_path("pypi:demo")
     path.parent.mkdir(parents=True)
 
@@ -89,7 +89,7 @@ def test_cache_envelope_rejects_unsupported_schema_version() -> None:
     with pytest.raises(ValidationError):
         CacheEnvelope(
             schema_version=CACHE_SCHEMA_VERSION + 1,
-            fetched_at=datetime.now(timezone.utc),
+            fetched_at=datetime.now(UTC),
             package={},
         )
 
@@ -101,12 +101,12 @@ def test_package_export_contract_rejects_wrong_schema() -> None:
             project="demo",
             package="demo",
             registry="pypi",
-            exported_at=datetime.now(timezone.utc),
+            exported_at=datetime.now(UTC),
         )
 
 
 def test_cache_supports_injected_root_and_clock(tmp_path) -> None:
-    fetched_at = datetime(2026, 8, 2, 12, tzinfo=timezone.utc)
+    fetched_at = datetime(2026, 8, 2, 12, tzinfo=UTC)
     info = PackageInfo(name="demo", registry=Registry.PYPI, latest_version="1.0.0")
 
     cache.save_package_cache("pypi:demo", info, fetched_at, root=tmp_path)

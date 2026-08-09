@@ -7,7 +7,7 @@ and makes the scoring logic unit-testable without mocking httpx.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from secchi.models import (
     ActivityEvent,
@@ -24,13 +24,13 @@ from secchi.models import (
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _aware(dt: datetime | None) -> datetime | None:
     if dt is None:
         return None
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
 
 def _days_since(dt: datetime | None) -> float | None:
@@ -237,7 +237,7 @@ def _adoption_from_trend(info: PackageInfo, versions) -> dict[str, int]:
 
     def parse(d: str) -> datetime | None:
         try:
-            return datetime.fromisoformat(d).replace(tzinfo=timezone.utc)
+            return datetime.fromisoformat(d).replace(tzinfo=UTC)
         except (ValueError, TypeError):
             return None
 
