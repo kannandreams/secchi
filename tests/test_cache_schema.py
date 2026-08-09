@@ -105,6 +105,53 @@ def test_package_export_contract_rejects_wrong_schema() -> None:
         )
 
 
+def test_cache_paths_do_not_collide_for_keys_that_differ_only_by_separator_placement(
+    tmp_path,
+) -> None:
+    first = cache.package_cache_path("go:gitlab.com/foo_bar/baz", root=tmp_path)
+    second = cache.package_cache_path("go:gitlab.com/foo/bar_baz", root=tmp_path)
+
+    assert first != second
+
+    first_security = cache.security_cache_path(
+        "go:gitlab.com/foo_bar/baz", root=tmp_path
+    )
+    second_security = cache.security_cache_path(
+        "go:gitlab.com/foo/bar_baz", root=tmp_path
+    )
+
+    assert first_security != second_security
+
+
+def test_cache_path_stays_within_root_for_traversal_and_separator_attempts(
+    tmp_path,
+) -> None:
+    malicious_keys = [
+        "pypi:..\\..\\..\\evil",
+        "pypi:../../evil",
+        "pypi:..",
+        "npm:@scope\\evil",
+    ]
+
+    for key in malicious_keys:
+        path = cache.package_cache_path(key, root=tmp_path)
+        assert path.parent == tmp_path / "packages"
+        assert path.resolve().is_relative_to((tmp_path / "packages").resolve())
+
+
+def test_package_cache_round_trips_a_name_containing_a_slash(tmp_path) -> None:
+    info = PackageInfo(name="foo/bar", registry=Registry.NPM, latest_version="1.0.0")
+    fetched_at = datetime.now(UTC)
+
+    cache.save_package_cache("npm:@scope/foo/bar", info, fetched_at, root=tmp_path)
+    loaded = cache.load_package_cache(
+        "npm:@scope/foo/bar", root=tmp_path, now=lambda: fetched_at
+    )
+
+    assert loaded is not None
+    assert loaded[0].name == "foo/bar"
+
+
 def test_cache_supports_injected_root_and_clock(tmp_path) -> None:
     fetched_at = datetime(2026, 8, 2, 12, tzinfo=UTC)
     info = PackageInfo(name="demo", registry=Registry.PYPI, latest_version="1.0.0")
