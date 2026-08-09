@@ -18,6 +18,7 @@ from secchi.ui.widgets.overview import (
     _render_line_chart,
     _trend_label,
 )
+from secchi.workspace import combine_install_breakdown
 
 
 def _daily_points(count: int = 30) -> list[DownloadTrendPoint]:
@@ -123,6 +124,23 @@ def test_overview_widgets_have_explicit_empty_states() -> None:
     assert "No reverse-dependency data available" in str(
         ReverseDependenciesPanel(info, _derived()).compose_body()[0].render()
     )
+
+
+def test_ecosystem_card_shows_each_package_manager_source() -> None:
+    pypi = PackageInfo(name="demo", registry=Registry.PYPI, total_downloads=100)
+    crates = PackageInfo(name="demo", registry=Registry.CRATES, total_downloads=50)
+    info = PackageInfo(name="demo", registry=Registry.PYPI)
+    derived = _derived()
+    derived.install_breakdown = combine_install_breakdown([pypi, crates])
+
+    rendered = "\n".join(
+        str(widget.render())
+        for widget in EcosystemDistributionPanel(info, derived).compose_body()
+    )
+
+    assert "PyPI" in rendered
+    assert "crates.io" in rendered
+    assert "Sources:" in rendered
 
 
 def _derived():

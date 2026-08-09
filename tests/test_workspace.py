@@ -88,7 +88,7 @@ def test_combine_install_breakdown_is_ranked_by_download_share() -> None:
 
     assert [method.label for method in breakdown.methods] == ["PyPI", "npm"]
     assert [method.percent for method in breakdown.methods] == [75.0, 25.0]
-    assert breakdown.caption == "Combined from registry 30-day download totals."
+    assert breakdown.caption == "Observed 30-day download share by package manager."
 
 
 def test_workspace_state_supports_lazy_loading_and_force_refresh() -> None:

@@ -23,7 +23,7 @@ from secchi.models import (
 CRATES_API = "https://crates.io/api/v1"
 
 _HEADERS = {
-    "User-Agent": "secchi (https://github.com/secchi)",
+    "User-Agent": "secchi (https://github.com/kannandreams/secchi)",
     "Accept": "application/json",
 }
 

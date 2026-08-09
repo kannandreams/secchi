@@ -189,10 +189,11 @@ class EcosystemDistributionPanel(Panel):
             rows.append(Static(f"{label:<12} {bar} [b]{method.percent:>4.0f}%[/]"))
 
         primary = methods[0]
+        sources = ", ".join(method.label for method in methods)
         rows.append(
             Static(
-                f"\n[dim]Primary:[/] {escape(primary.label)}\n"
-                f"[dim]Signal:[/] Most users install via {escape(primary.label)}."
+                f"\n[dim]Sources:[/] {escape(sources)}\n"
+                f"[dim]Signal:[/] Highest observed activity: {escape(primary.label)}."
             )
         )
         return rows

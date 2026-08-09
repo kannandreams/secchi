@@ -133,5 +133,5 @@ def combine_install_breakdown(infos: list[PackageInfo]) -> InstallBreakdown:
     ]
     return InstallBreakdown(
         methods=methods,
-        caption="Combined from registry 30-day download totals.",
+        caption="Observed 30-day download share by package manager.",
     )

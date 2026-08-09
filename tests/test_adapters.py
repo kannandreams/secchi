@@ -238,6 +238,31 @@ def test_crates_adapter_parses_metadata_versions_dependencies_trend_and_search()
     run(exercise())
 
 
+def test_crates_adapter_identifies_secchi_to_crates_io() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert (
+            "secchi (https://github.com/kannandreams/secchi)"
+            in request.headers["user-agent"]
+        )
+        return json_response(
+            request,
+            {
+                "crate": {
+                    "name": "demo",
+                    "max_stable_version": "1.0.0",
+                    "versions": [],
+                }
+            },
+        )
+
+    async def exercise() -> None:
+        async with client_for(handler) as client:
+            info = await CratesAdapter(client).fetch_package("demo")
+        assert info.name == "demo"
+
+    run(exercise())
+
+
 def test_sparse_adapters_parse_metadata_search_and_report_missing_optional_signals() -> (
     None
 ):

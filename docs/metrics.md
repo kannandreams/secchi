@@ -21,6 +21,33 @@ The project header also shows the package description, ecosystem, latest
 version, repository, documentation link, license, and artifact size when those
 signals are available.
 
+## Multiple package-manager sources
+
+When the same package name exists in more than one supported registry, Secchi
+creates one logical dashboard package and fetches each registry source
+independently. For example, an unqualified `secchi dashboard tuffcli` can
+include both PyPI and crates.io data. A registry that fails to respond is
+excluded from the combined values and shown as a warning in the process log.
+
+Most activity metrics are combined: download totals are summed, download
+trends are added for matching dates, ecosystem distribution keeps each package
+manager as a separate share, and OSV advisories are merged and deduplicated.
+The ecosystem card therefore describes observed registry download activity; it
+does not claim to measure the user's actual installation method.
+
+Some fields cannot be safely merged. Secchi chooses a primary metadata source
+in this order: crates.io, PyPI, npm, then the first available source for other
+registries. The primary source supplies fields such as the displayed latest
+version, description, release list, version-adoption calculation, and health
+history. GitHub data uses the first resolved repository, while reverse
+dependencies use crates.io when a crates.io source is available.
+
+The combined health score is recalculated from the merged package view; it is
+not an average of separate registry scores. Because release/version fields and
+health history come from the primary source, treat the score as a combined
+package signal with a preferred metadata source, not as an independently
+weighted score for every ecosystem.
+
 ## Overview panels
 
 ### Adoption trend
@@ -79,6 +106,17 @@ The health score is a weighted composite with a maximum of 100 points:
 | Security | 20 |
 | Testing | 15 |
 | **Total** | **100** |
+
+The categories mean:
+
+| Category | Calculation |
+| --- | --- |
+| Maintenance | 20 points based on the more recent of the latest registry release or GitHub push: 20 within 30 days, 16 within 90 days, 12 within 180 days, 6 within one year, and 2 when older. |
+| Community | Up to 15 scaled points from GitHub stars, forks, and issue-response activity in the last 90 days. |
+| Documentation | Up to 15 scaled points from homepage (5 raw), documentation URL (8 raw), and detected README (7 raw). |
+| Releases | Up to 15 scaled points from the number of versions released during the last 365 days. |
+| Security | 20 points, reduced for yanked recent releases and missing repository/GitHub visibility; OSV advisories are displayed separately and do not currently change this score. |
+| Testing | 15 points when a resolved GitHub repository contains at least one GitHub Actions workflow; this is not test coverage or workflow-success measurement. |
 
 Missing data is generally scored as zero for that signal. This means a low
 score can sometimes indicate incomplete metadata rather than a definitively
