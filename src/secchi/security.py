@@ -13,6 +13,12 @@ from secchi.models import AdvisoryReference, PackageInfo, Registry, SecurityAdvi
 OSV_QUERY_URL = "https://api.osv.dev/v1/query"
 OSV_WEB_URL = "https://osv.dev/vulnerability"
 
+# Safety cap on paginated OSV queries. A real package/version is never
+# expected to need this many pages; it exists purely to bound the loop
+# against a misbehaving or malicious response that keeps returning a
+# next_page_token.
+_OSV_MAX_PAGES = 20
+
 OSV_ECOSYSTEMS: dict[Registry, str] = {
     Registry.PYPI: "PyPI",
     Registry.NPM: "npm",
@@ -30,22 +36,33 @@ async def fetch_osv_advisories(
     if not ecosystem or not info.latest_version:
         return []
 
-    response = await client.post(
-        OSV_QUERY_URL,
-        json={
+    advisories: list[SecurityAdvisory] = []
+    page_token: str | None = None
+    for _ in range(_OSV_MAX_PAGES):
+        query: dict[str, Any] = {
             "package": {"name": info.name, "ecosystem": ecosystem},
             "version": info.latest_version,
-        },
-    )
-    response.raise_for_status()
-    payload = response.json()
-    return [
-        advisory
-        for raw in payload.get("vulns", [])
-        if isinstance(raw, dict)
-        and not raw.get("withdrawn")
-        and (advisory := _parse_advisory(raw)) is not None
-    ]
+        }
+        if page_token:
+            query["page_token"] = page_token
+
+        response = await client.post(OSV_QUERY_URL, json=query)
+        response.raise_for_status()
+        payload = response.json()
+
+        advisories.extend(
+            advisory
+            for raw in payload.get("vulns", [])
+            if isinstance(raw, dict)
+            and not raw.get("withdrawn")
+            and (advisory := _parse_advisory(raw)) is not None
+        )
+
+        page_token = payload.get("next_page_token")
+        if not page_token:
+            break
+
+    return advisories
 
 
 def _parse_advisory(raw: dict[str, Any]) -> SecurityAdvisory | None:

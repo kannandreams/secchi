@@ -7,6 +7,7 @@ import json
 
 import httpx
 
+from secchi import security
 from secchi.models import PackageInfo, Registry
 from secchi.security import fetch_osv_advisories
 
@@ -69,6 +70,68 @@ def test_osv_lookup_queries_latest_version_and_normalizes_advisory() -> None:
         assert advisory.severity == "HIGH"
         assert advisory.fixed_versions == ["2.0.1"]
         assert advisory.url.endswith(advisory.id)
+
+    asyncio.run(exercise())
+
+
+def test_osv_lookup_follows_pagination_across_multiple_pages() -> None:
+    request_bodies: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.read())
+        request_bodies.append(body)
+        if "page_token" not in body:
+            return httpx.Response(
+                200,
+                json={"vulns": [{"id": "GHSA-page1"}], "next_page_token": "tok-2"},
+                request=request,
+            )
+        return httpx.Response(
+            200, json={"vulns": [{"id": "GHSA-page2"}]}, request=request
+        )
+
+    async def exercise() -> None:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            advisories = await fetch_osv_advisories(
+                PackageInfo(
+                    name="demo", registry=Registry.PYPI, latest_version="2.0.0"
+                ),
+                client=client,
+            )
+
+        assert [a.id for a in advisories] == ["GHSA-page1", "GHSA-page2"]
+        assert len(request_bodies) == 2
+        assert "page_token" not in request_bodies[0]
+        assert request_bodies[1]["page_token"] == "tok-2"
+
+    asyncio.run(exercise())
+
+
+def test_osv_lookup_stops_paginating_at_the_safety_cap() -> None:
+    request_count = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal request_count
+        request_count += 1
+        return httpx.Response(
+            200,
+            json={
+                "vulns": [{"id": f"GHSA-{request_count}"}],
+                "next_page_token": "always-more",
+            },
+            request=request,
+        )
+
+    async def exercise() -> None:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            advisories = await fetch_osv_advisories(
+                PackageInfo(
+                    name="demo", registry=Registry.PYPI, latest_version="2.0.0"
+                ),
+                client=client,
+            )
+        assert len(advisories) == security._OSV_MAX_PAGES
+        assert request_count == security._OSV_MAX_PAGES
 
     asyncio.run(exercise())
 

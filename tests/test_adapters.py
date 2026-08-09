@@ -398,6 +398,24 @@ def test_sparse_adapters_parse_metadata_search_and_report_missing_optional_signa
     run(exercise())
 
 
+def test_golang_adapter_case_encodes_uppercase_module_paths() -> None:
+    requested_paths: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requested_paths.append(request.url.path)
+        return json_response(request, {"Version": "v1.0.0"})
+
+    async def exercise() -> None:
+        async with client_for(handler) as client:
+            adapter = GoModuleAdapter(client)
+            info = await adapter.fetch_package("github.com/BurntSushi/toml")
+
+        assert info.latest_version == "v1.0.0"
+        assert requested_paths == ["/github.com/!burnt!sushi/toml/@latest"]
+
+    run(exercise())
+
+
 def test_adapters_return_empty_search_results_for_missing_optional_endpoint() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(503, request=request)

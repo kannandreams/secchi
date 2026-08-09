@@ -13,8 +13,19 @@ from secchi.models import PackageInfo, Registry, SearchResult, Version
 GO_PROXY = "https://proxy.golang.org"
 
 
+def _escape_case(component: str) -> str:
+    """Go module proxy case-encoding: each uppercase letter becomes ``!`` +
+    its lowercase form (e.g. ``BurntSushi`` -> ``!burnt!sushi``).
+
+    Required so the proxy can serve module paths as files on case-insensitive
+    filesystems; see https://go.dev/ref/mod#module-proxy. Without it, any
+    module path containing an uppercase letter 404s against the real proxy.
+    """
+    return "".join(f"!{char.lower()}" if char.isupper() else char for char in component)
+
+
 def _module_path(name: str) -> str:
-    return quote(name, safe="/@")
+    return quote(_escape_case(name), safe="/@!")
 
 
 class GoModuleAdapter(SparseAdapter):
