@@ -9,6 +9,27 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 Changes not yet included in a release will be listed here.
 
+## [0.1.3] - 2026-08-09
+
+### Added
+
+* Added structured `SUCCESS`, `WARN`, and `FAILURE` diagnostics across registry and package-processing workflows.
+* Added dashboard process logs with `l` and clipboard export with `c`.
+* Added CLI diagnostics through `--verbose` and `--log-file`.
+* Added a simple GitHub feature-request issue template for contributors.
+
+### Improved
+
+* Improved cross-registry package aggregation and ecosystem distribution reporting.
+* Expanded documentation for health scores, package-manager sources, workspace configuration, and favorites.
+* Clarified dashboard behavior for non-fatal signal warnings and registry-specific failures.
+
+### Fixed
+
+* Improved crates.io request identification with a repository-specific `User-Agent`.
+* Fixed case-insensitive HTTP header merging so registry adapters send the intended request headers.
+* Improved diagnostics for retries, fallback requests, cache usage, and registry response failures.
+
 ## [0.1.2] - 2026-08-03
 
 * Added: Workspace aggregation and project-scoped lazy loading.
@@ -38,7 +59,8 @@ Changes not yet included in a release will be listed here.
 * JSON, Markdown, and HTML reporting.
 * MCP server integration for coding agents.
 
-[Unreleased]: https://github.com/kannandreams/secchi/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/kannandreams/secchi/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/kannandreams/secchi/releases/tag/v0.1.3
 [0.1.2]: https://github.com/kannandreams/secchi/releases/tag/v0.1.2
 [0.1.1]: https://github.com/kannandreams/secchi/releases/tag/v0.1.1
 [0.1.0]: https://github.com/kannandreams/secchi/releases/tag/v0.1.0
