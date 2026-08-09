@@ -240,9 +240,8 @@ def test_crates_adapter_parses_metadata_versions_dependencies_trend_and_search()
 
 def test_crates_adapter_identifies_secchi_to_crates_io() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        assert (
+        assert request.headers["user-agent"] == (
             "secchi (https://github.com/kannandreams/secchi)"
-            in request.headers["user-agent"]
         )
         return json_response(
             request,

@@ -11,6 +11,7 @@ from secchi.http import SecchiAsyncClient
 from secchi.models import Registry, SearchResult
 from secchi.services.search import PackageSearchService
 from secchi.ui.app import Secchi
+from secchi.ui.widgets.modals import LogsScreen
 
 
 def test_diagnostic_log_formats_and_writes_events(tmp_path) -> None:
@@ -100,3 +101,5 @@ def test_dashboard_keeps_filter_and_adds_log_shortcut() -> None:
     bindings = {binding.key: binding.action for binding in Secchi.BINDINGS}
     assert bindings["f"] == "toggle_filter"
     assert bindings["l"] == "logs"
+    log_bindings = {binding.key: binding.action for binding in LogsScreen.BINDINGS}
+    assert log_bindings["c"] == "copy_logs"

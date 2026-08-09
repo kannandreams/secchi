@@ -23,6 +23,7 @@ _SHORTCUTS = [
     ("r", "Refresh the selected project"),
     ("f", "Toggle favorites-only filter"),
     ("l", "Show process logs"),
+    ("c", "Copy process logs"),
     ("?", "Show this help"),
     ("q / Ctrl+C", "Quit secchi"),
     ("Esc", "Close overlay / dismiss"),
@@ -133,7 +134,8 @@ class LogsScreen(ModalScreen[None]):
     """Readable session diagnostics for registry and package processing."""
 
     BINDINGS: ClassVar[list[Binding]] = [
-        Binding("escape,l,q", "dismiss_screen", "Close", show=False)
+        Binding("escape,l,q", "dismiss_screen", "Close", show=False),
+        Binding("c", "copy_logs", "Copy", show=False),
     ]
 
     def __init__(self, diagnostics: DiagnosticLog) -> None:
@@ -144,7 +146,7 @@ class LogsScreen(ModalScreen[None]):
         with Vertical(id="logs-box"):
             yield Static("Process Logs", classes="modal-title")
             yield RichLog(id="diagnostic-log", highlight=False, markup=False)
-            yield Static("Press Esc or l to close", classes="modal-hint")
+            yield Static("Press c to copy · Esc or l to close", classes="modal-hint")
 
     def on_mount(self) -> None:
         log = self.query_one("#diagnostic-log", RichLog)
@@ -164,6 +166,14 @@ class LogsScreen(ModalScreen[None]):
 
     def action_dismiss_screen(self) -> None:
         self.dismiss(None)
+
+    def action_copy_logs(self) -> None:
+        events = self._diagnostics.snapshot()
+        if not events:
+            self.app.notify("No diagnostic events to copy.", severity="warning")
+            return
+        self.app.copy_to_clipboard("\n".join(event.format() for event in events))
+        self.app.notify("Copied process logs to clipboard.", title="Logs")
 
 
 class ExportScreen(ModalScreen[str | None]):

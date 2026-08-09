@@ -94,7 +94,7 @@ class _ClientLease:
         return getattr(self.client, "diagnostics", None)
 
     async def get(self, url: str, *args, **kwargs):
-        headers = dict(self.client.headers)
+        headers = httpx.Headers(self.client.headers)
         headers.update(self.headers)
         headers.update(kwargs.pop("headers", {}) or {})
         return await self.client.get(url, *args, headers=headers, **kwargs)
