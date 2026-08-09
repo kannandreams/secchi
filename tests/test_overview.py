@@ -55,6 +55,15 @@ def test_overview_mounts_the_six_dashboard_panels_in_order() -> None:
     asyncio.run(run_check())
 
 
+def test_adoption_trend_caption_falls_back_for_registries_without_a_dedicated_source() -> (
+    None
+):
+    for registry in (Registry.HOMEBREW, Registry.GO, Registry.CRAN):
+        info = PackageInfo(name="demo", registry=registry)
+        panel = AdoptionTrendPanel(info, _derived(), 30)
+        assert panel._caption == f"Source: {registry.display_name}"
+
+
 def test_adoption_trend_aggregates_and_keeps_latest_period() -> None:
     points = _daily_points(365)
 
