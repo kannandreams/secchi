@@ -31,6 +31,38 @@ packages = [
 Supported registry values are `pypi`, `npm`, `crates.io`, `homebrew`, `go`,
 and `cran`.
 
+### When Secchi reads the configuration
+
+Workspace commands read `secchi.toml` to load projects and package sources:
+
+```bash
+secchi dashboard
+secchi dashboard --project tools
+secchi monitor tools
+secchi report --project tools
+secchi --list
+```
+
+Secchi looks for configuration in this order:
+
+1. The path passed with `--config` or `-c`.
+2. `./secchi.toml`.
+3. `./.secchi.toml`.
+4. `~/.config/secchi/config.toml`, or `$XDG_CONFIG_HOME/secchi/config.toml`.
+
+Direct package commands do not require a configuration file and inspect the
+package named on the command line instead:
+
+```bash
+secchi show tuffcli
+secchi dashboard tuffcli
+secchi search tuffcli
+```
+
+If a direct dashboard package matches a configured project or package, Secchi
+uses that configured workspace entry; otherwise it resolves the package across
+the supported registries.
+
 ## Project titles and favorites
 
 Use `title` for the human-readable project name shown in the dashboard. Use
@@ -48,6 +80,10 @@ packages = [
 
 New configurations should prefer project-level favorites because the project,
 not an individual registry variant, controls workspace navigation.
+
+Favorites are stored in `secchi.toml`; they are not maintained in a separate
+database. The `f` dashboard shortcut only toggles the favorites-only view for
+the current session and does not change the configuration file.
 
 ## Lazy loading and refresh
 

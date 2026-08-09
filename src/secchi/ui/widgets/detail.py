@@ -65,16 +65,6 @@ class DetailView(Container):
         with VerticalScroll(id="detail-content"):
             yield from self._compose_summary_row()
 
-            if self._warnings:
-                warning_lines = "\n".join(
-                    f"• {warning.source}: {warning.message}"
-                    for warning in self._warnings
-                )
-                yield Static(
-                    f"[b yellow]Signal warnings[/]\n{warning_lines}",
-                    id="signal-warnings",
-                )
-
             if self._info and self._info.latest_version:
                 yield from self._compose_tabs()
             elif self._error:

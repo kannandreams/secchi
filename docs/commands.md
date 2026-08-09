@@ -4,6 +4,9 @@ Secchi's CLI commands share the same package resolution, caching, enrichment,
 and scoring services. The output surface changes by command; the intelligence
 pipeline does not.
 
+Use [Workspace](workspace.md) to understand when `secchi.toml` is read, how
+configuration paths are selected, and where dashboard favorites come from.
+
 ## `show`
 
 Print a compact terminal summary:
@@ -46,7 +49,9 @@ the URL and HTTP status returned by a registry. Use `--log-file PATH` to save
 the same readable diagnostics for troubleshooting.
 
 In the dashboard, press `l` to open the current session's process log. The
-existing `f` shortcut remains the favorites-only filter.
+existing `f` shortcut remains the favorites-only filter. Non-fatal signal
+warnings stay in the process log rather than being repeated in the package
+detail view; critical package-fetch failures still appear in the detail view.
 
 ## `report`
 
