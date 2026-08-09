@@ -10,6 +10,7 @@ from tomli_w import dumps as toml_dumps
 
 from secchi import __version__
 from secchi.config import find_config, list_projects
+from secchi.diagnostics import DiagnosticLog, DiagnosticStatus
 from secchi.errors import SecchiError
 from secchi.models import Registry
 from secchi.renderers.summary import render_summary
@@ -43,6 +44,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--list", "-l", action="store_true", help="List configured projects and exit"
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show every SUCCESS, WARN, and FAILURE diagnostic event",
+    )
+    parser.add_argument(
+        "--log-file",
+        type=Path,
+        help="Write readable diagnostics for this run to a file",
     )
 
     sub = parser.add_subparsers(dest="command")
@@ -171,6 +182,27 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Re-fetch only OSV security advisories instead of using their cache",
     )
+    for command_parser in (
+        dashboard_parser,
+        show_parser,
+        search_parser,
+        report_parser,
+        check_parser,
+        compare_parser,
+        monitor_parser,
+    ):
+        command_parser.add_argument(
+            "--verbose",
+            action="store_true",
+            default=argparse.SUPPRESS,
+            help="Show every SUCCESS, WARN, and FAILURE diagnostic event",
+        )
+        command_parser.add_argument(
+            "--log-file",
+            type=Path,
+            default=argparse.SUPPRESS,
+            help="Write readable diagnostics for this run to a file",
+        )
     sub.add_parser("mcp", help="Run the Model Context Protocol server over stdio")
     return parser
 
@@ -216,10 +248,29 @@ def cmd_init() -> None:
     print(f"\n✅  Config written to {output_path}")
 
 
+def _print_diagnostics(diagnostics: DiagnosticLog, *, verbose: bool) -> None:
+    events = diagnostics.snapshot()
+    visible = (
+        events
+        if verbose
+        else [
+            event
+            for event in events
+            if event.status in (DiagnosticStatus.WARN, DiagnosticStatus.FAILURE)
+        ]
+    )
+    if not visible:
+        return
+    print("\nDiagnostics:")
+    for event in visible:
+        print(f"  {event.format()}")
+
+
 def _run_dashboard(
     args: argparse.Namespace,
     parser: argparse.ArgumentParser,
     service: PackageIntelligenceService,
+    diagnostics: DiagnosticLog,
 ) -> None:
     try:
         request = asyncio.run(
@@ -234,6 +285,7 @@ def _run_dashboard(
                     or args.security_refresh
                     or args.refresh
                 ),
+                diagnostics=diagnostics,
             )
         )
     except (SecchiError, ValueError) as exc:
@@ -247,15 +299,26 @@ def _run_dashboard(
         workspace=request.workspace,
         force_security_refresh=request.security_refresh,
         intelligence=service,
+        diagnostics=diagnostics,
     ).run()
 
 
-def _run_search(args: argparse.Namespace) -> None:
-    results = asyncio.run(search.run(args.package, registry=args.registry, limit=10))
+def _run_search(
+    args: argparse.Namespace, diagnostics: DiagnosticLog, *, verbose: bool
+) -> None:
+    results = asyncio.run(
+        search.run(
+            args.package,
+            registry=args.registry,
+            limit=10,
+            diagnostics=diagnostics,
+        )
+    )
     if not results:
         print(
             f"No packages matching '{args.package}' found in the selected registries."
         )
+        _print_diagnostics(diagnostics, verbose=verbose)
         return
     print(f"Matches for {args.package}:\n")
     for result in results:
@@ -264,6 +327,7 @@ def _run_search(args: argparse.Namespace) -> None:
         print(
             f"{result.registry.display_name:<10} {result.name:<24} {result.version or '—':<12} {marker:<6} {description}"
         )
+    _print_diagnostics(diagnostics, verbose=verbose)
 
 
 def main() -> None:
@@ -283,7 +347,8 @@ def main() -> None:
         args.dashboard_config = None
         args.dashboard_refresh = args.refresh
         args.command = "dashboard"
-    service = PackageIntelligenceService()
+    diagnostics = DiagnosticLog(path=args.log_file)
+    service = PackageIntelligenceService(diagnostics=diagnostics)
     if args.list:
         config_path = find_config(args.config)
         if not config_path:
@@ -292,7 +357,7 @@ def main() -> None:
             print(name)
         return
     if args.command == "dashboard" or args.command is None:
-        _run_dashboard(args, parser, service)
+        _run_dashboard(args, parser, service, diagnostics)
         return
     if args.command == "show":
         try:
@@ -314,9 +379,10 @@ def main() -> None:
         print(render_summary(result.info, result.derived))
         for warning in result.warnings:
             print(f"Warning [{warning.source}]: {warning.message}")
+        _print_diagnostics(diagnostics, verbose=args.verbose)
         return
     if args.command == "search":
-        _run_search(args)
+        _run_search(args, diagnostics, verbose=args.verbose)
         return
     if args.command == "report":
         try:
@@ -345,6 +411,7 @@ def main() -> None:
             output.target.parent.mkdir(parents=True, exist_ok=True)
             output.target.write_text(output.content)
             print(f"Wrote {output.format_name} report to {output.target}")
+        _print_diagnostics(diagnostics, verbose=args.verbose)
         return
     if args.command == "check":
         try:
@@ -369,6 +436,7 @@ def main() -> None:
             print(f"{'PASS' if item.passed else 'FAIL'}  {item.name}: {item.detail}")
         for warning in result.warnings:
             print(f"Warning [{warning.source}]: {warning.message}")
+        _print_diagnostics(diagnostics, verbose=args.verbose)
         if not result.passed:
             raise SystemExit(1)
         return
@@ -395,6 +463,7 @@ def main() -> None:
             print(json.dumps(comparison.as_dict(), indent=2))
         else:
             print(render_comparison(comparison))
+        _print_diagnostics(diagnostics, verbose=args.verbose)
         return
     parser.error("Unknown command")
 

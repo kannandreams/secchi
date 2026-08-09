@@ -35,7 +35,18 @@ Search supported registries and return ranked matches:
 ```bash
 secchi search duckdb
 secchi search serde --registry crates.io
+secchi search tuffcli --verbose
+secchi search tuffcli --log-file secchi-run.log
 ```
+
+Search queries each selected registry independently. A registry that cannot be
+reached is reported as `WARN` while successful registry results remain visible.
+Use `--verbose` to show every `SUCCESS`, `WARN`, and `FAILURE` event, including
+the URL and HTTP status returned by a registry. Use `--log-file PATH` to save
+the same readable diagnostics for troubleshooting.
+
+In the dashboard, press `l` to open the current session's process log. The
+existing `f` shortcut remains the favorites-only filter.
 
 ## `report`
 

@@ -20,6 +20,11 @@ from secchi.cache import (
     save_package_cache,
     save_security_cache,
 )
+from secchi.diagnostics import (
+    DiagnosticLog,
+    DiagnosticStatus,
+    diagnostic_for_http_error,
+)
 from secchi.history import append_snapshot, compute_delta, find_baseline, load_snapshots
 from secchi.http import HttpClientFactory
 from secchi.models import (
@@ -76,10 +81,12 @@ class PackageIntelligenceService:
         cache_dir: Path | None = None,
         clock: Callable[[], datetime] | None = None,
         http_factory: HttpClientFactory | None = None,
+        diagnostics: DiagnosticLog | None = None,
     ) -> None:
         self.cache_dir = cache_dir
         self.clock = clock or (lambda: datetime.now(timezone.utc))
-        self.http_factory = http_factory or HttpClientFactory()
+        self.diagnostics = diagnostics
+        self.http_factory = http_factory or HttpClientFactory(diagnostics=diagnostics)
 
     async def fetch_project(
         self,
@@ -116,6 +123,12 @@ class PackageIntelligenceService:
             if not force_refresh:
                 cached = self._load_cache(key)
                 if cached is not None:
+                    if self.diagnostics is not None:
+                        self.diagnostics.record(
+                            DiagnosticStatus.SUCCESS,
+                            "CACHE",
+                            f"Using cached data for {ref.registry.display_name}:{ref.name}",
+                        )
                     info, fetched_at = cached
                     security_warnings = await self._refresh_security_if_needed(
                         key,
@@ -129,9 +142,21 @@ class PackageIntelligenceService:
                         warnings=security_warnings,
                         fetched_at=fetched_at,
                     )
+                if self.diagnostics is not None:
+                    self.diagnostics.record(
+                        DiagnosticStatus.SUCCESS,
+                        "CACHE",
+                        f"No cached data for {ref.registry.display_name}:{ref.name}; fetching fresh data",
+                    )
 
             async with self.http_factory.create() as client:
                 info, warnings = await self._fetch_fresh(ref, client)
+                if self.diagnostics is not None:
+                    self.diagnostics.record(
+                        DiagnosticStatus.SUCCESS,
+                        ref.registry.display_name,
+                        f"Package metadata loaded: {ref.name} {info.latest_version}",
+                    )
                 info.security_advisories, security_warning = await self._fetch_security(
                     key, info, client
                 )
@@ -149,6 +174,12 @@ class PackageIntelligenceService:
                 fetched_at=fetched_at,
             )
         except (httpx.HTTPError, OSError, ValueError, KeyError, TypeError) as exc:
+            if self.diagnostics is not None:
+                self.diagnostics.record(
+                    DiagnosticStatus.FAILURE,
+                    ref.registry.display_name,
+                    f"Package fetch failed for {ref.name}: {diagnostic_for_http_error(exc)}",
+                )
             return IntelligenceResult(
                 ref=ref,
                 error=FetchError(
@@ -304,6 +335,12 @@ class PackageIntelligenceService:
         try:
             return await operation(), None
         except (httpx.HTTPError, OSError, ValueError, KeyError, TypeError) as exc:
+            if self.diagnostics is not None:
+                self.diagnostics.record(
+                    DiagnosticStatus.WARN,
+                    "SIGNAL",
+                    f"{source} unavailable: {diagnostic_for_http_error(exc)}",
+                )
             return default, SignalWarning(source=source, message=str(exc))
 
     def _apply_history_deltas(self, key: str, info: PackageInfo) -> None:

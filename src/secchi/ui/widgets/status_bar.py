@@ -25,6 +25,7 @@ SHORTCUTS = (
     f"{_format_key('e')} Export  "
     f"{_format_key('/')} Search  "
     f"{_format_key('f')} Filter  "
+    f"{_format_key('l')} Logs  "
     f"{_format_key('?')} Help  "
     f"{_format_key('q')} Quit"
 )

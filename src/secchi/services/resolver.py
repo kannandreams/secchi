@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from secchi.diagnostics import DiagnosticLog
 from secchi.errors import ConfigError
 from secchi.models import PackageRef, Registry
 from secchi.services.search import PackageSearchService
@@ -30,6 +31,7 @@ async def resolve_package(
     *,
     configured_refs: list[PackageRef] | None = None,
     registry: str | None = None,
+    diagnostics: DiagnosticLog | None = None,
 ) -> list[PackageRef]:
     """Resolve a package spec from config first, then exact registry matches."""
     explicit = parse_package_spec(spec, registry)
@@ -42,6 +44,6 @@ async def resolve_package(
     if configured:
         return configured
 
-    matches = await PackageSearchService().search(spec)
+    matches = await PackageSearchService(diagnostics=diagnostics).search(spec)
     exact = [result for result in matches if result.exact]
     return [PackageRef(result.name, result.registry) for result in exact]

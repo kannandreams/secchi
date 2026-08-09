@@ -229,6 +229,11 @@ renderer and consumer to handle new fields independently.
 pipeline. Add `--registry` with `pypi`, `crates.io`, `npm`, `homebrew`, `go`, or
 `cran` when a package name needs an explicit ecosystem.
 
+For registry troubleshooting, add `--verbose` to show readable `SUCCESS`,
+`WARN`, and `FAILURE` events, including HTTP response statuses. Use
+`--log-file PATH` to save the current run's diagnostics. In the dashboard,
+press `l` for the process log; `f` remains the favorites-only filter.
+
 `compare` is an advisory decision aid for agents and engineers choosing between
 dependencies. It reports `Recommended`, `Acceptable`, `Use with caution`, or
 `Avoid`, along with the evidence and unknown signals behind the result. Use

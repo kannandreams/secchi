@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+from rich.text import Text
 from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, OptionList, Static
+from textual.widgets import Button, Input, OptionList, RichLog, Static
 from textual.widgets.option_list import Option
 
+from secchi.diagnostics import DiagnosticLog, DiagnosticStatus
 from secchi.models import PackageRef, Project
 
 _SHORTCUTS = [
@@ -20,6 +22,7 @@ _SHORTCUTS = [
     ("/", "Search packages by name"),
     ("r", "Refresh the selected project"),
     ("f", "Toggle favorites-only filter"),
+    ("l", "Show process logs"),
     ("?", "Show this help"),
     ("q / Ctrl+C", "Quit secchi"),
     ("Esc", "Close overlay / dismiss"),
@@ -121,6 +124,43 @@ class HelpScreen(ModalScreen[None]):
 
     def on_key(self) -> None:
         self.dismiss(None)
+
+    def action_dismiss_screen(self) -> None:
+        self.dismiss(None)
+
+
+class LogsScreen(ModalScreen[None]):
+    """Readable session diagnostics for registry and package processing."""
+
+    BINDINGS: ClassVar[list[Binding]] = [
+        Binding("escape,l,q", "dismiss_screen", "Close", show=False)
+    ]
+
+    def __init__(self, diagnostics: DiagnosticLog) -> None:
+        super().__init__()
+        self._diagnostics = diagnostics
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="logs-box"):
+            yield Static("Process Logs", classes="modal-title")
+            yield RichLog(id="diagnostic-log", highlight=False, markup=False)
+            yield Static("Press Esc or l to close", classes="modal-hint")
+
+    def on_mount(self) -> None:
+        log = self.query_one("#diagnostic-log", RichLog)
+        events = self._diagnostics.snapshot()
+        if not events:
+            log.write("No diagnostic events recorded yet.")
+            return
+        for event in events:
+            style = {
+                DiagnosticStatus.SUCCESS: "green",
+                DiagnosticStatus.WARN: "yellow",
+                DiagnosticStatus.FAILURE: "red",
+            }[event.status]
+            text = Text(event.format())
+            text.stylize(style, 9, 9 + len(event.status.value))
+            log.write(text)
 
     def action_dismiss_screen(self) -> None:
         self.dismiss(None)

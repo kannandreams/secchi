@@ -89,6 +89,10 @@ class _ClientLease:
     async def __aexit__(self, exc_type, exc, traceback) -> None:
         return None
 
+    @property
+    def diagnostics(self):
+        return getattr(self.client, "diagnostics", None)
+
     async def get(self, url: str, *args, **kwargs):
         headers = dict(self.client.headers)
         headers.update(self.headers)

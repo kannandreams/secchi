@@ -5,6 +5,23 @@ Screen {
     layers: base overlay;
 }
 
+#logs-box {
+    width: 96%;
+    height: 80%;
+    max-width: 180;
+    border: solid #3A3A3A;
+    background: #050505;
+    padding: 1 2;
+}
+
+#diagnostic-log {
+    width: 1fr;
+    height: 1fr;
+    border: solid #3A3A3A;
+    background: #000000;
+    padding: 0 1;
+}
+
 /* ── Custom header bar ── */
 
 SecchiHeader {

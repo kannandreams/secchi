@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from secchi.config import find_config, load_project, load_projects
+from secchi.diagnostics import DiagnosticLog
 from secchi.errors import ConfigError, PackageNotFoundError
 from secchi.models import PackageRef, Project
 from secchi.services.resolver import parse_package_spec, resolve_package
@@ -44,6 +45,7 @@ async def run(
     config: str | None = None,
     refresh: bool = False,
     security_refresh: bool = False,
+    diagnostics: DiagnosticLog | None = None,
 ) -> DashboardRequest:
     config_path = find_config(config)
     workspace: list[Project] | None = None
@@ -60,7 +62,7 @@ async def run(
         if configured is not None:
             project = configured
         elif registry is None:
-            refs = await resolve_package(package)
+            refs = await resolve_package(package, diagnostics=diagnostics)
             if not refs:
                 raise PackageNotFoundError(
                     f"No exact package named '{package}' was found across registries."

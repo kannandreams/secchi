@@ -11,6 +11,7 @@ from typing import Any
 import httpx
 
 from secchi.api.base import AdapterBase, RegistryAdapter
+from secchi.diagnostics import DiagnosticStatus, diagnostic_for_http_error
 from secchi.models import (
     Dependency,
     DownloadCounts,
@@ -228,8 +229,22 @@ class PyPIAdapter(AdapterBase, RegistryAdapter):
                         exact=True,
                     )
                 ]
-            except (httpx.HTTPError, ValueError, KeyError):
-                pass
+            except (httpx.HTTPError, ValueError, KeyError) as exc:
+                diagnostics = client.diagnostics
+                if diagnostics is not None:
+                    status = (
+                        DiagnosticStatus.SUCCESS
+                        if isinstance(exc, httpx.HTTPStatusError)
+                        and exc.response.status_code == 404
+                        else DiagnosticStatus.WARN
+                    )
+                    message = (
+                        "Exact package was not found; trying HTML search"
+                        if status is DiagnosticStatus.SUCCESS
+                        else "Exact JSON lookup failed; trying HTML search: "
+                        + diagnostic_for_http_error(exc)
+                    )
+                    diagnostics.record(status, "PyPI", message)
             try:
                 response = await client.get(
                     "https://pypi.org/search/",
@@ -238,7 +253,7 @@ class PyPIAdapter(AdapterBase, RegistryAdapter):
                 )
                 response.raise_for_status()
             except httpx.HTTPError:
-                return []
+                raise
 
         pattern = re.compile(
             r'data-project-url="([^"]+)"[^>]*>.*?'

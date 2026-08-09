@@ -14,6 +14,7 @@ from textual.binding import Binding
 from textual.containers import Container, Horizontal
 
 from secchi import derived as derive
+from secchi.diagnostics import DiagnosticLog
 from secchi.export import save_report
 from secchi.models import (
     DerivedPackageData,
@@ -36,7 +37,7 @@ from secchi.spotlight import fetch_spotlight, spotlight_disabled
 from secchi.trending import fetch_trending, load_cached_trending, save_cached_trending
 from secchi.ui.widgets.detail import DetailView
 from secchi.ui.widgets.header_bar import SecchiHeader
-from secchi.ui.widgets.modals import ExportScreen, HelpScreen, SearchScreen
+from secchi.ui.widgets.modals import ExportScreen, HelpScreen, LogsScreen, SearchScreen
 from secchi.ui.widgets.sidebar import Sidebar
 from secchi.ui.widgets.status_bar import SecchiFooter
 from secchi.workspace import (
@@ -61,6 +62,7 @@ class Secchi(App[None]):
         Binding("e", "export", "Export"),
         Binding("slash", "search", "Search"),
         Binding("question_mark", "help", "Help"),
+        Binding("l", "logs", "Logs"),
         Binding("f", "toggle_filter", "Filter"),
         Binding("q", "quit", "Quit"),
         Binding("ctrl+c", "quit", "Quit", show=False),
@@ -74,6 +76,7 @@ class Secchi(App[None]):
         force_security_refresh: bool = False,
         workspace: list[Project] | None = None,
         intelligence: PackageIntelligenceService | None = None,
+        diagnostics: DiagnosticLog | None = None,
     ) -> None:
         super().__init__()
         self._project = project
@@ -90,6 +93,7 @@ class Secchi(App[None]):
         self._render_in_progress = False
         self._render_again = False
         self._intelligence = intelligence or PackageIntelligenceService()
+        self._diagnostics = diagnostics or DiagnosticLog()
 
     @property
     def project(self) -> Project:
@@ -206,6 +210,9 @@ class Secchi(App[None]):
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen())
+
+    def action_logs(self) -> None:
+        self.push_screen(LogsScreen(self._diagnostics))
 
     def action_export(self) -> None:
         if self._workspace_state.selected_ref is None:
