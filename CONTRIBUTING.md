@@ -44,6 +44,10 @@ Before opening a new issue, please check whether a similar issue already exists.
 
 Feature requests are welcome.
 
+Use the [feature request template](https://github.com/kannandreams/secchi/issues/new?template=feature_request.md)
+when opening an issue. Keep the request simple: describe the problem or use
+case first, then explain the behavior you would like to see.
+
 When proposing a feature, it is helpful to explain the problem or use case rather than only describing a particular implementation.
 
 This gives us room to explore the best way to support the capability while keeping Secchi's architecture consistent.

@@ -5,7 +5,9 @@ Thanks for your interest in contributing to Secchi.
 The project is still evolving, so small fixes, documentation improvements,
 tests, adapter improvements, and clearly scoped changes are especially useful.
 For a new feature, open an issue first when possible so the direction can be
-discussed before significant implementation work begins.
+discussed before significant implementation work begins. Use the repository's
+[feature request template](https://github.com/kannandreams/secchi/issues/new?template=feature_request.md)
+to describe the problem, use case, and proposed behavior.
 
 ## Pull request expectations
 
