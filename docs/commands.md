@@ -24,7 +24,9 @@ secchi dashboard --project duckdb
 ```
 
 The dashboard includes adoption trend, health, ecosystem distribution, reverse
-dependencies, health timeline, and version adoption views.
+dependencies, health timeline, version adoption, and a dedicated Security tab.
+See [Dashboard metrics](metrics.md) for the meaning of each card and panel and
+the detailed health-score calculation.
 
 ## `search`
 

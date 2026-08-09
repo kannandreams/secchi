@@ -36,6 +36,7 @@ nav:
   - Home: index.md
   - Getting started: getting-started.md
   - Commands: commands.md
+  - Dashboard metrics: metrics.md
   - Workspace: workspace.md
   - Reports: reports.md
   - MCP and agents: mcp.md

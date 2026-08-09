@@ -235,6 +235,10 @@ dependencies. It reports `Recommended`, `Acceptable`, `Use with caution`, or
 explicit `registry:name` references when comparing packages across ecosystems.
 Secchi does not install, upgrade, remove, or approve a dependency automatically.
 
+See the [Dashboard metrics and health score guide](docs/metrics.md) for the
+meaning of the dashboard cards, overview panels, health categories, grades, and
+practical ways to improve a package's signals.
+
 List available projects:
 
 ```bash
