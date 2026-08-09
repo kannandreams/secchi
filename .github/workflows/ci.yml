@@ -75,15 +75,15 @@ jobs:
         run: uv build
 
   required:
-      name: required
-      needs: checks
-      if: always()
-      runs-on: ubuntu-latest
+    name: required
+    needs: checks
+    if: always()
+    runs-on: ubuntu-latest
 
-      steps:
-        - name: Verify CI matrix
-          run: |
-            if [[ "${{ needs.checks.result }}" != "success" ]]; then
-              echo "CI matrix did not succeed"
-              exit 1
-            fi
+    steps:
+      - name: Verify CI matrix
+        run: |
+          if [[ "${{ needs.checks.result }}" != "success" ]]; then
+            echo "CI matrix did not succeed"
+            exit 1
+          fi
