@@ -30,11 +30,12 @@ _RANGES: tuple[tuple[str, int], ...] = (("30d", 30), ("90d", 90), ("1y", 365))
 
 
 def _downloads_source(registry: Registry) -> str:
-    return {
+    captions = {
         Registry.CRATES: "Source: crates.io",
         Registry.PYPI: "Source: PyPI (via pypistats)",
         Registry.NPM: "Source: npm registry",
-    }[registry]
+    }
+    return captions.get(registry, f"Source: {registry.display_name}")
 
 
 def _source_registries(info: PackageInfo) -> list[Registry]:

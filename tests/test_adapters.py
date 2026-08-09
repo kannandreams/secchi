@@ -170,6 +170,42 @@ def test_npm_adapter_parses_versions_dependencies_search_and_downloads() -> None
     run(exercise())
 
 
+def test_npm_adapter_sorts_versions_when_a_release_date_is_missing() -> None:
+    package = {
+        "name": "demo",
+        "dist-tags": {"latest": "2.0.0"},
+        "time": {
+            "1.0.0": "2025-01-01T00:00:00Z",
+            # 0.9.0 has no entry in "time" — release_date parses to None.
+            "2.0.0": "2026-01-01T00:00:00Z",
+        },
+        "versions": {
+            "0.9.0": {},
+            "1.0.0": {},
+            "2.0.0": {},
+        },
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/demo":
+            return json_response(request, package)
+        return httpx.Response(404, request=request)
+
+    async def exercise() -> None:
+        async with client_for(handler) as client:
+            adapter = NpmAdapter(client)
+            versions = await adapter.fetch_versions("demo")
+
+        assert [version.version for version in versions] == [
+            "2.0.0",
+            "1.0.0",
+            "0.9.0",
+        ]
+        assert versions[-1].release_date is None
+
+    run(exercise())
+
+
 def test_crates_adapter_parses_metadata_versions_dependencies_trend_and_search() -> (
     None
 ):
@@ -234,6 +270,37 @@ def test_crates_adapter_parses_metadata_versions_dependencies_trend_and_search()
         assert dependencies[0].name == "serde"
         assert trend[0].count == 4 and counts.month == 4
         assert search[0].name == "demo"
+
+    run(exercise())
+
+
+def test_crates_adapter_sorts_versions_when_a_release_date_is_missing() -> None:
+    payload = {
+        "crate": {"name": "demo"},
+        "versions": [
+            {"id": 1, "num": "1.0.0", "created_at": "2025-01-01T00:00:00Z"},
+            # 0.9.0 has no created_at — release_date parses to None.
+            {"id": 2, "num": "0.9.0", "created_at": None},
+            {"id": 3, "num": "2.0.0", "created_at": "2026-01-01T00:00:00Z"},
+        ],
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/v1/crates/demo":
+            return json_response(request, payload)
+        return httpx.Response(404, request=request)
+
+    async def exercise() -> None:
+        async with client_for(handler) as client:
+            adapter = CratesAdapter(client)
+            versions = await adapter.fetch_versions("demo")
+
+        assert [version.version for version in versions] == [
+            "2.0.0",
+            "1.0.0",
+            "0.9.0",
+        ]
+        assert versions[-1].release_date is None
 
     run(exercise())
 

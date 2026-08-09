@@ -21,6 +21,11 @@ from secchi.models import (
 NPM_REGISTRY = "https://registry.npmjs.org"
 NPM_DOWNLOADS = "https://api.npmjs.org/downloads"
 
+# Aware sort sentinel for versions with no parsed release date — release_date
+# is always tz-aware when present, and a naive datetime.min would raise
+# TypeError when compared against it, dropping the whole version list.
+_MIN_DATETIME = datetime.min.replace(tzinfo=UTC)
+
 
 def _npm_name(name: str) -> str:
     """URL-encode an npm package name (handles scoped packages like @scope/name)."""
@@ -137,7 +142,7 @@ class NpmAdapter(AdapterBase, RegistryAdapter):
                     )
                 )
 
-            versions.sort(key=lambda v: v.release_date or datetime.min, reverse=True)
+            versions.sort(key=lambda v: v.release_date or _MIN_DATETIME, reverse=True)
             return versions
 
     async def fetch_dependencies(self, name: str, version: str) -> list[Dependency]:

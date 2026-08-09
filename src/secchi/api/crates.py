@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 
 import httpx
 
@@ -21,6 +21,11 @@ from secchi.models import (
 )
 
 CRATES_API = "https://crates.io/api/v1"
+
+# Aware sort sentinel for versions with no parsed release date — release_date
+# is always tz-aware when present, and a naive datetime.min would raise
+# TypeError when compared against it, dropping the whole version list.
+_MIN_DATETIME = datetime.min.replace(tzinfo=UTC)
 
 _HEADERS = {
     "User-Agent": "secchi (https://github.com/kannandreams/secchi)",
@@ -118,7 +123,7 @@ class CratesAdapter(AdapterBase, RegistryAdapter):
                     )
                 )
 
-            versions.sort(key=lambda v: v.release_date or datetime.min, reverse=True)
+            versions.sort(key=lambda v: v.release_date or _MIN_DATETIME, reverse=True)
             return versions
 
     async def fetch_dependencies(self, name: str, version: str) -> list[Dependency]:
