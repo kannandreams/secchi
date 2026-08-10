@@ -9,6 +9,27 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 Changes not yet included in a release will be listed here.
 
+## [0.1.4] - 2026-08-10
+
+### Added
+
+* Added OSV advisory pagination with a bounded page limit for complete, safe security results.
+* Added repository security checks and expanded regression coverage for adapters, cache, history, configuration, and security workflows.
+* Added contributor guidance and reusable coding-agent skills for architecture, testing, registry adapters, and self-review.
+
+### Improved
+
+* Improved compatibility with Python 3.11 through 3.14 and tightened CI and linting checks.
+* Improved error messages for malformed TOML project and package configuration.
+* Improved npm and crates.io version sorting when release dates are missing.
+
+### Fixed
+
+* Fixed Go module proxy requests for module paths containing uppercase letters.
+* Fixed cache-key collisions and path traversal risks for package and security cache files.
+* Fixed crash-mid-write and concurrent-update risks when saving history snapshots.
+* Fixed adapter and dashboard crashes caused by missing release dates and unsupported registry labels.
+
 ## [0.1.3] - 2026-08-09
 
 ### Added
@@ -59,7 +80,8 @@ Changes not yet included in a release will be listed here.
 * JSON, Markdown, and HTML reporting.
 * MCP server integration for coding agents.
 
-[Unreleased]: https://github.com/kannandreams/secchi/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/kannandreams/secchi/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/kannandreams/secchi/releases/tag/v0.1.4
 [0.1.3]: https://github.com/kannandreams/secchi/releases/tag/v0.1.3
 [0.1.2]: https://github.com/kannandreams/secchi/releases/tag/v0.1.2
 [0.1.1]: https://github.com/kannandreams/secchi/releases/tag/v0.1.1
