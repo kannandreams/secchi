@@ -41,6 +41,19 @@ secchi show duckdb --registry pypi
 secchi dashboard serde --registry crates.io
 ```
 
+## Open the dashboard in a browser
+
+Secchi can serve the same Textual dashboard in a browser with
+[Textual Web](https://github.com/Textualize/textual-web):
+
+```bash
+pipx install textual-web
+secchi web duckdb
+```
+
+Browser mode launches the existing `secchi dashboard` experience through
+Textual Web. Treat generated URLs as access to the live dashboard session.
+
 ## Create a workspace
 
 Create a starter configuration interactively:

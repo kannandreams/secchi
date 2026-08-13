@@ -123,7 +123,7 @@ score can sometimes indicate incomplete metadata rather than a definitively
 unhealthy project. GitHub-dependent categories are especially affected when a
 repository cannot be resolved.
 
-### Maintenance — 20 points
+### Maintenance
 
 Secchi considers the more recent of the latest package release and the latest
 GitHub push:
@@ -141,7 +141,7 @@ To improve this category, maintain a healthy release cadence and keep the
 source repository active. Activity should represent meaningful maintenance,
 not empty commits or unnecessary releases.
 
-### Community — 15 points
+### Community
 
 Community is calculated from GitHub data. Secchi first calculates up to 20 raw
 points, then scales that result to a maximum of 15 points.
@@ -164,7 +164,7 @@ The practical improvement is not simply collecting stars. Maintain a visible
 repository, respond to issues, close completed work, and make contribution
 paths clear.
 
-### Documentation — 15 points
+### Documentation
 
 Secchi calculates up to 20 raw points and scales the result to 15:
 
@@ -176,7 +176,7 @@ Provide a working project homepage, a dedicated documentation link, and a
 clear README with installation, usage, configuration, and troubleshooting
 guidance.
 
-### Releases — 15 points
+### Releases
 
 This category counts package versions released within the last 365 days. The
 result is scaled to 15 points:
@@ -193,7 +193,7 @@ The score rewards ongoing activity, but it does not evaluate whether releases
 are useful or stable. Prefer predictable, meaningful releases with clear
 release notes.
 
-### Security — 20 points
+### Security
 
 The current score starts at 20 points and applies these deductions:
 
@@ -214,7 +214,7 @@ provide accurate repository metadata, respond to vulnerabilities, and publish
 fixed releases. The fixed-release portion is currently visible through the
 Security tab but is not yet a scoring input.
 
-### Testing — 15 points
+### Testing
 
 Testing is currently a narrow CI proxy:
 
