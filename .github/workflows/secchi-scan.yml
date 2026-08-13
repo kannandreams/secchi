@@ -1,0 +1,21 @@
+name: secchi-scan
+
+"on":
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  secchi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: kannandreams/secchi-action@v1
+        with:
+          package: pypi:secchi
+          comment: "false"
