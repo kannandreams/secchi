@@ -69,7 +69,7 @@ your own projects.
 | Type | Capability | What it helps with | Status |
 | --- | --- | --- | :---: |
 | Explore | Direct package lookup | Quickly inspect any package from the terminal | ✅ |
-| Explore | Interactive dashboard | Explore health, adoption, releases, and dependencies | ✅ |
+| Explore | Interactive dashboard | Explore health, adoption, releases, dependencies, and optional Web dashboard access | ✅ |
 | Explore | Workspace monitoring | Monitor configured projects and registry sources | ✅ |
 | Explore | Cross-registry search | Find packages across supported ecosystems | ✅ |
 | Explore | Health and adoption signals | Understand project momentum and maintenance quality | ✅ |
@@ -305,7 +305,7 @@ secchi --list                           List projects in config
 secchi init                             Interactively create secchi.toml
 ```
 
-Install `textual-web` with `pipx install textual-web` to use `secchi web`.
+Install Textual Web with `pipx install textual-web` to use `secchi web`.
 Browser mode serves the existing Textual dashboard through that external CLI;
 generated URLs should be treated as access to the live dashboard session.
 

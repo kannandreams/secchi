@@ -34,7 +34,7 @@ the detailed health-score calculation.
 ## `web`
 
 Serve the same Textual dashboard in a browser with
-[`textual-web`](https://github.com/Textualize/textual-web):
+[Textual Web](https://github.com/Textualize/textual-web):
 
 ```bash
 secchi web duckdb
@@ -42,13 +42,13 @@ secchi web --config secchi.toml
 secchi web --project duckdb
 ```
 
-Install the external `textual-web` CLI before using the command:
+Install the external Textual Web CLI before using the command:
 
 ```bash
 pipx install textual-web
 ```
 
-Browser mode generates a temporary `textual-web` configuration that launches
+Browser mode generates a temporary Textual Web configuration that launches
 `secchi dashboard` with the same package, project, config, cache, diagnostics,
 and security-refresh options. It does not serve an arbitrary terminal.
 
@@ -56,7 +56,7 @@ Treat generated URLs as access to the live dashboard session. The Textual app
 still runs on the host machine or server; the browser connects to that running
 process.
 
-`textual-web` is intentionally treated as an external command rather than a
+Textual Web is intentionally treated as an external command rather than a
 Secchi package dependency because the latest PyPI release currently pins an
 older Textual runtime than Secchi itself uses.
 
