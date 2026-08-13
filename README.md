@@ -294,6 +294,7 @@ or fetch Spotlight data and removes the card from the dashboard.
 
 ```
 secchi dashboard [package]              Launch the TUI (workspace when omitted)
+secchi web [package]                    Serve the TUI dashboard in a browser
 secchi show <package>                   Print a concise intelligence summary
 secchi search <package>                 Search packages across supported registries
 secchi report <package> --format <type> Generate json, html, or md output
@@ -303,6 +304,10 @@ secchi --project <name>                 Backwards-compatible project dashboard
 secchi --list                           List projects in config
 secchi init                             Interactively create secchi.toml
 ```
+
+Install `textual-web` with `pipx install textual-web` to use `secchi web`.
+Browser mode serves the existing Textual dashboard through that external CLI;
+generated URLs should be treated as access to the live dashboard session.
 
 ## Development
 
