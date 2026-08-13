@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import subprocess
 from pathlib import Path
 
 from tomli_w import dumps as toml_dumps
@@ -79,6 +80,31 @@ def build_parser() -> argparse.ArgumentParser:
     dashboard_parser.add_argument(
         "--security-no-cache",
         dest="dashboard_security_refresh",
+        action="store_true",
+        help="Re-fetch only OSV security advisories instead of using their cache",
+    )
+
+    web_parser = sub.add_parser(
+        "web", help="Serve the interactive dashboard in a browser with textual-web"
+    )
+    web_parser.add_argument("package", nargs="?", help="Package name or registry:name")
+    web_parser.add_argument("--registry", choices=[item.value for item in Registry])
+    web_parser.add_argument("--project", "-p", dest="web_project")
+    web_parser.add_argument("--config", "-c", dest="web_config")
+    web_parser.add_argument(
+        "--slug",
+        default="secchi",
+        help="URL slug to request from textual-web (default: secchi)",
+    )
+    web_parser.add_argument(
+        "--no-cache",
+        dest="web_refresh",
+        action="store_true",
+        help="Re-fetch package data and security advisories instead of using cache",
+    )
+    web_parser.add_argument(
+        "--security-no-cache",
+        dest="web_security_refresh",
         action="store_true",
         help="Re-fetch only OSV security advisories instead of using their cache",
     )
@@ -184,6 +210,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     for command_parser in (
         dashboard_parser,
+        web_parser,
         show_parser,
         search_parser,
         report_parser,
@@ -303,6 +330,57 @@ def _run_dashboard(
     ).run()
 
 
+def _run_web(
+    args: argparse.Namespace,
+    parser: argparse.ArgumentParser,
+    diagnostics: DiagnosticLog,
+) -> None:
+    refresh = getattr(args, "web_refresh", False) or args.refresh
+    security_refresh = (
+        getattr(args, "web_security_refresh", False) or args.security_refresh or refresh
+    )
+    project_name = getattr(args, "web_project", None) or args.project
+    config = getattr(args, "web_config", None) or args.config
+    try:
+        request = asyncio.run(
+            dashboard.run(
+                package=getattr(args, "package", None),
+                registry=getattr(args, "registry", None),
+                project_name=project_name,
+                config=config,
+                refresh=refresh,
+                security_refresh=security_refresh,
+                diagnostics=diagnostics,
+            )
+        )
+    except (SecchiError, ValueError) as exc:
+        parser.error(str(exc))
+
+    from secchi.web import TextualWebUnavailable, prepare_launch, run_textual_web
+
+    launch = prepare_launch(
+        request,
+        package=getattr(args, "package", None),
+        registry=getattr(args, "registry", None),
+        project_name=project_name,
+        refresh=refresh,
+        security_refresh=security_refresh,
+        verbose=getattr(args, "verbose", False),
+        log_file=getattr(args, "log_file", None),
+        slug=args.slug,
+    )
+    print(
+        "Serving Secchi through textual-web. Treat generated URLs as access to "
+        "this dashboard session."
+    )
+    try:
+        run_textual_web(launch.config_text)
+    except TextualWebUnavailable as exc:
+        parser.error(str(exc))
+    except subprocess.CalledProcessError as exc:
+        parser.error(f"textual-web exited with status {exc.returncode}.")
+
+
 def _run_search(
     args: argparse.Namespace, diagnostics: DiagnosticLog, *, verbose: bool
 ) -> None:
@@ -358,6 +436,9 @@ def main() -> None:
         return
     if args.command == "dashboard" or args.command is None:
         _run_dashboard(args, parser, service, diagnostics)
+        return
+    if args.command == "web":
+        _run_web(args, parser, diagnostics)
         return
     if args.command == "show":
         try:
