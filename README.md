@@ -81,7 +81,7 @@ your own projects.
 | Report | Project-wide reports | Combine registry sources for one monitored project | ✅ |
 | Automate | Package health checks | Fail workflows when package standards are not met | 🚧 |
 | Automate | Workspace policy checks | Evaluate every configured project against policies | ⏳ |
-| Automate | GitHub Actions integration | Run Secchi automatically in CI | ⏳ |
+| Automate | GitHub Actions integration | Run Secchi automatically in CI | ✅ |
 | Integrate | Python SDK | Use Secchi from Python applications and scripts | ⏳ |
 | Integrate | MCP Server | Let AI assistants query package intelligence | ✅ |
 | Explore | Ecosystem adapters | Support PyPI, npm, crates.io, Homebrew, Go Modules, and CRAN | ✅ |
@@ -142,6 +142,19 @@ The server communicates over standard input/output and exposes tools for
 package inspection, cross-registry search, configured project reports, and
 health policy checks. It reuses the same cached intelligence pipeline as the
 CLI, dashboard, and report commands.
+
+## GitHub Actions
+
+Secchi is available on the GitHub Marketplace as
+[Secchi Package Intelligence](https://github.com/marketplace/actions/secchi-package-intelligence).
+Use it to run package intelligence in CI and publish Markdown reports to the
+Actions job summary or a pull request comment.
+
+```yaml
+- uses: kannandreams/secchi-action@v1
+  with:
+    package: pypi:duckdb
+```
 
 ## Use Secchi with MCP
 
