@@ -1,4 +1,4 @@
-"""Browser dashboard launcher backed by textual-web."""
+"""Browser dashboard launcher backed by Textual's local web server."""
 
 from __future__ import annotations
 
@@ -6,25 +6,21 @@ import shlex
 import shutil
 import subprocess
 import sys
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-
-from tomli_w import dumps as toml_dumps
 
 from secchi.workflows.dashboard import DashboardRequest
 
 
-class TextualWebUnavailable(RuntimeError):
-    """Raised when textual-web is not installed or not on PATH."""
+class TextualServeUnavailable(RuntimeError):
+    """Raised when the Textual CLI is not installed or not on PATH."""
 
 
 @dataclass(frozen=True)
 class WebDashboardLaunch:
-    """Details for a generated textual-web launch."""
+    """Details for a generated Textual serve launch."""
 
     command: list[str]
-    config_text: str
 
 
 def build_dashboard_command(
@@ -38,7 +34,7 @@ def build_dashboard_command(
     verbose: bool = False,
     log_file: Path | None = None,
 ) -> list[str]:
-    """Build the dashboard command textual-web should run."""
+    """Build the dashboard command Textual serve should run."""
 
     command = [sys.executable, "-m", "secchi", "dashboard"]
     if package:
@@ -60,21 +56,6 @@ def build_dashboard_command(
     return command
 
 
-def build_textual_web_config(command: list[str], *, slug: str = "secchi") -> str:
-    """Build textual-web TOML for the Secchi dashboard app."""
-
-    return toml_dumps(
-        {
-            "app": {
-                "Secchi": {
-                    "command": shlex.join(command),
-                    "slug": slug,
-                }
-            }
-        }
-    )
-
-
 def prepare_launch(
     request: DashboardRequest,
     *,
@@ -85,9 +66,8 @@ def prepare_launch(
     security_refresh: bool = False,
     verbose: bool = False,
     log_file: Path | None = None,
-    slug: str = "secchi",
 ) -> WebDashboardLaunch:
-    """Prepare a textual-web launch without starting a subprocess."""
+    """Prepare a local Textual serve launch without starting a subprocess."""
 
     command = build_dashboard_command(
         request,
@@ -99,23 +79,29 @@ def prepare_launch(
         verbose=verbose,
         log_file=log_file,
     )
-    return WebDashboardLaunch(
-        command=command,
-        config_text=build_textual_web_config(command, slug=slug),
-    )
+    return WebDashboardLaunch(command=command)
 
 
-def run_textual_web(config_text: str) -> None:
-    """Run textual-web with a generated temporary config file."""
+def run_textual_serve(command: list[str], *, port: int = 8000) -> None:
+    """Run the dashboard through Textual's local browser server."""
 
-    textual_web = shutil.which("textual-web")
-    if textual_web is None:
-        raise TextualWebUnavailable(
-            "Browser dashboard support requires textual-web. "
-            "Install the external CLI with `pipx install textual-web`."
+    textual = shutil.which("textual")
+    if textual is None:
+        raise TextualServeUnavailable(
+            "Browser dashboard support requires the Textual CLI. "
+            "Run `uv sync` and use `uv run secchi web`, or install Secchi "
+            "with a Textual version that provides `textual serve`."
         )
-
-    with tempfile.TemporaryDirectory(prefix="secchi-web-") as temp_dir:
-        config_path = Path(temp_dir) / "secchi-web.toml"
-        config_path.write_text(config_text)
-        subprocess.run([textual_web, "--config", str(config_path)], check=True)
+    subprocess.run(
+        [
+            textual,
+            "serve",
+            "--title",
+            "Secchi",
+            "--port",
+            str(port),
+            "--command",
+            shlex.join(command),
+        ],
+        check=True,
+    )

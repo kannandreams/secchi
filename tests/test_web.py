@@ -2,11 +2,11 @@ import sys
 from pathlib import Path
 
 from secchi.models import PackageRef, Project, Registry
-from secchi.web import build_textual_web_config, prepare_launch
+from secchi.web import prepare_launch, run_textual_serve
 from secchi.workflows.dashboard import DashboardRequest
 
 
-def test_prepare_launch_builds_textual_web_config_for_direct_package(
+def test_prepare_launch_builds_dashboard_command_for_direct_package(
     tmp_path: Path,
 ) -> None:
     request = DashboardRequest(
@@ -22,7 +22,6 @@ def test_prepare_launch_builds_textual_web_config_for_direct_package(
         package="duckdb",
         registry="pypi",
         refresh=True,
-        slug="secchi-demo",
     )
 
     assert launch.command == [
@@ -35,9 +34,6 @@ def test_prepare_launch_builds_textual_web_config_for_direct_package(
         "pypi",
         "--no-cache",
     ]
-    assert "[app.Secchi]" in launch.config_text
-    assert 'slug = "secchi-demo"' in launch.config_text
-    assert "--no-cache" in launch.config_text
 
 
 def test_prepare_launch_preserves_existing_config_and_project(tmp_path: Path) -> None:
@@ -68,10 +64,30 @@ def test_prepare_launch_preserves_existing_config_and_project(tmp_path: Path) ->
     assert "--log-file" in launch.command
 
 
-def test_build_textual_web_config_quotes_command_arguments() -> None:
-    config = build_textual_web_config(
-        [sys.executable, "-m", "secchi", "dashboard", "name with spaces"]
+def test_textual_serve_invokes_local_server(monkeypatch) -> None:
+    calls = []
+    monkeypatch.setattr("secchi.web.shutil.which", lambda name: "/opt/bin/textual")
+    monkeypatch.setattr(
+        "secchi.web.subprocess.run",
+        lambda command, check: calls.append((command, check)),
     )
 
-    assert "[app.Secchi]" in config
-    assert "'name with spaces'" in config
+    run_textual_serve(
+        [sys.executable, "-m", "secchi", "dashboard", "duckdb"], port=8001
+    )
+
+    assert calls == [
+        (
+            [
+                "/opt/bin/textual",
+                "serve",
+                "--title",
+                "Secchi",
+                "--port",
+                "8001",
+                "--command",
+                f"{sys.executable} -m secchi dashboard duckdb",
+            ],
+            True,
+        )
+    ]

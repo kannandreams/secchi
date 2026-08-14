@@ -43,18 +43,44 @@ secchi dashboard serde --registry crates.io
 
 ## Open the dashboard in a browser
 
-Secchi can serve the same Textual dashboard in a browser with
-[Textual Web](https://github.com/Textualize/textual-web):
+Secchi can serve the same Textual dashboard in a local browser with Textual's
+built-in server:
 
 ```bash
-pipx install textual-web
-secchi web duckdb
+uv sync
+uv run secchi web duckdb
+```
+
+The server runs locally and normally prints a URL such as
+`http://localhost:8000`. Contributors only need `uv sync`; no separate browser
+server package or relay account is required.
+
+The default port is `8000`. If that port is already in use, choose another:
+
+```bash
+uv run secchi web duckdb --port 8001
+```
+
+The `web` command must be available in the installed Secchi version. If
+`secchi --help` does not list `web`, upgrade Secchi or run the current checkout
+with uv:
+
+```bash
+uv tool upgrade secchi
+# or, from a Secchi checkout:
+uv run secchi web duckdb
 ```
 
 Browser mode launches the existing `secchi dashboard` experience through
-Textual Web. Treat generated URLs as access to the live dashboard session.
+Textual's local server. Treat generated URLs as access to the live dashboard
+session. Browser support is currently beta and is intended for local demos or
+trusted networks.
 
 ## Create a workspace
+
+Secchi checks PyPI at most once per day and prints an upgrade hint when a newer
+release is available. Disable the check with
+`SECCHI_DISABLE_UPDATE_CHECK=1` when working offline.
 
 Create a starter configuration interactively:
 

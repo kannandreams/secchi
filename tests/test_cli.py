@@ -13,8 +13,8 @@ def test_web_command_arguments_parse() -> None:
             "demo",
             "--config",
             "secchi.toml",
-            "--slug",
-            "secchi-demo",
+            "--port",
+            "8001",
             "--security-no-cache",
         ]
     )
@@ -24,7 +24,7 @@ def test_web_command_arguments_parse() -> None:
     assert args.registry == "pypi"
     assert args.web_project == "demo"
     assert args.web_config == "secchi.toml"
-    assert args.slug == "secchi-demo"
+    assert args.port == 8001
     assert args.web_security_refresh is True
 
 

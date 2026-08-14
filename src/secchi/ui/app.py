@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import UTC, datetime
+from io import StringIO
 from pathlib import Path
 from typing import ClassVar
 
@@ -15,7 +16,7 @@ from textual.containers import Container, Horizontal
 
 from secchi import derived as derive
 from secchi.diagnostics import DiagnosticLog
-from secchi.export import save_report
+from secchi.export import report_filename, report_mime_type, save_report
 from secchi.models import (
     DerivedPackageData,
     FetchError,
@@ -260,10 +261,26 @@ class Secchi(App[None]):
                 )
                 subject = ref.name
                 project_name = self._project.name
-            path = save_report(content, project_name, subject, format_name)
-            self.notify(f"Exported to {path.name}", title="Export")
+            self._deliver_export(content, project_name, subject, format_name)
 
         self.push_screen(ExportScreen(project_scope=project_scope), _on_export)
+
+    def _deliver_export(
+        self, content: str, project_name: str, subject: str, format_name: str
+    ) -> None:
+        """Deliver an export to a browser or save it to the terminal filesystem."""
+
+        if self.is_web:
+            filename = report_filename(project_name, subject, format_name)
+            self.deliver_text(
+                StringIO(content),
+                save_filename=filename,
+                mime_type=report_mime_type(format_name),
+            )
+            self.notify(f"Downloading {filename}", title="Export")
+        else:
+            path = save_report(content, project_name, subject, format_name)
+            self.notify(f"Exported to {path.name}", title="Export")
 
     def _start_spotlight_fetch(self) -> None:
         if spotlight_disabled():
