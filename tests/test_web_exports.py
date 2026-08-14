@@ -22,9 +22,7 @@ def test_web_export_uses_textual_delivery(monkeypatch, tmp_path: Path) -> None:
 
     assert delivered["content"] == "# report"
     assert delivered["save_filename"] == (
-        "secchi-demo-duckdb-"
-        + datetime.now(UTC).strftime("%Y-%m-%d")
-        + ".md"
+        "secchi-demo-duckdb-" + datetime.now(UTC).strftime("%Y-%m-%d") + ".md"
     )
     assert delivered["mime_type"] == "text/markdown"
 

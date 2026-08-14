@@ -68,7 +68,8 @@ def test_textual_serve_invokes_local_server(monkeypatch) -> None:
     calls = []
     monkeypatch.setattr("secchi.web.shutil.which", lambda name: "/opt/bin/textual")
     monkeypatch.setattr(
-        "secchi.web.subprocess.run", lambda command, check: calls.append((command, check))
+        "secchi.web.subprocess.run",
+        lambda command, check: calls.append((command, check)),
     )
 
     run_textual_serve(
