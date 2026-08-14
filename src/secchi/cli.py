@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import subprocess
+import sys
 from pathlib import Path
 
 from tomli_w import dumps as toml_dumps
@@ -17,6 +18,7 @@ from secchi.models import Registry
 from secchi.renderers.summary import render_summary
 from secchi.services.comparison import render_comparison
 from secchi.services.intelligence import PackageIntelligenceService
+from secchi.update import check_for_update
 from secchi.workflows import check, compare, dashboard, report, search, show
 
 
@@ -85,16 +87,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     web_parser = sub.add_parser(
-        "web", help="Serve the interactive dashboard in a browser with textual-web"
+        "web", help="Serve the interactive dashboard in a local browser"
     )
     web_parser.add_argument("package", nargs="?", help="Package name or registry:name")
     web_parser.add_argument("--registry", choices=[item.value for item in Registry])
     web_parser.add_argument("--project", "-p", dest="web_project")
     web_parser.add_argument("--config", "-c", dest="web_config")
     web_parser.add_argument(
-        "--slug",
-        default="secchi",
-        help="URL slug to request from textual-web (default: secchi)",
+        "--port",
+        type=int,
+        default=8000,
+        help="Local browser server port (default: 8000)",
     )
     web_parser.add_argument(
         "--no-cache",
@@ -356,7 +359,7 @@ def _run_web(
     except (SecchiError, ValueError) as exc:
         parser.error(str(exc))
 
-    from secchi.web import TextualWebUnavailable, prepare_launch, run_textual_web
+    from secchi.web import TextualServeUnavailable, prepare_launch, run_textual_serve
 
     launch = prepare_launch(
         request,
@@ -367,18 +370,17 @@ def _run_web(
         security_refresh=security_refresh,
         verbose=getattr(args, "verbose", False),
         log_file=getattr(args, "log_file", None),
-        slug=args.slug,
     )
     print(
-        "Serving Secchi through textual-web. Treat generated URLs as access to "
-        "this dashboard session."
+        "Serving Secchi through Textual's local web server. Open the URL shown "
+        "by the server to access this dashboard session."
     )
     try:
-        run_textual_web(launch.config_text)
-    except TextualWebUnavailable as exc:
+        run_textual_serve(launch.command, port=args.port)
+    except TextualServeUnavailable as exc:
         parser.error(str(exc))
     except subprocess.CalledProcessError as exc:
-        parser.error(f"textual-web exited with status {exc.returncode}.")
+        parser.error(f"textual serve exited with status {exc.returncode}.")
 
 
 def _run_search(
@@ -434,6 +436,9 @@ def main() -> None:
         for name in list_projects(config_path):
             print(name)
         return
+    notice = check_for_update()
+    if notice:
+        print(f"Notice: {notice.message}", file=sys.stderr)
     if args.command == "dashboard" or args.command is None:
         _run_dashboard(args, parser, service, diagnostics)
         return

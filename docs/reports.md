@@ -26,6 +26,10 @@ secchi report \
 If no output path is given, the report is written to the current directory.
 Use `--output -` to write to standard output.
 
+When the dashboard is running through `secchi web`, exporting Markdown, JSON,
+or HTML delivers the report as a browser download. Terminal dashboard exports
+continue to write a file to the local filesystem.
+
 ## Choosing a format
 
 | Format | Best for |

@@ -46,6 +46,10 @@ See the available commands before trying a package:
 uvx --from secchi secchi --help
 ```
 
+Secchi checks PyPI at most once per day and prints an upgrade notice when a
+newer release is available. Disable this optional check with
+`SECCHI_DISABLE_UPDATE_CHECK=1`.
+
 If you like what you see, install Secchi permanently with one of the options
 below. You do not need to run `secchi init` for direct package exploration;
 `init` is only needed when you want to create a workspace configuration for
@@ -303,6 +307,9 @@ SECCHI_DISABLE_SPOTLIGHT=1 secchi dashboard duckdb
 When this variable is set to `1`, `true`, `yes`, or `on`, Secchi does not read
 or fetch Spotlight data and removes the card from the dashboard.
 
+See the [environment variables guide](docs/environment.md) for release update
+checks, GitHub API authentication, cache location, and optional integrations.
+
 ## CLI Options
 
 ```
@@ -318,8 +325,24 @@ secchi --list                           List projects in config
 secchi init                             Interactively create secchi.toml
 ```
 
-Install Textual Web with `pipx install textual-web` to use `secchi web`.
-Browser mode serves the existing Textual dashboard through that external CLI;
+Run `uv sync` and `uv run secchi web duckdb` from a source checkout; Secchi
+uses Textual's built-in local web server. No separate browser server package
+or relay account is required. The
+`web` command is available in recent Secchi releases; if it does not appear in
+`secchi --help`, upgrade Secchi. There is currently no `secchi[web]` extra
+because browser serving is provided by Secchi's existing Textual dependency.
+
+The local server uses port `8000` by default. Choose another port when needed:
+
+```bash
+uv run secchi web duckdb --port 8001
+```
+
+Browser support is currently beta and intended for local demos or trusted
+networks. The Python process runs on the host machine and the browser connects
+to the local server. See the [environment variables guide](docs/environment.md)
+for related runtime controls.
+Browser mode serves the existing Textual dashboard through the local server;
 generated URLs should be treated as access to the live dashboard session.
 
 ## Development

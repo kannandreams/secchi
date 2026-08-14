@@ -39,6 +39,7 @@ nav:
   - Dashboard metrics: metrics.md
   - Workspace: workspace.md
   - Reports: reports.md
+  - Environment variables: environment.md
   - GitHub Actions: github-actions.md
   - MCP and agents: mcp.md
   - Development: development.md

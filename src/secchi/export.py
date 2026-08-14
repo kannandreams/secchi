@@ -49,14 +49,38 @@ def save_report(
 ) -> Path:
     """Save a report in the target directory, creating it when necessary."""
     date = datetime.now(UTC).strftime("%Y-%m-%d")
-    safe_project = project_name.replace("/", "_").replace(" ", "_")
-    safe_subject = subject.replace("/", "_").replace(" ", "_")
-    extension = "md" if format_name == "markdown" else format_name
-    filename = f"secchi-{safe_project}-{safe_subject}-{date}.{extension}"
+    filename = report_filename(project_name, subject, format_name, date=date)
     path = (directory or Path.cwd()) / filename
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content)
     return path
+
+
+def report_filename(
+    project_name: str,
+    subject: str,
+    format_name: str,
+    *,
+    date: str | None = None,
+) -> str:
+    """Return the stable filename used for terminal and browser exports."""
+
+    safe_project = project_name.replace("/", "_").replace(" ", "_")
+    safe_subject = subject.replace("/", "_").replace(" ", "_")
+    extension = "md" if format_name == "markdown" else format_name
+    export_date = date or datetime.now(UTC).strftime("%Y-%m-%d")
+    return f"secchi-{safe_project}-{safe_subject}-{export_date}.{extension}"
+
+
+def report_mime_type(format_name: str) -> str:
+    """Return the MIME type for a supported report format."""
+
+    return {
+        "markdown": "text/markdown",
+        "md": "text/markdown",
+        "json": "application/json",
+        "html": "text/html",
+    }.get(format_name, "application/octet-stream")
 
 
 def _serialize_package_info(info: PackageInfo) -> dict[str, Any]:
