@@ -358,7 +358,7 @@ Press `ctrl+r` to manually reload the dashboard without exiting.
 ### Coverage Reports
 
 The latest `main` coverage report is published at
-[`kannandreams.github.io/secchi/coverage/`](https://kannandreams.github.io/secchi/coverage/)
+[`docs.secchi.dev/coverage/`](https://docs.secchi.dev/coverage/)
 after GitHub Pages is enabled for the repository.
 
 ## Project Information
