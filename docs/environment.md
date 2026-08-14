@@ -6,10 +6,10 @@ experience.
 
 | Variable | Values | Purpose |
 | --- | --- | --- |
-| `SECCHI_GITHUB_TOKEN` | GitHub token | Authenticates GitHub API requests for stars, repository signals, workflows, README, and issue activity. This is recommended for repeated scans and CI. |
-| `SECCHI_DISABLE_UPDATE_CHECK` | `1`, `true`, `yes`, `on` | Disables the once-per-day PyPI release update check. |
-| `SECCHI_DISABLE_SPOTLIGHT` | `1`, `true`, `yes`, `on` | Disables the optional Spotlight feed in the dashboard. |
-| `XDG_CACHE_HOME` | Directory path | Changes the root directory used for Secchi's local cache. |
+| `SECCHI_GITHUB_TOKEN` | GitHub token | GitHub API enrichment |
+| `SECCHI_DISABLE_UPDATE_CHECK` | `1`, `true`, `yes`, `on` | Disable daily update check |
+| `SECCHI_DISABLE_SPOTLIGHT` | `1`, `true`, `yes`, `on` | Disable Spotlight feed |
+| `XDG_CACHE_HOME` | Directory path | Change cache location |
 
 ## GitHub API access
 
