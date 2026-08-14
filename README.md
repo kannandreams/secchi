@@ -73,7 +73,7 @@ your own projects.
 | Type | Capability | What it helps with | Status |
 | --- | --- | --- | :---: |
 | Explore | Direct package lookup | Quickly inspect any package from the terminal | ✅ |
-| Explore | Interactive dashboard | Explore health, adoption, releases, dependencies, and optional Web dashboard access | ✅ |
+| Explore | Interactive dashboard | Explore health, adoption, releases, dependencies, and optional [Web dashboard](docs/getting-started.md#open-the-dashboard-in-a-browser) access | ✅ |
 | Explore | Workspace monitoring | Monitor configured projects and registry sources | ✅ |
 | Explore | Cross-registry search | Find packages across supported ecosystems | ✅ |
 | Explore | Health and adoption signals | Understand project momentum and maintenance quality | ✅ |
