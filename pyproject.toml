@@ -27,7 +27,7 @@ secchi-mcp = "secchi.mcp_server:main"
 
 [project.urls]
 Homepage = "https://secchi.dev"
-Documentation = "https://secchi.dev/getting-started/"
+Documentation = "https://docs.secchi.dev/getting-started/"
 Repository = "https://github.com/kannandreams/secchi"
 Issues = "https://github.com/kannandreams/secchi/issues"
 

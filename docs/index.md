@@ -1,213 +1,50 @@
----
-hide:
-  - navigation
-  - toc
----
+# Secchi
 
-<div class="lp-root" markdown="0">
+Secchi is an open source package intelligence CLI. It combines registry
+metadata, download activity, release history, GitHub signals, dependency
+information, and security advisories into a single view of a package,
+across PyPI, npm, crates.io, Homebrew, Go Modules, and CRAN. It ships an
+interactive terminal dashboard, cross-registry search and comparison,
+exportable reports, workspace monitoring, and a read-only MCP server for
+coding agents.
 
-<!-- ═══════════════════════════════════════════════════════════════ HERO ═══ -->
+For the product overview, see [secchi.dev](https://secchi.dev).
 
-<section class="lp-hero lp-hero--dashboard">
-  <h1 class="lp-title">Open Source Package Intelligence</h1>
-  <p class="lp-subtitle">Package <span id="lp-typeword"></span><span class="lp-cursor">|</span> signals in one place.</p>
-  <div class="lp-hero-actions">
-    <a href="getting-started/" class="lp-btn lp-btn--primary">See the signals &rarr;</a>
-  </div>
-</section>
+## Install
 
-<div class="lp-try-first">
-  <span class="lp-try-first-label">// try first</span>
-  <code>uvx --from secchi secchi dashboard duckdb</code>
-</div>
+```bash
+uv tool install secchi
+```
 
-<!-- ══════════════════════════════════════════════════════════ FEATURES ═══ -->
+Then inspect a package directly — no configuration file required:
 
-<section class="lp-section">
-  <h2 class="lp-section-title">// features</h2>
-  <div class="lp-grid">
-    <div class="lp-card">
-      <div class="lp-card-icon">&#x25A0;</div>
-      <h3>Interactive Dashboard</h3>
-      <p>Rich TUI with health signals, adoption metrics, dependency graphs, and security advisories.</p>
-    </div>
-    <div class="lp-card">
-      <div class="lp-card-icon">&#x25CB;</div>
-      <h3>Cross-Registry Search</h3>
-      <p>Find packages across PyPI, npm, crates.io, Homebrew, Go Modules, and CRAN from one command.</p>
-    </div>
-    <div class="lp-card">
-      <div class="lp-card-icon">&#x25C6;</div>
-      <h3>Package Comparison</h3>
-      <p>Rank choices with evidence-based recommendations — Recommended, Acceptable, Caution, or Avoid.</p>
-    </div>
-    <div class="lp-card">
-      <div class="lp-card-icon">&#x25B3;</div>
-      <h3>Export &amp; Reports</h3>
-      <p>Generate JSON, Markdown, and HTML reports for automation, docs, and stakeholders.</p>
-    </div>
-    <div class="lp-card">
-      <div class="lp-card-icon">&#x25A3;</div>
-      <h3>Workspace Monitoring</h3>
-      <p>Monitor named projects with lazy loading. Configure once and revisit anytime.</p>
-    </div>
-    <div class="lp-card">
-      <div class="lp-card-icon">&#x25B7;</div>
-      <h3>MCP Server</h3>
-      <p>Let AI coding agents inspect, search, compare, and check packages directly.</p>
-    </div>
-    <div class="lp-card">
-      <div class="lp-card-icon">&#x2295;</div>
-      <h3>Security Advisories</h3>
-      <p>OSV.dev vulnerability lookup for the latest version across PyPI, npm, crates.io, Go, and CRAN.</p>
-    </div>
-    <div class="lp-card">
-      <div class="lp-card-icon">+</div>
-      <h3>Request a Feature</h3>
-      <p>Contributions welcome.</p>
-      <a class="lp-card-btn" href="https://github.com/kannandreams/secchi/issues/new">New issue</a>
-    </div>
-  </div>
-</section>
+```bash
+secchi dashboard duckdb
+```
 
-<!-- ═══════════════════════════════════════════════════════ ECOSYSTEMS ═══ -->
+See [Getting started](getting-started.md) for pipx and pip installation
+and first-run guidance.
 
-<section class="lp-section lp-section--alt">
-  <h2 class="lp-section-title">// ecosystems</h2>
-  <div class="lp-ecosystems">
-    <div class="lp-eco"><img src="https://cdn.simpleicons.org/python" alt=""><span>PyPI</span></div>
-    <div class="lp-eco"><img src="https://cdn.simpleicons.org/javascript" alt=""><span>npm</span></div>
-    <div class="lp-eco"><img src="https://cdn.simpleicons.org/rust" alt=""><span>crates.io</span></div>
-    <div class="lp-eco"><img src="https://cdn.simpleicons.org/homebrew" alt=""><span>Homebrew</span></div>
-    <div class="lp-eco"><img src="https://cdn.simpleicons.org/go" alt=""><span>Go Modules</span></div>
-    <div class="lp-eco"><img src="https://cdn.simpleicons.org/r" alt=""><span>CRAN</span></div>
-  </div>
-</section>
+## Documentation
 
-<!-- ═══════════════════════════════════════════════════════════ SPOTLIGHT ═══ -->
+| Page | Covers |
+| --- | --- |
+| [Getting started](getting-started.md) | Installation and first commands. |
+| [Commands](commands.md) | The full CLI command reference. |
+| [Dashboard metrics](metrics.md) | Every dashboard signal and how the health score is calculated. |
+| [Workspace](workspace.md) | Monitoring a named list of projects. |
+| [Reports](reports.md) | JSON, Markdown, and HTML export. |
+| [Environment variables](environment.md) | Optional integrations and behavior switches. |
+| [GitHub Actions](github-actions.md) | Using the Secchi Marketplace Action in CI. |
+| [MCP and agents](mcp.md) | The read-only MCP server for coding agents. |
+| [Development](development.md) | Working on Secchi itself. |
+| [Contributing](contributing.md) | How to file issues and submit changes. |
 
-<section class="lp-section lp-spotlight">
-  <h2 class="lp-section-title">// secchi spotlight</h2>
-  <p class="lp-spotlight-tagline">Free promotion for open-source projects&mdash;from the terminal.</p>
-  <div class="lp-spotlight-layout">
-    <div class="lp-spotlight-intro">
-      <p class="lp-spotlight-copy">Have an open-source project you want to show in the Secchi Spotlight space? Submit a pull request and let more developers discover it.</p>
-      <div class="lp-section-cta">
-        <a href="https://github.com/kannandreams/secchi-spotlight/pulls" class="lp-btn lp-btn--primary">Submit your project &rarr;</a>
-      </div>
-    </div>
-    <div class="lp-spotlight-card" aria-label="Example Secchi Spotlight project">
-      <div class="lp-spotlight-card-label"><span>SPOTLIGHT</span></div>
-      <div class="lp-spotlight-card-body">
-        <h3>tuffcli</h3>
-        <p>Capability lifecycle manager<br>for coding agents.</p>
-        <div class="lp-spotlight-card-meta"><span class="lp-spotlight-star">&#9733;</span><span>1</span><span>Early project</span></div>
-      </div>
-    </div>
-  </div>
-</section>
+## Related projects
 
-<!-- ════════════════════════════════════════════════════════════ QUICK ═══ -->
-
-<section class="lp-section lp-section--alt">
-  <h2 class="lp-section-title">// quick start</h2>
-  <div class="terminal-window">
-    <div class="terminal-titlebar">
-      <span class="terminal-dot terminal-dot--red"></span>
-      <span class="terminal-dot terminal-dot--yellow"></span>
-      <span class="terminal-dot terminal-dot--green"></span>
-      <span class="terminal-title">secchi — package intelligence</span>
-    </div>
-    <div class="terminal-body">
-      <div class="terminal-lines">
-        <div class="terminal-line">
-          <span class="terminal-prompt">~ $</span>
-          <span class="terminal-cmd">secchi dashboard duckdb</span>
-        </div>
-        <div class="terminal-line">
-          <span class="terminal-prompt">~ $</span>
-          <span class="terminal-cmd">secchi compare pypi:duckdb pypi:polars</span>
-        </div>
-        <div class="terminal-line">
-          <span class="terminal-prompt">~ $</span>
-          <span class="terminal-cmd">secchi report duckdb --format html</span>
-        </div>
-        <div class="terminal-line">
-          <span class="terminal-prompt">~ $</span>
-          <span class="terminal-cmd">secchi mcp</span>
-          <span class="terminal-cursor">&#9608;</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="lp-section-cta">
-    <a href="commands/" class="lp-btn lp-btn--primary">All commands &rarr;</a>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════════════════════════════ FOOTER ═══ -->
-
-<section class="lp-section lp-footer">
-  <div class="lp-footer-grid">
-    <div>
-      <strong>Secchi</strong>
-      <p>Open Source Package Intelligence.<br>Apache 2.0 licensed.</p>
-    </div>
-    <div>
-      <strong>Docs</strong>
-      <a href="getting-started/">Getting started</a>
-      <a href="commands/">Commands</a>
-      <a href="workspace/">Workspace</a>
-      <a href="reports/">Reports</a>
-      <a href="mcp/">MCP &amp; agents</a>
-    </div>
-    <div>
-      <strong>Project</strong>
-      <a href="https://github.com/kannandreams/secchi">GitHub</a>
-      <a href="https://github.com/kannandreams/secchi/blob/main/LICENSE">License</a>
-      <a href="https://github.com/kannandreams/secchi/blob/main/CHANGELOG.md">Changelog</a>
-      <a href="contributing/">Contributing</a>
-    </div>
-  </div>
-</section>
-
-</div>
-
-<script>
-(function() {
-  var words = ["health", "adoption", "security", "dependencies"];
-  var el = document.getElementById("lp-typeword");
-  if (!el) return;
-  var i = 0;       // current word index
-  var j = 0;       // current char index in word
-  var typing = true;
-  var speed = 60;  // ms per char
-
-  function tick() {
-    var word = words[i];
-    if (typing) {
-      el.textContent = word.slice(0, j + 1);
-      j++;
-      if (j >= word.length) {
-        typing = false;
-        setTimeout(tick, 1800);
-        return;
-      }
-    } else {
-      el.textContent = word.slice(0, j - 1);
-      j--;
-      if (j <= 0) {
-        typing = true;
-        i = (i + 1) % words.length;
-        j = 0;
-        el.textContent = "";
-        setTimeout(tick, 200);
-        return;
-      }
-    }
-    setTimeout(tick, typing ? speed : 35);
-  }
-
-  tick();
-})();
-</script>
+- [Secchi CLI Analytics](https://github.com/kannandreams/secchi-cli-analytics)
+  — a separate binary that gives CLI authors local-first usage analytics:
+  command and flag usage, failures, and human-versus-agent attribution,
+  with command paths and flag names only, never argument values.
+- Test coverage for this repository is published at
+  [docs.secchi.dev/coverage](https://docs.secchi.dev/coverage/).
