@@ -15,8 +15,35 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Filter changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          # "code" = anything that isn't docs-site-only. Keep this in sync
+          # with the equivalent filter in security.yml.
+          filters: |
+            code:
+              - '**'
+              - '!docs/**'
+              - '!mkdocs.yml'
+              - '!overrides/**'
+              - '!README.md'
+
   checks:
     name: Python ${{ matrix.python-version }}
+    needs: changes
+    # Skip the full Python matrix for docs-site-only changes; a manual
+    # workflow_dispatch always runs it.
+    if: needs.changes.outputs.code == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -74,20 +101,52 @@ jobs:
       - name: Build verification
         run: uv build
 
+  docs:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Build MkDocs site
+        run: uv run mkdocs build --strict
+
   ci-required:
     name: CI Required
-    needs: 
+    needs:
+      - changes
       - checks
+      - docs
     if: ${{ always() }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Verify CI matrix
+      - name: Verify CI results
         run: |
-          echo "CI matrix result: ${{ needs.checks.result }}"
+          echo "Docs-site-only change: ${{ needs.changes.outputs.code == 'false' }}"
+          echo "Python matrix result: ${{ needs.checks.result }}"
+          echo "Docs build result:     ${{ needs.docs.result }}"
 
-          if [[ "${{ needs.checks.result }}" != "success" ]]; then
-            echo "CI matrix did not succeed"
+          if [[ "${{ needs.docs.result }}" != "success" ]]; then
+            echo "Documentation build failed."
+            exit 1
+          fi
+
+          if [[ "${{ needs.changes.outputs.code }}" == "true" && "${{ needs.checks.result }}" != "success" ]]; then
+            echo "Python matrix did not succeed."
             exit 1
           fi
 

@@ -14,8 +14,38 @@ permissions:
   actions: read
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Filter changed paths
+        id: filter
+        # On schedule there's no diff to filter against; the action reports
+        # `false` for every filter in that case, which the codeql/audit
+        # `if:` below explicitly overrides for github.event_name == 'schedule'.
+        uses: dorny/paths-filter@v3
+        with:
+          # "code" = anything that isn't docs-site-only. Keep this in sync
+          # with the equivalent filter in ci.yml.
+          filters: |
+            code:
+              - '**'
+              - '!docs/**'
+              - '!mkdocs.yml'
+              - '!overrides/**'
+              - '!README.md'
+
   codeql:
     name: CodeQL
+    needs: changes
+    # Skip for docs-site-only changes; the weekly schedule and manual
+    # dispatch always run it.
+    if: needs.changes.outputs.code == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -38,6 +68,8 @@ jobs:
 
   dependency-audit:
     name: Dependency audit
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -72,6 +104,7 @@ jobs:
   security-required:
     name: Security Required
     needs:
+      - changes
       - codeql
       - dependency-audit
       - dependency-review
@@ -82,22 +115,26 @@ jobs:
     steps:
       - name: Verify security checks
         env:
+          CODE_CHANGED: ${{ needs.changes.outputs.code }}
           CODEQL_RESULT: ${{ needs.codeql.result }}
           AUDIT_RESULT: ${{ needs.dependency-audit.result }}
           REVIEW_RESULT: ${{ needs.dependency-review.result }}
         run: |
+          echo "Docs-site-only change: $([[ "$CODE_CHANGED" == "false" ]] && echo true || echo false)"
           echo "CodeQL:            $CODEQL_RESULT"
           echo "Dependency audit:  $AUDIT_RESULT"
           echo "Dependency review: $REVIEW_RESULT"
 
-          if [[ "$CODEQL_RESULT" != "success" ]]; then
-            echo "CodeQL failed or did not complete successfully."
-            exit 1
-          fi
+          if [[ "$CODE_CHANGED" == "true" || "$GITHUB_EVENT_NAME" == "schedule" || "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$CODEQL_RESULT" != "success" ]]; then
+              echo "CodeQL failed or did not complete successfully."
+              exit 1
+            fi
 
-          if [[ "$AUDIT_RESULT" != "success" ]]; then
-            echo "Dependency audit failed or did not complete successfully."
-            exit 1
+            if [[ "$AUDIT_RESULT" != "success" ]]; then
+              echo "Dependency audit failed or did not complete successfully."
+              exit 1
+            fi
           fi
 
           if [[ "$REVIEW_RESULT" != "success" && "$REVIEW_RESULT" != "skipped" ]]; then
