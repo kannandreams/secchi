@@ -1,0 +1,9 @@
+Self-hosted web fonts for docs.secchi.dev, copied from the secchi.dev
+landing page (secchi-website/fonts). Both are licensed under the
+SIL Open Font License 1.1:
+
+  Space Grotesk   https://github.com/floriankarsten/space-grotesk
+  JetBrains Mono  https://github.com/JetBrains/JetBrainsMono
+
+*-symbols.woff2 are unicode-range subsets (U+2190-21FF, U+2500-25FF:
+arrows, box drawing, block elements, geometric shapes).
