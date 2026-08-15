@@ -1,0 +1,32 @@
+{#-
+  Primary nav override: Material 9.7.7 partials/nav.html with the drawer
+  title rendered as the SECCHI wordmark (disk glyph + text) instead of the
+  logo image + site name, matching the header.
+-#}
+{% import "partials/nav-item.html" as item with context %}
+{% set class = "md-nav md-nav--primary" %}
+{% if "navigation.tabs" in features %}
+  {% set class = class ~ " md-nav--lifted" %}
+{% endif %}
+{% if "toc.integrate" in features %}
+  {% set class = class ~ " md-nav--integrated" %}
+{% endif %}
+<nav class="{{ class }}" aria-label="{{ lang.t('nav') }}" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="{{ config.extra.homepage | d(nav.homepage.url, true) | url }}" title="{{ config.site_name | e }}" class="md-nav__button md-logo sx-wordmark" aria-label="{{ config.site_name }}" data-md-component="logo">
+      <span class="disk-glyph" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="wordmark-text" data-text="SECCHI">SECCHI</span>
+    </a>
+  </label>
+  {% if config.repo_url %}
+    <div class="md-nav__source">
+      {% include "partials/source.html" %}
+    </div>
+  {% endif %}
+  <ul class="md-nav__list" data-md-scrollfix>
+    {% for nav_item in nav.items %}
+      {% set path = "__nav_" ~ loop.index %}
+      {{ item.render(nav_item, path, 1) }}
+    {% endfor %}
+  </ul>
+</nav>

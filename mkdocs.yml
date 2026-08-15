@@ -6,17 +6,38 @@ repo_name: kannandreams/secchi
 
 theme:
   name: material
+  custom_dir: overrides
   language: en
-  logo: assets/secchi-logo.png
+  favicon: assets/favicon.svg
+  # Fonts are self-hosted (docs/fonts, declared in extra.css); no Google Fonts.
+  font: false
   features:
     - navigation.sections
     - navigation.top
     - content.code.copy
     - search.highlight
+  # Colors come entirely from stylesheets/extra.css (the secchi.dev tokens).
+  # Dark first; the header bar stays dark in both schemes.
   palette:
-    - scheme: slate
-      primary: black
-      accent: green
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+extra:
+  # The wordmark links to the product site, as on secchi.dev; "Docs" and
+  # the sidebar "Home" entry lead back here.
+  homepage: https://secchi.dev/
 
 extra_css:
   - stylesheets/extra.css

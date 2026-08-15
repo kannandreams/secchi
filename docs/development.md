@@ -50,6 +50,15 @@ uv run mkdocs build --strict
 The documentation configuration lives in `mkdocs.yml`, and source pages live
 under `docs/`.
 
+The site shares the [secchi.dev](https://secchi.dev) design system: its
+tokens, fonts, and rules are ported into `docs/stylesheets/extra.css` (design
+tokens at the top), and the header and mobile drawer come from the Material
+template overrides in `overrides/partials/`. There are dark (carbon-blue
+page, black panels) and light schemes behind Material's palette toggle; the
+header bar stays black in both. Fonts are self-hosted under
+`docs/fonts/`; nothing is fetched from third parties at runtime. When the
+landing page's `css/site.css` changes, mirror the change here.
+
 ## Architecture direction
 
 The CLI, dashboard, reports, MCP server, and future SDK surfaces should reuse
