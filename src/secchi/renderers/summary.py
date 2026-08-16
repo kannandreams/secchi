@@ -9,9 +9,7 @@ def render_summary(info: PackageInfo, derived: DerivedPackageData) -> str:
     change = derived.downloads_30d_pct_change
     downloads = _format_count(derived.downloads_30d_total)
     if change is not None:
-        downloads = (
-            f"{downloads} ({'▲' if change >= 0 else '▼'} {abs(change):.1f}%)"
-        )
+        downloads = f"{downloads} ({'▲' if change >= 0 else '▼'} {abs(change):.1f}%)"
     stars = (
         _format_count(info.github_stats.stars) if info.github_stats.resolved else "—"
     )
