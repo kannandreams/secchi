@@ -68,13 +68,16 @@ def test_resolver_prefers_configured_registry_sources() -> None:
 
 def test_summary_includes_primary_signals() -> None:
     info = PackageInfo(name="duckdb", registry=Registry.PYPI, latest_version="1.5.5")
+    derived = DerivedPackageData(
+        health_score=HealthScore(total=92), downloads_30d_total=7_600
+    )
     info.github_stats.resolved = True
     info.github_stats.stars = 34_000
-    derived = DerivedPackageData(health_score=HealthScore(total=92))
     output = render_summary(info, derived)
     assert "Health Score      92 / 100" in output
     assert "Latest Version    1.5.5" in output
     assert "GitHub Stars      34.0k" in output
+    assert "Downloads         7.6k" in output
     assert "Security Advisories 0" in output
 
 

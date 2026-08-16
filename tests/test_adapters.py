@@ -518,3 +518,23 @@ def test_pubdev_adapter_search_describes_each_result() -> None:
         assert next(r for r in results if r.name == "demo_two").exact is False
 
     run(exercise())
+
+
+def test_pubdev_adapter_resolves_exact_package_when_search_omits_it() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/search":
+            return json_response(request, {"packages": [{"package": "other"}]})
+        if request.url.path == "/api/packages/scanbot_sdk":
+            return json_response(request, _pubdev_package("scanbot_sdk"))
+        if request.url.path == "/api/packages/other":
+            return json_response(request, _pubdev_package("other"))
+        return httpx.Response(404, request=request)
+
+    async def exercise() -> None:
+        async with client_for(handler) as client:
+            results = await PubDevAdapter(client).search("scanbot_sdk")
+
+        assert [result.name for result in results if result.exact] == ["scanbot_sdk"]
+        assert results[0].registry is Registry.PUB
+
+    run(exercise())
