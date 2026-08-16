@@ -84,16 +84,27 @@ class PubDevAdapter(SparseAdapter):
 
     async def search(self, query: str, limit: int = 10) -> list[SearchResult]:
         async with self._client_scope() as client:
+            names: list[str] = []
             try:
                 response = await client.get(f"{PUB_API}/search", params={"q": query})
                 response.raise_for_status()
-            except httpx.HTTPError:
-                return []
-            names = [
-                entry.get("package", "")
-                for entry in response.json().get("packages", [])[:limit]
-                if entry.get("package")
-            ]
+                names = [
+                    entry.get("package", "")
+                    for entry in response.json().get("packages", [])[:limit]
+                    if entry.get("package")
+                ]
+            except (httpx.HTTPError, ValueError, KeyError, TypeError):
+                # The search endpoint is useful for suggestions, but it is not
+                # authoritative for exact package resolution.  Fall through to
+                # the package endpoint below so newly indexed or oddly ranked
+                # packages can still be opened directly.
+                pass
+
+            # An unqualified CLI package name must resolve even when pub.dev's
+            # search results omit the exact package (or the search endpoint is
+            # temporarily unavailable).
+            if query.casefold() not in {name.casefold() for name in names}:
+                names.insert(0, query)
 
             async def describe(candidate: str) -> SearchResult | None:
                 try:
@@ -115,7 +126,7 @@ class PubDevAdapter(SparseAdapter):
                     exact=resolved_name.casefold() == query.casefold(),
                 )
 
-            results = await asyncio.gather(*(describe(name) for name in names))
+            results = await asyncio.gather(*(describe(name) for name in names[:limit]))
         return [result for result in results if result is not None]
 
 
