@@ -25,6 +25,7 @@ OSV_ECOSYSTEMS: dict[Registry, str] = {
     Registry.CRATES: "crates.io",
     Registry.GO: "Go",
     Registry.CRAN: "CRAN",
+    Registry.PUB: "Pub",
 }
 
 

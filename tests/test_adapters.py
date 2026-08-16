@@ -16,8 +16,9 @@ from secchi.api.crates import CratesAdapter
 from secchi.api.golang import GoModuleAdapter
 from secchi.api.homebrew import HomebrewAdapter
 from secchi.api.npm import NpmAdapter
+from secchi.api.pubdev import PubDevAdapter
 from secchi.api.pypi import PyPIAdapter
-from secchi.models import Registry
+from secchi.models import DownloadCounts, Registry
 
 
 def run(operation: Awaitable):
@@ -425,5 +426,95 @@ def test_adapters_return_empty_search_results_for_missing_optional_endpoint() ->
             assert await HomebrewAdapter(client).search("missing") == []
             assert await GoModuleAdapter(client).search("missing") == []
             assert await CranAdapter(client).search("missing") == []
+            assert await PubDevAdapter(client).search("missing") == []
+            assert (
+                await PubDevAdapter(client).fetch_download_counts("missing")
+                == DownloadCounts()
+            )
+
+    run(exercise())
+
+
+def _pubdev_package(name: str = "demo") -> dict:
+    return {
+        "name": name,
+        "latest": {
+            "version": "2.0.0",
+            "published": "2026-02-01T00:00:00Z",
+            "pubspec": {
+                "name": name,
+                "description": "A demo Flutter package",
+                "homepage": "https://example.com",
+                "repository": "https://github.com/example/demo",
+                "environment": {"sdk": ">=3.0.0 <4.0.0", "flutter": ">=1.0.0"},
+                "dependencies": {"flutter": {"sdk": "flutter"}, "http": "^1.0.0"},
+                "dev_dependencies": {"test": "^1.0.0"},
+            },
+        },
+        "versions": [
+            {
+                "version": "1.0.0",
+                "published": "2025-01-01T00:00:00Z",
+                "pubspec": {"dependencies": {"http": "^0.13.0"}},
+            },
+            {
+                "version": "2.0.0",
+                "published": "2026-02-01T00:00:00Z",
+                "retracted": True,
+                "pubspec": {"dependencies": {"http": "^1.0.0"}},
+            },
+        ],
+    }
+
+
+def test_pubdev_adapter_parses_metadata_versions_dependencies_and_download_counts() -> (
+    None
+):
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/packages/demo":
+            return json_response(request, _pubdev_package())
+        if request.url.path == "/api/packages/demo/score":
+            return json_response(request, {"downloadCount30Days": 4200})
+        return httpx.Response(404, request=request)
+
+    async def exercise() -> None:
+        async with client_for(handler) as client:
+            adapter = PubDevAdapter(client)
+            info = await adapter.fetch_package("demo")
+            versions = await adapter.fetch_versions("demo")
+            deps = await adapter.fetch_dependencies("demo", "2.0.0")
+
+        assert info.registry is Registry.PUB
+        assert info.latest_version == "2.0.0"
+        assert info.package_kind == "Flutter Package"
+        assert info.repository_url == "https://github.com/example/demo"
+        assert info.download_counts.month == 4200
+        assert [v.version for v in versions] == ["2.0.0", "1.0.0"]
+        assert versions[0].is_yanked is True
+        assert [d.name for d in deps] == ["http"]
+
+    run(exercise())
+
+
+def test_pubdev_adapter_search_describes_each_result() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/search":
+            return json_response(
+                request,
+                {"packages": [{"package": "demo"}, {"package": "demo_two"}]},
+            )
+        if request.url.path == "/api/packages/demo":
+            return json_response(request, _pubdev_package("demo"))
+        if request.url.path == "/api/packages/demo_two":
+            return json_response(request, _pubdev_package("demo_two"))
+        return httpx.Response(404, request=request)
+
+    async def exercise() -> None:
+        async with client_for(handler) as client:
+            results = await PubDevAdapter(client).search("demo")
+
+        assert {r.name for r in results} == {"demo", "demo_two"}
+        assert next(r for r in results if r.name == "demo").exact is True
+        assert next(r for r in results if r.name == "demo_two").exact is False
 
     run(exercise())

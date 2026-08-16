@@ -12,6 +12,7 @@ class Registry(StrEnum):
     HOMEBREW = "homebrew"
     GO = "go"
     CRAN = "cran"
+    PUB = "pub"
 
     @property
     def display_name(self) -> str:
@@ -22,6 +23,7 @@ class Registry(StrEnum):
             self.HOMEBREW: "Homebrew",
             self.GO: "Go Modules",
             self.CRAN: "CRAN",
+            self.PUB: "pub.dev",
         }[self]
 
     @property
@@ -33,6 +35,7 @@ class Registry(StrEnum):
             self.HOMEBREW: "🍺",
             self.GO: "🐹",
             self.CRAN: "📈",
+            self.PUB: "🎯",
         }[self]
 
     @property
@@ -44,6 +47,7 @@ class Registry(StrEnum):
             self.HOMEBREW: "Ruby/C++",
             self.GO: "Go",
             self.CRAN: "R",
+            self.PUB: "Dart/Flutter",
         }[self]
 
     @property
@@ -55,6 +59,7 @@ class Registry(StrEnum):
             self.HOMEBREW: "brew install",
             self.GO: "go get",
             self.CRAN: "install.packages",
+            self.PUB: "dart pub add",
         }[self]
 
 

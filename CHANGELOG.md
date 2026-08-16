@@ -7,7 +7,9 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes not yet included in a release will be listed here.
+### Added
+
+* Added a pub.dev registry adapter for Dart and Flutter packages (`--registry pub`), including OSV advisory coverage and pub.dev's 30-day download signal.
 
 ## [0.1.4] - 2026-08-10
 

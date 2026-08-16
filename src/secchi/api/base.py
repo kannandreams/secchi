@@ -107,6 +107,7 @@ def create_adapter(registry: Registry, *, client: httpx.AsyncClient) -> Registry
     from secchi.api.golang import GoModuleAdapter
     from secchi.api.homebrew import HomebrewAdapter
     from secchi.api.npm import NpmAdapter
+    from secchi.api.pubdev import PubDevAdapter
     from secchi.api.pypi import PyPIAdapter
 
     adapters = {
@@ -116,6 +117,7 @@ def create_adapter(registry: Registry, *, client: httpx.AsyncClient) -> Registry
         Registry.HOMEBREW: HomebrewAdapter,
         Registry.GO: GoModuleAdapter,
         Registry.CRAN: CranAdapter,
+        Registry.PUB: PubDevAdapter,
     }
     cls = adapters[registry]
     return cls(client)

@@ -34,6 +34,7 @@ def _downloads_source(registry: Registry) -> str:
         Registry.CRATES: "Source: crates.io",
         Registry.PYPI: "Source: PyPI (via pypistats)",
         Registry.NPM: "Source: npm registry",
+        Registry.PUB: "Source: pub.dev (30-day rolling count)",
     }
     return captions.get(registry, f"Source: {registry.display_name}")
 

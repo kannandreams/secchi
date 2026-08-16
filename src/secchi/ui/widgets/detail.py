@@ -32,6 +32,7 @@ ECOSYSTEM_ICONS: dict[str, str] = {
     "homebrew": "🍺",
     "go": "🐹",
     "cran": "📈",
+    "pub": "🎯",
     "docker": "🐳",
     "nix": "❄️",
     "winget": "🪟",
