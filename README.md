@@ -65,6 +65,7 @@ your own projects.
     <td align="center"><img src="https://cdn.simpleicons.org/homebrew" alt="Homebrew" width="28"><br><strong>Homebrew</strong><br><small>Formulae</small></td>
     <td align="center"><img src="https://cdn.simpleicons.org/go" alt="Go" width="28"><br><strong>Go Modules</strong><br><small>Go</small></td>
     <td align="center"><img src="https://cdn.simpleicons.org/r" alt="R" width="28"><br><strong>CRAN</strong><br><small>R</small></td>
+    <td align="center"><img src="https://cdn.simpleicons.org/dart" alt="Dart" width="28"><br><strong>pub.dev</strong><br><small>Dart/Flutter</small></td>
   </tr>
 </table>
 
@@ -88,7 +89,7 @@ your own projects.
 | Automate | GitHub Actions integration | Run Secchi automatically in CI | ✅ |
 | Integrate | Python SDK | Use Secchi from Python applications and scripts | ⏳ |
 | Integrate | MCP Server | Let AI assistants query package intelligence | ✅ |
-| Explore | Ecosystem adapters | Support PyPI, npm, crates.io, Homebrew, Go Modules, and CRAN | ✅ |
+| Explore | Ecosystem adapters | Support PyPI, npm, crates.io, Homebrew, Go Modules, CRAN, and pub.dev | ✅ |
 
 ## Install
 
@@ -199,7 +200,7 @@ server is added, the agent can use these tools:
 | MCP tool | Use it for |
 | --- | --- |
 | `inspect_package` | Inspect health, adoption, releases, dependencies, and repository signals |
-| `search_packages` | Find matching packages across PyPI, npm, crates.io, Homebrew, Go Modules, and CRAN |
+| `search_packages` | Find matching packages across PyPI, npm, crates.io, Homebrew, Go Modules, CRAN, and pub.dev |
 | `inspect_project` | Read a configured project from `secchi.toml` and summarize all its package sources |
 | `check_package` | Evaluate minimum health and repository CI policies |
 | `compare_packages` | Rank two or more package choices with recommendations, confidence, and evidence |
@@ -243,8 +244,8 @@ schema changes can be introduced as migrations instead of relying on every
 renderer and consumer to handle new fields independently.
 
 `search`, `show`, `dashboard`, and `report` use the same data collection and scoring
-pipeline. Add `--registry` with `pypi`, `crates.io`, `npm`, `homebrew`, `go`, or
-`cran` when a package name needs an explicit ecosystem.
+pipeline. Add `--registry` with `pypi`, `crates.io`, `npm`, `homebrew`, `go`,
+`cran`, or `pub` when a package name needs an explicit ecosystem.
 
 For registry troubleshooting, add `--verbose` to show readable `SUCCESS`,
 `WARN`, and `FAILURE` events, including HTTP response statuses. Use

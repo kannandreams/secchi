@@ -14,7 +14,8 @@ modify a dependency without a separate explicit user instruction.
 
 1. Identify the exact package and ecosystem. Prefer an explicit reference such
    as `pypi:duckdb`, `npm:duckdb`, `crates.io:duckdb`, `homebrew:duckdb`,
-   `go:example.com/pkg`, or `cran:duckdb` when names could be ambiguous.
+   `go:example.com/pkg`, `cran:duckdb`, or `pub:dio` when names could be
+   ambiguous.
 2. Inspect one package with `inspect_package` or compare alternatives with
    `compare_packages` through MCP when available.
 3. Use `--refresh` or `refresh: true` only when current data is needed. Cached

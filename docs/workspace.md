@@ -29,7 +29,7 @@ packages = [
 ```
 
 Supported registry values are `pypi`, `npm`, `crates.io`, `homebrew`, `go`,
-and `cran`.
+`cran`, and `pub`.
 
 ### When Secchi reads the configuration
 

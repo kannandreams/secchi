@@ -260,7 +260,7 @@ def cmd_init() -> None:
             if not package_name:
                 break
             registry = input(
-                "    Registry [pypi/crates.io/npm/homebrew/go/cran, default: pypi]: "
+                "    Registry [pypi/crates.io/npm/homebrew/go/cran/pub, default: pypi]: "
             ).strip()
             packages.append({"name": package_name, "registry": registry or "pypi"})
         if packages:
